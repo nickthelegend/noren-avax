@@ -97,7 +97,7 @@ export function Landing() {
           <h1>
             Let customers pay <em>privately.</em>
           </h1>
-          <p>For shops that take crypto. Customers pay in stablecoins, or on credit against their bitcoin, and only you and your accountant see who paid and how much. Settled on Avalanche with eERC, its encrypted token.</p>
+          <p>For shops that take crypto. Customers pay in stablecoins, or on credit against their bitcoin. The public chain never shows which shop they paid or what a shop earned: you, your accountant and the auditor read that. Settled on Avalanche with eERC, its encrypted token.</p>
           <div className="lx-ctas">
             <a className="lx-btn light" {...linkProps('/shop/harbor-loom')}>
               Try the checkout

@@ -1,4 +1,50 @@
-# Screen audit (ship round, Nov 12 2026)
+# Screen audit
+
+## NEAR-UI round (Nov 13 2026): Noren on NEAR's approved UI
+
+Nick (Nov 13): "Noren should have the same exact UI we have for NEAR." The web app now uses the NEAR edition's
+stylesheets verbatim (`web/src/ui/nk/{styles,app-base,near,landing}.css`), its brand, ambient, Art3d and Mark
+components, its navy 3D kit, mark and fonts. Avalanche-only additions sit in `web/src/ui/nk/avax.css` on the same
+tokens. Every route was shot at 1440 and 375 and laid side by side with the approved NEAR screenshots
+(`orchestration/shots/noren-near/r3/after-*`).
+
+Contact sheets (NEAR left, Avalanche right): `orchestration/shots/avax-noren/near-ui/contact/<route>-<width>.jpg`.
+Raw shots: `near-ui/roles/` (signed-in roles, QA build, `scripts/qa/shots.mjs`), `near-ui/hosted/` (the production site
+after the redeploy, `NOREN_URL=https://noren-avax.vercel.app node scripts/qa/states.mjs`).
+
+| Avalanche route / state | NEAR counterpart | Width | Same product? | Overflow | Console errors |
+|---|---|---|---|---:|---:|
+| Landing `/` | About (`#/near`) | 1440 / 375 | Yes: night glyph-field hero, recorded-run strip, two views, four steps, night batch card, live numbers, contracts, "What Avalanche does here", closing call | 0 | 0 |
+| Credit `/credit` (customer; signed out reads the demo customer) | Credit | 1440 / 375 | Yes: navy credit-limit hero with four tiles, health bar, four action tiles (Pay anyone in kaki), collateral list, The contract + Activity | 0 | 0 |
+| Pay anyone `/shop/harbor-loom` | Pay anyone | 1440 / 375 | Yes: stall card, "Pay with" band (Private balance / Credit), amount box with token chip, merchant box (shop + items), CTA, recorded-payment proof, hub receipt | 0 | 0 |
+| Debt-free `/debt-free` | Debt-free | 1440 / 375 | Yes: big date-style headline ("$36.00 to go" / "Debt-free today"), projection chart (what is owed if nothing is repaid), two stat tiles, Repay and release card | 0 | 0 |
+| Add collateral / Borrow / Repay / Withdraw sheet | Deposit collateral sheet | 1440 / 375 | Yes: same sheet, band, amount box, CTA, receipt | 0 | 0 |
+| Wallet sheet (Connect wallet) | Read any account sheet | 1440 / 375 | Yes: same sheet and list rows (Test wallet, Browser wallet) | 0 | 0 |
+| Merchant `/merchant` (signed out, fresh wallet open-shop form, Harbor & Loom decrypted) | (Avalanche only) | 1440 / 375 | Built from the same parts: navy revenue hero, Orders as Activity rows, assistant card, Withdraw, Payouts, What Snowtrace sees | 0 | 0 |
+| Accountant `/accountant` (signed out, shop owner naming an accountant, accountant decrypted) | (Avalanche only) | 1440 / 375 | Same parts: navy statements hero, statement rows with ✓, recorded batches, hub card | 0 | 0 |
+| Auditor `/auditor` (signed out, other wallet, auditor decrypted) | (Avalanche only) | 1440 / 375 | Same parts: navy auditor hero, ledger rows, settlement batches ✓, received by address, who can read what | 0 | 0 |
+| Unknown shop `/shop/no-such-shop`, 404 `/nope` | — | 1440 / 375 | Empty states in the NEAR card style with a way back | 0 | 0 |
+
+Fixed during the round (each found by these shots or by the film's live take):
+- **Public-RPC 429s.** The first shots and the first film take logged 429s from the public Fuji RPCs (one auditor shot,
+  thousands of failed reads during a payment). Re-reads after a burst of transactions now coalesce, the Activity card
+  reads every NorenCredit event in one windowed scan and refreshes once 6 s after the last transaction, and log reads
+  retry with backoff; a refusal that survives the retries is one quiet line, not a raw RPC error. Re-shot: 0 errors.
+- **Accountant false empty state.** It said "No shop has named this wallet" while NorenMerchants was still loading; it
+  now shows "Reading NorenSettlement…" (or the read error).
+- **Phone ledgers.** Ledger, order and statement titles wrap at 375 instead of truncating, so the payee shows.
+
+What differs from NEAR on purpose: a second pill group for the shop side (Merchant · Accountant · Auditor) next to
+the customer group; below 1180 px both groups move under the brand row, and at 375 they stack as two full-width pills
+(the header then scrolls with the page instead of sticking, so it never covers half a phone screen). The side column
+does not stick, so long Merchant and Auditor side cards stay reachable. Labels: NEAR → Avalanche, NearBlocks →
+Snowtrace, Meteor → test wallet / Core / MetaMask.
+
+---
+
+# Earlier rounds (warm-black UI, retired Nov 13)
+
+## Ship round (Nov 12 2026)
 
 Every route and every state we can reach, at 1440 and 375, judged before and after this round's fixes. The look is
 approved and unchanged: no new art, colours, fonts or layout. Fixes are copy, overflow, empty/error states and one

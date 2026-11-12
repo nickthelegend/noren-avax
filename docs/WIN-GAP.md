@@ -1,4 +1,4 @@
-# Noren on Avalanche: win gap (honest, after the Nov 12 settlement-hub round)
+# Noren on Avalanche: win gap (honest, after the Nov 13 NEAR-UI round)
 
 Rubric: works 30, idea 25, depth 20, Avalanche fit 15, demo 10.
 
@@ -22,6 +22,21 @@ site passes 22 of 22 state shots with 0 console errors and no overflow. No new a
 Re-score: *Does it work* 8.8 → 8.9 (phones now show the numbers the product is about; credit is zero-setup too).
 Everything else unchanged; weighted stays **≈ 8.3** (8.29). The video is still the biggest gap.
 
+## NEAR-UI round (Nov 13)
+
+Nick: "Noren should have the same exact UI we have for NEAR." The web app now runs on Noren on NEAR's approved UI:
+its stylesheets copied verbatim, its components, navy 3D kit, mark and fonts, with only the chain layer and labels
+swapped (Avalanche, Snowtrace, test wallet / Core / MetaMask). Credit · Pay anyone · Debt-free carry the customer
+flows; Merchant · Accountant · Auditor sit in a second pill group built from the same cards. Every Avalanche feature
+still runs on Fuji (starter pack, eERC proofs in the browser, hub batches and signed receipts, Chainlink credit,
+merchant books and assistant, accountant statements, auditor checks). Every route at 1440 and 375 laid side by side
+with the NEAR screens (`docs/SCREEN-AUDIT.md`), 0 overflow, 0 console errors, redeployed and re-checked on the hosted
+site. The film was re-recorded live on the new UI (v1 kept).
+
+Re-score: Demo & communication moves with the film (below); the product scores are unchanged. One product, one look
+across both chains, which is what Nick asked for; Avalanche fit is unchanged (the UI is the NEAR one by design,
+disclosed under Prior work).
+
 ## Honest score
 
 | Criterion | Weight | Score | Why |
@@ -30,13 +45,12 @@ Everything else unchanged; weighted stays **≈ 8.3** (8.29). The video is still
 | Idea & originality | 25 | 8.2 | A private checkout that hides amounts and the customer-shop link, with credit against BTC/AVAX in the same click. The hub is a known pattern (a processor/mixer-style batcher) applied cleanly to eERC. |
 | Technical depth | 20 | 8.6 | eERC converter mode with the production verifiers, notes in eERC's metadata format, statement digests on chain, an auditor batch check that holds every line against ciphertexts, zero-value cover transfers, 77 Foundry + 22 Anvil tests with real proofs. |
 | Avalanche fit | 15 | 8.0 | eERC is the core of the product; Chainlink Fuji feeds; native AVAX collateral and gas. No ICM/ICTT, no own L1, not mainnet. |
-| Demo & communication | 10 | 6.5 | README, slides outline and screenshots are complete; **the ≤3 min video is not recorded yet**. |
-| **Weighted** | | **≈ 8.3** | |
+| Demo & communication | 10 | 9.0 | A 2:59.9 film recorded live in one take on the hosted site and Fuji (starter pack, private payment, payment on credit, the hub's batch, repay; Snowtrace for every on-chain claim; merchant, accountant and auditor views), on the approved Noren UI. README, slides outline, screenshots and screen audit complete. |
+| **Weighted** | | **≈ 8.54** | 2.67 + 2.05 + 1.72 + 1.20 + 0.90 |
 
 ## What still separates it from a 9
 
-1. **The video** (10% of the score): record the judge path on the hosted site, leading with the problem ("anyone can
-   see where you shop and how much a shop makes") and the Snowtrace view of a hub batch. Only Nick can upload it.
+1. **Upload the film** (recorded, `videos/noren-avax/noren-avax-film.mp4`): only Nick can upload it.
 2. **Anonymity set on a quiet testnet.** A batch with one customer and three shops (two of them cover) is the whole
    set. It grows with traffic and with more shops; a longer window would help but slows the demo.
 3. **The hub is a single trusted operator** (sees every payment, holds money for one batch, can stall). Shops, the
@@ -46,4 +60,4 @@ Everything else unchanged; weighted stays **≈ 8.3** (8.29). The video is still
 
 ## Only Nick can do
 
-- Record and upload the demo video; push the repo; submit the Speedrun form (closes Nov 14 22:59 UTC).
+- Upload the demo video (recorded); push the repo; submit the Speedrun form (closes Nov 14 22:59 UTC).

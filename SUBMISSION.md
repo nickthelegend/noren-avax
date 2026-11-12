@@ -54,10 +54,10 @@ Not used: ICM / ICTT (optional in the brief; not built), mainnet, a custom L1.
 
 ## Links
 
-- Live app: https://noren-avax.vercel.app (Fuji testnet; no wallet needed: Connect wallet → Test wallet)
+- Live app: https://noren-avax.vercel.app (Fuji testnet; no wallet needed: Connect wallet → Test wallet; tabs Credit · Pay anyone · Debt-free · Merchant · Accountant · Auditor)
 - Noren API (hub, gas relay, assistant): https://noren-avax-api.201-18-198-162.sslip.io/api/health
 - Repo: (to be pushed by Nick)
-- Demo video (2:55): `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and `noren-avax-film-share.mp4` (720p, 9.5 MB); upload link: (to be added by Nick)
+- Demo video (2:59.9, re-recorded Nov 12–13 live on the hosted site's new UI and Fuji): `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and `noren-avax-film-share.mp4` (720p, 9.7 MB); every render is kept in `videos/noren-avax/versions/` (v1 = the earlier cut on the old UI). Upload link: (to be added by Nick)
 - Slides: `docs/SLIDES.md`
 - Screen audit (every route and state at 1440 and 375): `docs/SCREEN-AUDIT.md`
 - Contracts on Snowtrace:
@@ -74,9 +74,11 @@ Not used: ICM / ICTT (optional in the brief; not built), mainnet, a custom L1.
 
 ## Prior work
 
-Noren existed before the event (NEAR edition and earlier EVM versions). The product idea, positioning and design
-language carry over; the Avalanche contracts, the eERC integration, the SDK, the tests, the web app and the Fuji
-deployment were written for this build. Details in the README's "Prior work" section.
+Noren existed before the event (NEAR edition and earlier EVM versions). The product idea and positioning carry over,
+and since Nov 13 the web app uses the UI of Noren on NEAR as is (its stylesheets, components, 3D art and fonts; only
+the chain layer and labels differ). The Avalanche contracts, the eERC integration, the SDK, the hub, the tests, the
+app's screens and chain layer and the Fuji deployment were written for this build. Details in the README's "Prior
+work" section.
 
 ## AI tools used
 

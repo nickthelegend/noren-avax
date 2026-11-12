@@ -25,6 +25,18 @@ async function creditLogs(fromBlock: bigint) {
   return out;
 }
 
+/** Public Fuji RPCs sit behind load balancers: a log read can hit a node a block behind, or a rate limit. Try again. */
+async function retry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i >= tries) throw e;
+      await new Promise((r) => setTimeout(r, 1500 * i));
+    }
+  }
+}
+
 type Demo = { title: string; as: string; at: string; txs: { hash: Hex; what: string }[] };
 const DEMO = Object.values(((D as unknown as { demo?: Record<string, Demo> }).demo ?? {}) as Record<string, Demo>);
 
@@ -98,7 +110,7 @@ export function Activity() {
   const who = useWho();
   const ver = useSignerVersion();
   const now = useNow();
-  const acts = useLoad<Act[] | null>(async () => {
+  const acts = useLoad<Act[] | null>(() => retry(async () => {
     if (!who) return null;
     const from = BigInt(D.deployBlock);
     const [creditAll, sent, tops, shops] = await Promise.all([
@@ -128,7 +140,7 @@ export function Activity() {
     return rows
       .map((x) => ({ hash: x.r.transactionHash as Hex, title: x.title, sub: x.sub, kind: x.kind, at: t.get(String(x.r.blockNumber)) ?? 0 }))
       .sort((a, b) => b.at - a.at);
-  }, [who?.address, ver], 0, [6000]);
+  }), [who?.address, ver], 0, [6000]);
 
   const recorded: Act[] = DEMO.flatMap((d) => d.txs.map((tx) => ({ hash: tx.hash, title: cap(tx.what), sub: d.title, at: Date.parse(d.at) / 1000 }))).reverse();
   const list = who ? acts.data : recorded;
@@ -138,7 +150,9 @@ export function Activity() {
       sub={who ? `${who.label} on Avalanche Fuji` : 'Recorded on Avalanche Fuji'}
       pill={<Pill>{list ? list.length : '…'}</Pill>}
     >
-      {who && acts.error && <p className="nk-err">{acts.error}</p>}
+      {who && acts.error && (
+        <p className="nc-fine">Fuji’s public RPC refused the log read just now ({acts.error.slice(0, 80)}). It retries after your next transaction; the list below may be behind.</p>
+      )}
       {who && !acts.data && !acts.error && (
         <ul className="nk-acts nc-acts">
           <Row state="run" title="Reading Fuji logs…" sub="NorenCredit and eERC events for this wallet" />

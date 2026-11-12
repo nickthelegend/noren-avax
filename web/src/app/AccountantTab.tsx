@@ -22,9 +22,10 @@ export function AccountantTab({ market }: { market: Market }) {
   shops.data?.forEach((s) => setName(s.owner, s.name));
   const mine = who ? (shops.data ?? []).filter((s) => s.owner.toLowerCase() === who.address.toLowerCase()) : [];
   // Shops that named this wallet as their accountant in NorenSettlement.
-  const books = useLoad<Shop[]>(
+  const books = useLoad<Shop[] | null>(
     async () => {
-      if (!who || !shops.data || !VIA_HUB) return [];
+      if (!who || !VIA_HUB) return [];
+      if (!shops.data) return null; // still reading the shops
       const list = await Promise.all(shops.data.map(async (s) => ((await accountantOf(pub as never, D as never, s.id)).toLowerCase() === who.address.toLowerCase() ? s : null)));
       return list.filter((x): x is Shop => !!x);
     },
@@ -124,7 +125,9 @@ export function AccountantTab({ market }: { market: Market }) {
               <Empty art="shield" title="Connect the accountant’s or the shop’s wallet" action={<button className="nk-btn na-kaki" onClick={market.connect}>Connect a wallet</button>}>
                 The accountant reads statements here; the shop owner names the accountant here.
               </Empty>
-            ) : books.loading && !books.data ? (
+            ) : shops.error && !shops.data ? (
+              <Empty art="warning" title="Couldn’t read NorenMerchants">{shops.error}</Empty>
+            ) : !books.data ? (
               <Empty art="hourglass" title="Reading NorenSettlement…" />
             ) : mine.length === 0 ? (
               <Empty title="No shop has named this wallet">

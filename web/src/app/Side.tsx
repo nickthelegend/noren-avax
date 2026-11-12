@@ -1,6 +1,6 @@
 import { formatEther, parseAbiItem, type Hex } from 'viem';
-import { AVAX, addressUrl, depositEvent, privateTransferEvent, scanLogs } from '@noren-avax/sdk';
-import { D, nameOf, pub } from '../lib/chain';
+import { AVAX, addressUrl, depositEvent, privateTransferEvent, readShops, scanLogs } from '@noren-avax/sdk';
+import { D, nameOf, pub, setName } from '../lib/chain';
 import { ago, useLoad, useNow } from '../lib/hooks';
 import { useSignerVersion, useWho } from '../lib/signer';
 import { Icon } from '../ui/nk/brand';
@@ -90,11 +90,13 @@ export function Activity() {
   const acts = useLoad<Act[] | null>(async () => {
     if (!who) return null;
     const from = BigInt(D.deployBlock);
-    const [credit, sent, tops] = await Promise.all([
+    const [credit, sent, tops, shops] = await Promise.all([
       Promise.all(creditEvents.map((ev) => scanLogs(pub as never, { address: D.norenCredit, event: ev, args: { user: who.address }, fromBlock: from }))),
       scanLogs(pub as never, { address: D.encryptedERC, event: privateTransferEvent, args: { from: who.address }, fromBlock: from }),
       scanLogs(pub as never, { address: D.encryptedERC, event: depositEvent, args: { user: who.address }, fromBlock: from }),
+      readShops(pub as never, D).catch(() => []),
     ]);
+    shops.forEach((s) => setName(s.owner, s.name));
     const rows = [
       ...credit.flat().map((r) => {
         const a = r.args as Record<string, unknown>;

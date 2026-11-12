@@ -13,7 +13,10 @@ Fuji, and the live demo sends real Fuji transactions from the web app.
 | Live demo | Avalanche Fuji, through the web app with the QA signer | 5 steps | `node scripts/qa/demo.mjs` |
 
 Last run (Nov 12 2026): 37 passed in `forge test` (the 4 fork tests skip unless `NOREN_FORK=1`; with it, 4 more pass),
-10 of 10 in the Anvil suite.
+10 of 10 in the Anvil suite. The Anvil suite was run five times; one run had 2 failures that did not reproduce in
+the next three runs, so treat it as possibly flaky (timing against a fresh Anvil) until it has been watched longer.
+Each run re-records the fixtures with fresh proof randomness, and `forge test` passes with both the committed and a
+freshly recorded fixture file.
 
 ## What each suite proves
 

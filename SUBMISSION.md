@@ -40,6 +40,7 @@ Not used: ICM / ICTT (optional in the brief; not built), mainnet, a custom L1.
 
 ## Links
 
+- Live app: https://noren-avax.vercel.app (Fuji testnet; connect a wallet to pay)
 - Repo: (to be pushed by Nick)
 - Demo video (≤ 3 min): (to be recorded)
 - Slides: `docs/SLIDES.md`

@@ -7,6 +7,8 @@ AVAX and pays in the same flow. The payment is an [eERC](https://github.com/ava-
 Avalanche, so its amount is a ciphertext on chain: the shop decrypts its revenue with its own key, its accountant
 decrypts it with the auditor key, and Snowtrace shows neither.
 
+**Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
+
 ![Checkout after a private payment on Fuji](docs/img/demo-1-private.jpg)
 
 - **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, withdraw it.

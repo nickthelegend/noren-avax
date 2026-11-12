@@ -25,7 +25,11 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[], everyMs = 0): 
   useEffect(() => {
     setData(undefined);
     run();
-    const onTx = () => setTimeout(run, 400);
+    // Public Fuji RPCs sit behind load balancers and can trail a block: read now and once more a bit later.
+    const onTx = () => {
+      setTimeout(run, 400);
+      setTimeout(run, 3500);
+    };
     addEventListener('noren:tx', onTx);
     const t = everyMs ? setInterval(run, everyMs) : undefined;
     return () => {

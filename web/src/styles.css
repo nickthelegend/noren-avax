@@ -184,7 +184,7 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
 /* ---------- checkout ---------- */
 .checkout { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 68px); }
 .co-left { background: radial-gradient(600px 400px at 20% 110%, rgba(217, 119, 47, 0.2), transparent 70%), var(--night); color: var(--on-night); }
-.co-left-in, .co-right-in { max-width: 480px; margin: 0 auto; padding: 56px 32px 64px; }
+.co-left-in, .co-right-in { max-width: 520px; margin: 0 auto; padding: 56px 32px 64px; }
 .co-left-in { margin-right: 0; padding-right: 64px; }
 .co-right-in { margin-left: 0; padding-left: 64px; }
 .co-shop { display: flex; align-items: center; gap: 12px; font-size: 17px; }

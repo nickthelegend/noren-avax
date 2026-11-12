@@ -52,5 +52,223 @@
       "what": "lists Wool throw at 64 tUSDC"
     }
   },
-  "auditor": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61"
+  "auditor": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61",
+  "demo": {
+    "1": {
+      "title": "Customer pays Linen tote privately",
+      "as": "customer",
+      "at": "2026-11-12T11:36:02.747Z",
+      "txs": [
+        {
+          "hash": "0xd994d7aea38d88a107b2f996fe61d7c9dc59bb5ae365caf9d6c545932c4ac01a",
+          "what": "register eERC key"
+        },
+        {
+          "hash": "0x4c05dbfeb0475588ea82a61b58ee7ff9c94aa18bb455424e65e690cdb36c8746",
+          "what": "tUSDC faucet"
+        },
+        {
+          "hash": "0x54cd67a658a1bfd8be5a0dc539f3e39f4b1ad2afe78a53e7addfa326f3f2031a",
+          "what": "approve tUSDC for eERC"
+        },
+        {
+          "hash": "0xf62222df071bd6852b6c7f7ecfcd23f9d7e96b0cde23207bb8dfe18e8010e030",
+          "what": "top up private balance"
+        },
+        {
+          "hash": "0xcc37d1ffe8149cde5b94f871177cad88a8a67f6d54fdd36a241ee6f47260cd61",
+          "what": "private payment to Harbor & Loom"
+        }
+      ],
+      "shot": "shots/avax-noren/demo-1-private.png"
+    },
+    "2": {
+      "title": "Customer borrows against tWBTC and pays Waxed canvas apron on credit",
+      "as": "customer",
+      "at": "2026-11-12T11:37:01.792Z",
+      "txs": [
+        {
+          "hash": "0xa864565adb18388904678dbd583772620f7fa8b172df0ddd40fe0fadf87fd8f3",
+          "what": "tWBTC faucet"
+        },
+        {
+          "hash": "0x63be89cb92a70c759c0e742e08a84ac11611cda0d260a034db51ece53542aeda",
+          "what": "approve tWBTC"
+        },
+        {
+          "hash": "0x7d799048a1b37cf09c3488cddcf68673d26d584ce1aa55a87188675077334425",
+          "what": "lock 0.01 tWBTC as collateral"
+        },
+        {
+          "hash": "0xe18ba26eee72680020a1a5a025e5557a4eb69570276ba132d1105b99f06d7581",
+          "what": "borrow 36.00 tUSDC"
+        },
+        {
+          "hash": "0xca9be2649a11a59b12420fbcf809e461d5db72587130ddd9f006c837d365edc5",
+          "what": "credit into private balance"
+        },
+        {
+          "hash": "0x90bdd48949604ba652df7b7e72479f3dd8dd422c132389f55ba379019ef73960",
+          "what": "private payment to Harbor & Loom"
+        }
+      ],
+      "shot": "shots/avax-noren/demo-2-credit.png"
+    },
+    "3": {
+      "title": "Merchant decrypts private revenue and withdraws 24.00 tUSDC",
+      "as": "merchant",
+      "at": "2026-11-12T11:38:49.279Z",
+      "txs": [
+        {
+          "hash": "0xd5c8852f92d5ffa2aaeb46f9673dbb8b14626e357910cf53c26f9536e792924b",
+          "what": "withdraw private revenue"
+        }
+      ],
+      "shot": "shots/avax-noren/demo-3-merchant-withdraw.png"
+    },
+    "4": {
+      "title": "Auditor decrypts every payment and withdrawal",
+      "as": "auditor",
+      "at": "2026-11-12T11:38:53.664Z",
+      "txs": [],
+      "shot": "shots/avax-noren/demo-4-auditor.png"
+    },
+    "5": {
+      "title": "Customer repays the credit line in full",
+      "as": "customer",
+      "at": "2026-11-12T11:39:10.612Z",
+      "txs": [
+        {
+          "hash": "0x51d503658026ff10b7f000fafa48fb75f6bce26b78b3910b9131b29be6b9722f",
+          "what": "approve tUSDC"
+        },
+        {
+          "hash": "0xea2a053dfb815c2f8fca27305180e53453728220fc3f1bbc0ec494f0a27d1c47",
+          "what": "repay in full"
+        }
+      ],
+      "shot": "shots/avax-noren/demo-5-repay.png"
+    }
+  },
+  "deployTxs": [
+    {
+      "hash": "0x6f753c4b61ebff6c318988f6e8d35e891cee4014766f7a6592a77a7324db5d4f",
+      "type": "CREATE2",
+      "contract": "BabyJubJub",
+      "address": "0x5e510c50c767b963e54ba11d8b88537c322e0b86",
+      "fn": null
+    },
+    {
+      "hash": "0xb8460ddd4af83a3000c7cfe9327391a06689937c7b5aaf6c5810dfdf5273c86d",
+      "type": "CREATE",
+      "contract": "NorenTestToken",
+      "address": "0x788a627ced9b795517a9c481a4377ea0e26303a1",
+      "fn": null
+    },
+    {
+      "hash": "0x025d60c1ac288c369d1ce4aaa081a2b0ae5848e26a9ccad172f39e82eb6e1b46",
+      "type": "CREATE",
+      "contract": "NorenTestToken",
+      "address": "0x04e7f9a2b3c793884fb9a5c5f424a4739aa6e754",
+      "fn": null
+    },
+    {
+      "hash": "0x798d702306b3cc8e149a9be34197a16def8fdeeddac0d641f9270a628979415d",
+      "type": "CREATE",
+      "contract": "RegistrationVerifier",
+      "address": "0xa4294ef23f970dbc585bd9f7d0db28783c0d0230",
+      "fn": null
+    },
+    {
+      "hash": "0xd09aba87bb4532e5c624f7590d5fa99981bc6a2261813e2677a697d948d43ab1",
+      "type": "CREATE",
+      "contract": "Registrar",
+      "address": "0xf3876666123fc4a15b4503b17dc8188481f1bdc4",
+      "fn": null
+    },
+    {
+      "hash": "0xaa9159d78c659140b1dce803bad235bd497030bc0b23dfeb1625e85f75a91055",
+      "type": "CREATE",
+      "contract": "MintVerifier",
+      "address": "0x074505768821022815bff8055b9b09f437b3b972",
+      "fn": null
+    },
+    {
+      "hash": "0xcf8748c1d1841d2e12518bd9afa951cfe36d01f4c25265bcdf5dc3a31b222214",
+      "type": "CREATE",
+      "contract": "WithdrawVerifier",
+      "address": "0x09017343da7138f636af7aa705926467a85b3195",
+      "fn": null
+    },
+    {
+      "hash": "0x6f721406861853c05b24e192c6dfdba6cf7803ed6a6f61b44be1d90f46c77a52",
+      "type": "CREATE",
+      "contract": "TransferVerifier",
+      "address": "0xb1ee487ccffc1e019bd2eca64415ca72d4083fdc",
+      "fn": null
+    },
+    {
+      "hash": "0x830e69fdaae4b0af7c53de71aef04a80d1296128cca5997f3b7463a734768a6c",
+      "type": "CREATE",
+      "contract": "BurnVerifier",
+      "address": "0xb87413e34a7ac7d11e01436ac2a26c482f89d537",
+      "fn": null
+    },
+    {
+      "hash": "0xecec23257829c20eed707a7aa556a095496e37188bcdf1f96c53dd59f8ee52b1",
+      "type": "CREATE",
+      "contract": "EncryptedERC",
+      "address": "0x35f9e1a8f9e570b5c1f12bde4202683878867153",
+      "fn": null
+    },
+    {
+      "hash": "0x505a0888b17d5773de16feb08eab1717960890c93dc12481fa342decfae91b0e",
+      "type": "CREATE",
+      "contract": "NorenCredit",
+      "address": "0x8e11c777f31368c3630992cd918d42a44eef0713",
+      "fn": null
+    },
+    {
+      "hash": "0x6328632192ce7f64b5ca77cdb7704c8ef53af5929e2b02c8bb9e9011e7467645",
+      "type": "CALL",
+      "contract": "NorenCredit",
+      "address": "0x8e11c777f31368c3630992cd918d42a44eef0713",
+      "fn": "listAsset(address,address,uint16,uint16,uint16,uint32)"
+    },
+    {
+      "hash": "0x0419b0b04a110c8da6b16fa9bc2418be15d015562d1545955ac0471e116dbe39",
+      "type": "CALL",
+      "contract": "NorenCredit",
+      "address": "0x8e11c777f31368c3630992cd918d42a44eef0713",
+      "fn": "listAsset(address,address,uint16,uint16,uint16,uint32)"
+    },
+    {
+      "hash": "0x78dd87e7134cfe1049d15674eea8a8cfa562be6190d749c489df780f7d2328bf",
+      "type": "CALL",
+      "contract": "NorenTestToken",
+      "address": "0x788a627ced9b795517a9c481a4377ea0e26303a1",
+      "fn": "mint(address,uint256)"
+    },
+    {
+      "hash": "0x06f4217f7acec09e8ad4fa5ec436e529048354efdfeb36a1f7071ce5547c3d26",
+      "type": "CALL",
+      "contract": "NorenTestToken",
+      "address": "0x788a627ced9b795517a9c481a4377ea0e26303a1",
+      "fn": "approve(address,uint256)"
+    },
+    {
+      "hash": "0x84ffdc9546e95eebd8dc9160b95aff8cecc5d4980c76831aed375bcd6cff3d62",
+      "type": "CALL",
+      "contract": "NorenCredit",
+      "address": "0x8e11c777f31368c3630992cd918d42a44eef0713",
+      "fn": "fund(uint256)"
+    },
+    {
+      "hash": "0x2dd54fd8220c2e848672b30ea2979307576f7680a47f2a56031901a5e8c339bd",
+      "type": "CREATE",
+      "contract": "NorenMerchants",
+      "address": "0xe151590170cc22b8e34c93abd43f9bad26ddb039",
+      "fn": null
+    }
+  ]
 }

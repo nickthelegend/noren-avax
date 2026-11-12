@@ -192,6 +192,8 @@ export function Checkout({ slug }: { slug: string }) {
     }
     setBusy(false);
     acct.reload();
+    // Public RPCs behind a load balancer can lag a block; read once more.
+    setTimeout(acct.reload, 2500);
   }
 
   if (shops.error) return <main className="wrap pad"><Note tone="bad" art="warning" title="Couldn't read the shop from Fuji">{shops.error}</Note></main>;

@@ -22,8 +22,10 @@ export const local = (rpc: string) =>
     rpcUrls: { default: { http: [rpc] } },
   });
 
+// PublicNode first: the Avalanche endpoint rate-limits bursts of getLogs (HTTP 429 without CORS headers, which
+// browsers report as a CORS failure). It stays as the fallback.
 export const fujiTransport = (): Transport =>
-  fallback([http(FUJI_RPC, { retryCount: 2, timeout: 20_000 }), http(FUJI_RPC_2, { retryCount: 2, timeout: 20_000 })]);
+  fallback([http(FUJI_RPC_2, { retryCount: 2, timeout: 20_000 }), http(FUJI_RPC, { retryCount: 2, timeout: 20_000 })]);
 
 export function publicClientFor(chain: Chain, transport: Transport = chain.id === 43113 ? fujiTransport() : http(chain.rpcUrls.default.http[0])) {
   return createPublicClient({ chain, transport, batch: { multicall: false } });

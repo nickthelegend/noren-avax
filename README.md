@@ -7,7 +7,7 @@ AVAX and pays in the same flow. The payment is an [eERC](https://github.com/ava-
 Avalanche, so its amount is a ciphertext on chain: the shop decrypts its revenue with its own key, its accountant
 decrypts it with the auditor key, and Snowtrace shows neither.
 
-![Checkout after a private payment on Fuji](docs/img/checkout-1440.png)
+![Checkout after a private payment on Fuji](docs/img/demo-1-private.jpg)
 
 - **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, withdraw it.
 - **Noren app**: the checkout (pay with tUSDC or with credit) and the credit line.
@@ -46,6 +46,12 @@ browser. Screenshots of each step are in `docs/img/`.
 | 4. Auditor decrypts every payment and withdrawal | auditor | no transaction (local decryption) |
 | 5. Customer repays the credit line in full | customer | approve tUSDC: [`0x51d50365…`](https://testnet.snowtrace.io/tx/0x51d503658026ff10b7f000fafa48fb75f6bce26b78b3910b9131b29be6b9722f)<br>repay in full: [`0xea2a053d…`](https://testnet.snowtrace.io/tx/0xea2a053dfb815c2f8fca27305180e53453728220fc3f1bbc0ec494f0a27d1c47) |
 <!-- /demo -->
+
+| Merchant: revenue decrypted locally | Auditor: the ledger | Credit line after repayment |
+|---|---|---|
+| ![Merchant dashboard](docs/img/demo-3-merchant-withdraw.jpg) | ![Auditor ledger](docs/img/demo-4-auditor.jpg) | ![Credit line](docs/img/demo-5-repay.jpg) |
+
+Every route at 1440 and 375 px: `docs/img/<route>-<width>.jpg` (no horizontal overflow, no console errors).
 
 One-time setup (scripts/fuji/setup.ts):
 

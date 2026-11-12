@@ -386,4 +386,7 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
   .table-wrap { margin: 0 -18px; padding: 0 18px; }
   .qa-pick span { display: none; }
   .ev > div { grid-template-columns: 64px minmax(0, 1fr); }
+  .tabs button { padding: 8px 6px; font-size: 13px; }
+  .hbar { margin-top: 34px; }
+  .hbar-mark:not(.liq) em { top: auto; bottom: calc(100% + 6px); }
 }

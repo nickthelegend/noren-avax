@@ -119,13 +119,14 @@ export function Credit() {
         <div className="credit-main">
           <section className="ccard">
             <div className="ccard-top">
-              <span>Credit limit</span>
-              <span className="ccard-net">NorenCredit · Fuji</span>
+              <span>Credit limit · NorenCredit on Fuji</span>
             </div>
             <div className="ccard-big">{p ? <Money usd={usd6(p.borrowLimit)} /> : who ? <Skeleton w={200} h={56} /> : <Money usd={0} />}</div>
             <p className="ccard-sub">
               {p
-                ? `${(Number(p.btc) / 1e8).toString()} tWBTC + ${Number(formatEther(p.avax)).toFixed(4)} AVAX, priced by Chainlink`
+                ? p.btc === 0n && p.avax === 0n
+                  ? 'No collateral yet. Lock tWBTC or AVAX below to open the line.'
+                  : `${[p.btc > 0n ? `${Number(p.btc) / 1e8} tWBTC` : '', p.avax > 0n ? `${Number(formatEther(p.avax)).toFixed(4)} AVAX` : ''].filter(Boolean).join(' + ')}, priced by Chainlink`
                 : who
                   ? 'Reading your position…'
                   : 'Connect a wallet to see your line.'}

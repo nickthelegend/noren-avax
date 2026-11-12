@@ -1,17 +1,19 @@
 import { useSyncExternalStore } from 'react';
 import { createWalletClient, custom, nonceManager, type Abi, type Address, type Hex, type WalletClient } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { fuji, fujiTransport, FUJI_RPC, NorenPrivate } from '@noren-avax/sdk';
 import { D, circuits, pub, readable } from './chain';
 
 /**
- * Two ways to sign:
- *  - A browser wallet (Core, MetaMask…) over EIP-1193, switched to Fuji. This is the production path.
+ * Three ways to sign:
+ *  - A browser wallet (Core, MetaMask…) over EIP-1193, switched to Fuji.
+ *  - A test wallet made in this browser (a fresh Fuji key kept in localStorage, for testnet use only), so a judge with
+ *    no wallet and no AVAX can try every flow: NorenGasStation funds it in one tap.
  *  - The QA signer: only in builds made with VITE_QA=1 (`pnpm build:qa`), and only when the Playwright harness injects
  *    `window.__NOREN_QA__ = { keys: { customer, merchant, auditor } }` with Fuji test keys. Production builds drop this
  *    code path and no key is ever in a bundle.
  */
-export type Who = { address: Address; label: string; kind: 'wallet' | 'qa' };
+export type Who = { address: Address; label: string; kind: 'wallet' | 'qa' | 'guest' };
 type QaWindow = Window & { __NOREN_QA__?: { keys: Record<string, Hex> }; ethereum?: { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> } };
 export const QA = import.meta.env.VITE_QA === '1';
 
@@ -98,7 +100,66 @@ export async function connectWallet() {
   emit();
 }
 
+const GUEST = 'noren:test-wallet';
+
+/** Uses (or creates) the test wallet kept in this browser. Fuji test funds only; the key never leaves the browser. */
+export function openTestWallet() {
+  let key: Hex | null = null;
+  try {
+    key = localStorage.getItem(GUEST) as Hex | null;
+  } catch {
+    /* storage blocked: the key lives for this tab only */
+  }
+  if (!key || !/^0x[0-9a-f]{64}$/.test(key)) {
+    key = generatePrivateKey();
+    try {
+      localStorage.setItem(GUEST, key);
+    } catch {
+      /* ignore */
+    }
+  }
+  const account = privateKeyToAccount(key, { nonceManager });
+  client = createWalletClient({ account, chain: fuji, transport: fujiTransport() });
+  current = { address: account.address, label: `Test wallet ${account.address.slice(2, 6)}`, kind: 'guest' };
+  priv = null;
+  try {
+    sessionStorage.setItem('noren:who', 'guest');
+  } catch {
+    /* ignore */
+  }
+  emit();
+}
+
+export function hasTestWallet() {
+  try {
+    return !!localStorage.getItem(GUEST);
+  } catch {
+    return false;
+  }
+}
+
+/** Brings the test wallet back after a reload, if this tab was using it. */
+export function restoreTestWallet() {
+  if (QA) return;
+  try {
+    if (sessionStorage.getItem('noren:who') === 'guest' && hasTestWallet()) openTestWallet();
+  } catch {
+    /* ignore */
+  }
+}
+
+/** The connected account as a viem account object (test wallet / QA) or address (browser wallet). */
+export function signerClient(): WalletClient {
+  if (!client || !current) throw Error('Connect a wallet first.');
+  return client;
+}
+
 export function disconnect() {
+  try {
+    sessionStorage.removeItem('noren:who');
+  } catch {
+    /* ignore */
+  }
   current = null;
   client = null;
   priv = null;

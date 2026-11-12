@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { erc20Abi, type Abi, type Hex } from 'viem';
-import { norenCreditAbi, norenTokenAbi, readPosition, readShops, readWallet, type Shop } from '@noren-avax/sdk';
+import { erc20Abi, verifyMessage, type Abi, type Hex } from 'viem';
+import { hasHub, hubNote, norenCreditAbi, norenTokenAbi, readPosition, readShops, readWallet, receiptText, settledIn, type Shop } from '@noren-avax/sdk';
+import { api, getStarterPack, saveClaim, type HubStatus, type Receipt } from '../lib/api';
 import { D, pub, readable, setName } from '../lib/chain';
-import { useLoad } from '../lib/hooks';
+import { useLoad, useNow } from '../lib/hooks';
+import { StarterPack } from '../ui/StarterPack';
 import { linkProps } from '../lib/router';
 import { announceTx, isUnlocked, privateSession, unlock, useSignerVersion, useWho, write } from '../lib/signer';
 import { Art, Money, Note, Skeleton, Steps, TxLink, type Step } from '../ui/kit';
@@ -12,6 +14,9 @@ type Plan = { key: string; title: string; detail: string; needed: () => Promise<
 
 const usdcOf = (cents: bigint) => cents * 10_000n;
 const orderId = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+const claimSecret = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+const VIA_HUB = hasHub(D);
+const hhmm = (sec: number) => new Date(sec * 1000).toISOString().slice(11, 16);
 
 export function Checkout({ slug }: { slug: string }) {
   const who = useWho();
@@ -25,19 +30,20 @@ export function Checkout({ slug }: { slug: string }) {
   const [method, setMethod] = useState<Method>('private');
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [receipt, setReceipt] = useState<{ hash: Hex; cents: bigint; item: string; method: Method; order: string } | null>(null);
+  const [receipt, setReceipt] = useState<{ hash: Hex; cents: bigint; item: string; method: Method; order: string; claim: string } | null>(null);
 
   const acct = useLoad(
     async () => {
       if (!who) return null;
       const p = privateSession();
-      const [wallet, registered, position] = await Promise.all([
+      const [wallet, registered, position, avax] = await Promise.all([
         readWallet(pub as never, D, who.address),
         p.isRegistered(),
         readPosition(pub as never, D, who.address).catch((e) => ({ error: readable(e) })),
+        pub.getBalance({ address: who.address }),
       ]);
       const priv = isUnlocked() && registered ? (await p.balance()).cents : null;
-      return { wallet, registered, position, priv };
+      return { wallet, registered, position, priv, avax };
     },
     [who?.address, ver],
   );
@@ -50,8 +56,18 @@ export function Checkout({ slug }: { slug: string }) {
     if (!who || !shop || !item) return [];
     const p = () => privateSession();
     const order = orderId();
-    const memo = `${item.name} · order ${order}`;
+    const claim = claimSecret();
+    // Through the hub, the note (encrypted to the hub) says which shop; without one, straight to the shop.
+    const payee = VIA_HUB ? D.hub! : shop.owner;
+    const memo = VIA_HUB ? hubNote({ shopId: shop.id, order, claim, item: item.name }) : `${item.name} · order ${order}`;
     const common: Plan[] = [
+      {
+        key: 'pack',
+        title: 'Get test funds',
+        detail: 'NorenGasStation sends gas, 100 tUSDC and 0.01 tWBTC to this new wallet in one transaction.',
+        needed: async () => VIA_HUB && (await pub.getBalance({ address: who.address })) === 0n,
+        run: () => getStarterPack(who.address),
+      },
       {
         key: 'unlock',
         title: 'Unlock your private balance',
@@ -76,13 +92,16 @@ export function Checkout({ slug }: { slug: string }) {
     ];
     const pay: Plan = {
       key: 'pay',
-      title: `Pay ${shop.name} privately`,
-      detail: `Proves the payment on this device and sends ${(Number(price) / 100).toFixed(2)} tUSDC as an encrypted amount, with the order note encrypted to the shop.`,
+      title: VIA_HUB ? `Pay ${shop.name} through Noren` : `Pay ${shop.name} privately`,
+      detail: VIA_HUB
+        ? `Proves the payment on this device and sends ${(Number(price) / 100).toFixed(2)} tUSDC, encrypted, to Noren’s settlement hub. Only the hub learns it is for ${shop.name}.`
+        : `Proves the payment on this device and sends ${(Number(price) / 100).toFixed(2)} tUSDC as an encrypted amount, with the order note encrypted to the shop.`,
       needed: async () => true,
       run: async () => {
-        const h = await p().pay(shop.owner, price, memo);
-        announceTx(h, `private payment to ${shop.name}`);
-        setReceipt({ hash: h, cents: price, item: item.name, method, order });
+        const h = await p().pay(payee, price, memo);
+        announceTx(h, VIA_HUB ? `private payment via Noren for ${shop.name}` : `private payment to ${shop.name}`);
+        if (VIA_HUB) saveClaim(h, claim, { shop: shop.name, item: item.name, cents: String(price), order });
+        setReceipt({ hash: h, cents: price, item: item.name, method, order, claim });
         return h;
       },
     };
@@ -242,7 +261,15 @@ export function Checkout({ slug }: { slug: string }) {
           <div className="co-priv">
             <Art name="sealed-coin" size={56} />
             <p>
-              <b>{shop?.name ?? 'The shop'} sees the amount. Snowtrace doesn’t.</b> The payment is an eERC transfer: the amount is a ciphertext that only the shop’s key and the auditor’s key open.
+              {VIA_HUB ? (
+                <>
+                  <b>Snowtrace sees you paid Noren. Not which shop, not how much.</b> {shop?.name ?? 'The shop'} is paid from Noren’s hub in the next batch, with other shops.
+                </>
+              ) : (
+                <>
+                  <b>{shop?.name ?? 'The shop'} sees the amount. Snowtrace doesn’t.</b> The payment is an eERC transfer: the amount is a ciphertext that only the shop’s key and the auditor’s key open.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -275,6 +302,8 @@ export function Checkout({ slug }: { slug: string }) {
               Noren asks for one signature to derive your private-balance key, then each payment is one or two Fuji transactions.
             </Note>
           ) : (
+            <>
+            {acct.data && acct.data.avax === 0n && <StarterPack address={who.address} />}
             <div className="bal-row">
               <div className="bal">
                 <span>Private balance</span>
@@ -297,6 +326,7 @@ export function Checkout({ slug }: { slug: string }) {
                 <small>{method === 'credit' ? (positionErr ? 'Price feed stale' : <a {...linkProps('/credit')}>Credit line</a>) : 'Public, on Fuji'}</small>
               </div>
             </div>
+            </>
           )}
           {acct.error && <Note tone="bad" title="Couldn't read your balances">{acct.error}</Note>}
           {method === 'credit' && positionErr && <Note tone="warn" art="gauge" title="Credit is paused">{positionErr}</Note>}
@@ -305,7 +335,7 @@ export function Checkout({ slug }: { slug: string }) {
             {busy ? 'Working on Fuji…' : item ? `${method === 'credit' ? 'Pay on credit' : 'Pay'} ${(Number(item.priceCents) / 100).toFixed(2)} tUSDC` : 'Pay'}
           </button>
           {steps && <Steps steps={steps} />}
-          {receipt && (
+          {receipt && (VIA_HUB ? <HubReceipt r={receipt} shopName={shop?.name ?? 'the shop'} /> : (
             <div className="receipt" aria-live="polite">
               <Art name="receipt" size={64} />
               <div>
@@ -318,12 +348,65 @@ export function Checkout({ slug }: { slug: string }) {
                 <TxLink hash={receipt.hash} label="See it on Snowtrace" />
               </div>
             </div>
-          )}
+          ))}
           <p className="fine">
-            Payments use Ava Labs’ eERC in converter mode over test USDC on Fuji, with proofs made in your browser. Top-ups, borrowing and withdrawals are public; the payment amount is not.
+            Ava Labs’ eERC over test USDC on Fuji, proofs made in your browser. Top-ups and borrowing are public; the payment is not.
           </p>
         </div>
       </section>
     </main>
+  );
+}
+
+/** The customer's view of a hub payment: queued, then settled in a batch (read from NorenSettlement on chain), with the
+ *  hub's signed receipt (fetched with the claim secret only this browser and the hub know). */
+function HubReceipt({ r, shopName }: { r: { hash: Hex; cents: bigint; item: string; method: Method; order: string; claim: string }; shopName: string }) {
+  const now = useNow(1000);
+  const hub = useLoad(() => api<HubStatus>('/hub'), [], 15_000);
+  const batch = useLoad(() => settledIn(pub as never, D as never, r.hash), [r.hash], 10_000);
+  const rec = useLoad(
+    async () => {
+      const x = await api<Receipt | { status: 'unseen' }>('/receipt', { tx: r.hash, claim: r.claim });
+      if (!('signature' in x)) return null; // the hub hasn't read it from Fuji yet
+      const ok = await verifyMessage({ address: D.hub!, message: receiptText({ ...x, chainId: D.chainId }), signature: x.signature });
+      return { ...x, verified: ok };
+    },
+    [r.hash, batch.data],
+    15_000,
+  );
+  const settled = batch.data != null;
+  const next = hub.data?.nextSettleAt;
+  const left = next ? Math.max(0, Math.round(next - now / 1000)) : null;
+  return (
+    <div className="receipt" aria-live="polite">
+      <Art name="receipt" size={64} />
+      <div>
+        <b>
+          Paid {(Number(r.cents) / 100).toFixed(2)} tUSDC {r.method === 'credit' ? 'on credit ' : ''}for {shopName}
+        </b>
+        <p>
+          {r.item} · order {r.order}.{' '}
+          {settled ? (
+            <>Settled to {shopName} in batch #{batch.data}{rec.data?.payoutTx ? ', with other shops’ payouts' : ''}.</>
+          ) : next ? (
+            left === 0 ? (
+              <>Noren’s hub is paying out this batch now.</>
+            ) : (
+              <>Noren pays {shopName} in the next batch, at {hhmm(next)} UTC{left != null && left < 600 ? ` (in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')})` : ''}.</>
+            )
+          ) : hub.error ? (
+            <>The hub’s status is unavailable ({hub.error}). Your payment is safe on chain; it settles when the hub is back.</>
+          ) : (
+            <>Waiting for the next batch.</>
+          )}
+        </p>
+        <div className="rc-links">
+          <TxLink hash={r.hash} label="Your payment" />
+          {rec.data?.payoutTx && <TxLink hash={rec.data.payoutTx} label="Shop payout" />}
+          {rec.data?.verified && <span className="chip chip-ok">Receipt signed by the hub</span>}
+          {rec.error && <span className="chip chip-bad" title={rec.error}>Receipt unavailable</span>}
+        </div>
+      </div>
+    </div>
   );
 }

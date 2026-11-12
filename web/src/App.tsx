@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePath, linkProps } from './lib/router';
-import { QA, connectWallet, disconnect, qaRoles, restoreQa, selectQa, useWho } from './lib/signer';
+import { QA, connectWallet, disconnect, hasTestWallet, openTestWallet, qaRoles, restoreQa, restoreTestWallet, selectQa, useWho } from './lib/signer';
 import { readable } from './lib/chain';
 import { Mark } from './ui/kit';
 import { Landing } from './pages/Landing';
@@ -19,6 +19,13 @@ const NAV = [
 function WalletButton() {
   const who = useWho();
   const [err, setErr] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !(e.target as HTMLElement).closest('.wallet-pick') && setOpen(false);
+    addEventListener('click', close);
+    return () => removeEventListener('click', close);
+  }, [open]);
   if (QA) {
     const roles = qaRoles();
     return (
@@ -36,30 +43,54 @@ function WalletButton() {
   }
   if (who)
     return (
-      <button className="btn btn-ghost-light wallet" onClick={disconnect} title="Disconnect">
+      <button className="btn btn-ghost-light wallet" onClick={disconnect} title={who.kind === 'guest' ? 'Test wallet kept in this browser. Click to sign out; it stays here for next time.' : 'Disconnect'}>
         <span className="dot" /> {who.label}
       </button>
     );
   return (
-    <>
-      <button
-        className="btn btn-light"
-        onClick={() => connectWallet().catch((e) => setErr(readable(e)))}
-      >
+    <div className="wallet-pick">
+      <button className="btn btn-light" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}>
         Connect wallet
       </button>
+      {open && (
+        <div className="wallet-menu" role="menu" onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              openTestWallet();
+            }}
+          >
+            <b>{hasTestWallet() ? 'Your test wallet' : 'Test wallet'}</b>
+            <small>{hasTestWallet() ? 'Kept in this browser' : 'Made in this browser, funded in one tap'}</small>
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              connectWallet().catch((e) => setErr(readable(e)));
+            }}
+          >
+            <b>Browser wallet</b>
+            <small>Core or MetaMask on Fuji</small>
+          </button>
+        </div>
+      )}
       {err && (
         <div className="toast" role="alert" onClick={() => setErr(null)}>
           {err}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
 export function App() {
   const path = usePath();
-  useEffect(() => restoreQa(), []);
+  useEffect(() => {
+    restoreQa();
+    restoreTestWallet();
+  }, []);
   const dark = path === '/';
   let page;
   if (path.startsWith('/shop/')) page = <Checkout slug={decodeURIComponent(path.slice(6))} />;

@@ -9,5 +9,48 @@
   "norenMerchants": "0xE151590170cc22b8e34c93ABD43f9BAD26ddB039",
   "registrar": "0xf3876666123fC4A15b4503b17Dc8188481f1bDc4",
   "tUSDC": "0x788a627ceD9B795517A9c481A4377Ea0E26303A1",
-  "tWBTC": "0x04e7f9a2b3c793884Fb9a5C5F424a4739AA6e754"
+  "tWBTC": "0x04e7f9a2b3c793884Fb9a5C5F424a4739AA6e754",
+  "txs": {
+    "register_auditor": {
+      "hash": "0x2c5d6a09c59099f1b0422b63e2547580556b8e476291e3bd1f5e2164009f9209",
+      "by": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61",
+      "what": "auditor registers its eERC public key (Groth16 registration proof)"
+    },
+    "register_merchant": {
+      "hash": "0x0feb5875b4fe362b65e07d35e9d57d14e5ac2677781040d4812ea535f9eee99a",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "merchant registers its eERC public key (Groth16 registration proof)"
+    },
+    "set_auditor": {
+      "hash": "0xf13de5bdb1d84d5808938a99cb7281084c1687a8dc0e33e291f0654a17c66fc2",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "eERC owner sets the auditor key"
+    },
+    "open_shop": {
+      "hash": "0x256952109abf6529a2253e6f75fb2dc432170c20b810ae6cea61cb98428f083c",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "Harbor & Loom opens on Noren Merchant"
+    },
+    "list_item_0": {
+      "hash": "0xe3d501aab3f6a8fabfc928fb1a579073c409aae60fbfac27d9e4b41f2e55cdef",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "lists Linen tote at 24 tUSDC"
+    },
+    "list_item_1": {
+      "hash": "0xcf8c7c391bef14c69e41b7459c0f6ea27c93dee033dbd0f383bf6fd3552b6ebb",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "lists Waxed canvas apron at 36 tUSDC"
+    },
+    "list_item_2": {
+      "hash": "0x73ce4a61cb200171488d36d6fb68e0a13c9681bd17cf281a58822c9d0d1c21bf",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "lists Stoneware mug at 18 tUSDC"
+    },
+    "list_item_3": {
+      "hash": "0x6136dbf02e98fa05fe2746449c34d7cc3cb98b2617863eec2861944770dd375d",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "lists Wool throw at 64 tUSDC"
+    }
+  },
+  "auditor": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61"
 }

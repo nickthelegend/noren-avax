@@ -6,13 +6,14 @@ import { BASE, SHOTS as ROOT_SHOTS, qaPage, serve, withBrowser } from './harness
 const SHOTS = process.env.NOREN_SHOTS ?? ROOT_SHOTS;
 
 const routes = [
-  { name: 'landing', path: '/', as: 'customer' },
-  { name: 'checkout', path: '/shop/harbor-loom', as: 'customer' },
   { name: 'credit', path: '/credit', as: 'customer' },
+  { name: 'pay', path: '/shop/harbor-loom', as: 'customer' },
+  { name: 'debt-free', path: '/debt-free', as: 'customer' },
   { name: 'merchant', path: '/merchant', as: 'merchant', unlock: 'Decrypt revenue' },
   { name: 'auditor', path: '/auditor', as: 'auditor', unlock: 'Decrypt the ledger' },
   { name: 'auditor-other', path: '/auditor', as: 'customer' },
-  { name: 'accountant', path: '/auditor', as: 'accountant', unlock: 'Read my statements' },
+  { name: 'accountant', path: '/accountant', as: 'accountant', unlock: 'Read my statements' },
+  { name: 'merchant-accountant', path: '/accountant', as: 'merchant' },
 ];
 const only = process.argv[2];
 mkdirSync(SHOTS, { recursive: true });
@@ -26,11 +27,12 @@ try {
         const { page, ctx, errors } = await qaPage(browser, { width, height: width === 375 ? 812 : 900, as: r.as, mobile: width === 375 });
         await page.goto(BASE + r.path, { waitUntil: 'networkidle' });
         if (r.unlock) {
-          await page.getByRole('button', { name: r.unlock }).click();
-          await page.waitForSelector('table, .note', { timeout: 120_000 });
+          await page.getByRole('button', { name: r.unlock }).click({ timeout: 60_000 });
+          await page.waitForSelector('.nk-pill.live:text-is("Decrypted"), .nk-err', { timeout: 180_000 });
         }
         await page.waitForTimeout(6000);
         await page.evaluate(async () => {
+          document.querySelectorAll('[data-reveal]').forEach((e) => e.classList.add('in'));
           for (const img of document.querySelectorAll('img[loading="lazy"]')) img.loading = 'eager';
           await new Promise((res) => setTimeout(res, 800));
         });

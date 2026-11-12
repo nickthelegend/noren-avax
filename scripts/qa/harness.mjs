@@ -12,7 +12,7 @@ import { chromium } from 'playwright-core';
 import { withChromeLock } from '/Volumes/Extreme SSD/Projects/grokbot/orchestration/chrome-lock.mjs';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
-export const PORT = 5361;
+export const PORT = Number(process.env.NOREN_PORT ?? 5361);
 export const BASE = `http://127.0.0.1:${PORT}`;
 export const SHOTS = '/Volumes/Extreme SSD/Projects/grokbot/orchestration/shots/avax-noren';
 

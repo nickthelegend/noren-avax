@@ -1,88 +1,41 @@
 import { useEffect, useState } from 'react';
-import { usePath, linkProps } from './lib/router';
+import { addressUrl, readPool, readPrices } from '@noren-avax/sdk';
+import { go, linkProps, usePath } from './lib/router';
 import { QA, connectWallet, disconnect, hasTestWallet, openTestWallet, qaRoles, restoreQa, restoreTestWallet, selectQa, useWho } from './lib/signer';
-import { readable } from './lib/chain';
-import { Mark } from './ui/kit';
+import { D, pub, readable } from './lib/chain';
+import { useLoad } from './lib/hooks';
+import { Logo, Icon } from './ui/nk/brand';
 import { Landing } from './pages/Landing';
-import { Checkout } from './pages/Checkout';
-import { Merchant } from './pages/Merchant';
-import { Auditor } from './pages/Auditor';
-import { Credit } from './pages/Credit';
+import { CreditTab } from './app/CreditTab';
+import { PayTab } from './app/PayTab';
+import { DebtFreeTab } from './app/DebtFreeTab';
+import { MerchantTab } from './app/MerchantTab';
+import { AccountantTab } from './app/AccountantTab';
+import { AuditorTab } from './app/AuditorTab';
+import { CustomerSide } from './app/Side';
+import { Empty } from './app/common';
+import type { Market } from './app/market';
 
-const NAV = [
-  { path: '/shop/harbor-loom', label: 'Checkout', match: '/shop' },
-  { path: '/credit', label: 'Credit', match: '/credit' },
-  { path: '/merchant', label: 'Merchant', match: '/merchant' },
-  { path: '/auditor', label: 'Auditor', match: '/auditor' },
+type Tab = 'credit' | 'pay' | 'debt' | 'merchant' | 'accountant' | 'auditor';
+const PEOPLE: { k: Tab; l: string; path: string }[] = [
+  { k: 'credit', l: 'Credit', path: '/credit' },
+  { k: 'pay', l: 'Pay anyone', path: '/shop/harbor-loom' },
+  { k: 'debt', l: 'Debt-free', path: '/debt-free' },
+];
+const SHOPS: { k: Tab; l: string; path: string }[] = [
+  { k: 'merchant', l: 'Merchant', path: '/merchant' },
+  { k: 'accountant', l: 'Accountant', path: '/accountant' },
+  { k: 'auditor', l: 'Auditor', path: '/auditor' },
 ];
 
-function WalletButton() {
-  const who = useWho();
-  const [err, setErr] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => !(e.target as HTMLElement).closest('.wallet-pick') && setOpen(false);
-    addEventListener('click', close);
-    return () => removeEventListener('click', close);
-  }, [open]);
-  if (QA) {
-    const roles = qaRoles();
-    return (
-      <label className="qa-pick" title="QA build: Fuji test keys injected by the Playwright harness">
-        <span>QA signer</span>
-        <select value={who?.label ?? ''} onChange={(e) => selectQa(e.target.value)} aria-label="QA signer">
-          {roles.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-  }
-  if (who)
-    return (
-      <button className="btn btn-ghost-light wallet" onClick={disconnect} title={who.kind === 'guest' ? 'Test wallet kept in this browser. Click to sign out; it stays here for next time.' : 'Disconnect'}>
-        <span className="dot" /> {who.label}
-      </button>
-    );
-  return (
-    <div className="wallet-pick">
-      <button className="btn btn-light" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}>
-        Connect wallet
-      </button>
-      {open && (
-        <div className="wallet-menu" role="menu" onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
-          <button
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              openTestWallet();
-            }}
-          >
-            <b>{hasTestWallet() ? 'Your test wallet' : 'Test wallet'}</b>
-            <small>{hasTestWallet() ? 'Kept in this browser' : 'Made in this browser, funded in one tap'}</small>
-          </button>
-          <button
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              connectWallet().catch((e) => setErr(readable(e)));
-            }}
-          >
-            <b>Browser wallet</b>
-            <small>Core or MetaMask on Fuji</small>
-          </button>
-        </div>
-      )}
-      {err && (
-        <div className="toast" role="alert" onClick={() => setErr(null)}>
-          {err}
-        </div>
-      )}
-    </div>
-  );
+function tabOf(path: string): Tab | null {
+  if (path === '/credit') return 'credit';
+  if (path === '/pay' || path.startsWith('/shop/')) return 'pay';
+  if (path === '/debt-free') return 'debt';
+  if (path === '/merchant') return 'merchant';
+  if (path === '/accountant') return 'accountant';
+  if (path === '/auditor') return 'auditor';
+  return null;
 }
 
 export function App() {
@@ -91,67 +44,200 @@ export function App() {
     restoreQa();
     restoreTestWallet();
   }, []);
-  const dark = path === '/';
-  let page;
-  if (path.startsWith('/shop/')) page = <Checkout slug={decodeURIComponent(path.slice(6))} />;
-  else if (path === '/merchant') page = <Merchant />;
-  else if (path === '/auditor') page = <Auditor />;
-  else if (path === '/credit') page = <Credit />;
-  else if (path === '/') page = <Landing />;
-  else
-    page = (
-      <main className="wrap page-404">
-        <h1>Nothing here</h1>
-        <p className="sub">This page doesn’t exist.</p>
-        <div className="hero-cta">
-          <a className="btn btn-dark" {...linkProps('/')}>
-            Back to Noren
-          </a>
-          <a className="btn btn-quiet" {...linkProps('/shop/harbor-loom')}>
-            Try the checkout
-          </a>
-        </div>
-      </main>
-    );
+  useEffect(() => {
+    document.title = path === '/' ? 'Noren · Private checkout on Avalanche' : `Noren · ${[...PEOPLE, ...SHOPS].find((t) => t.k === tabOf(path))?.l ?? 'Not found'} on Avalanche`;
+  }, [path]);
+  if (path === '/') return <Landing />;
+  return <Shell path={path} />;
+}
+
+function Shell({ path }: { path: string }) {
+  const tab = tabOf(path);
+  const who = useWho();
+  const [wallet, setWallet] = useState(false);
+  const prices = useLoad(() => readPrices(pub as never, D), [], 60_000);
+  const pool = useLoad(() => readPool(pub as never, D), [], 60_000);
+  const market: Market = { prices, pool, connect: () => setWallet(true) };
+  const slug = path.startsWith('/shop/') ? decodeURIComponent(path.slice(6)) : 'harbor-loom';
+  const tabs = (set: typeof PEOPLE, label: string) => (
+    <div className="nk-tabs" role="tablist" aria-label={label}>
+      {set.map((t) => (
+        <button key={t.k} role="tab" aria-selected={tab === t.k} onClick={() => go(t.path)}>
+          {tab === t.k && <span className="nk-tab-pill" aria-hidden />}
+          <span className="nk-tab-l">{t.l}</span>
+        </button>
+      ))}
+    </div>
+  );
   return (
-    <div className={dark ? 'shell shell-dark' : 'shell'}>
-      <header className="top">
-        <div className="top-in">
-          <a className="brand" {...linkProps('/')} aria-label="Noren home">
-            <Mark />
-            <span>Noren</span>
-          </a>
-          <nav className="nav" aria-label="Main">
-            {NAV.map((n) => (
-              <a key={n.path} {...linkProps(n.path)} aria-current={path.startsWith(n.match) ? 'page' : undefined}>
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <div className="top-r">
-            <span className="net" title="Avalanche Fuji C-Chain (testnet)">
-              <i /> Fuji
-            </span>
-            <WalletButton />
-          </div>
+    <div className="nk nc na">
+      <header className="nk-nav">
+        <a className="nk-brand" {...linkProps('/')}>
+          <Logo size={30} />
+          <span>Noren</span>
+          <small>Avalanche</small>
+        </a>
+        <div className="na-tabsets">
+          {tabs(PEOPLE, 'Pay and borrow')}
+          {tabs(SHOPS, 'Shops and books')}
+        </div>
+        <div className="nk-right">
+          <span className="nk-net hide-s na-net">
+            <i className={prices.error ? '' : 'on'} />
+            Avalanche Fuji
+          </span>
+          <button className="nk-chip" onClick={() => setWallet(true)} aria-label={who ? `Wallet ${who.label}. Change wallet` : 'Connect a wallet'}>
+            <span className={`nk-ava ${who ? '' : 'na-ava-off'}`} aria-hidden />
+            {who ? who.label : 'Connect wallet'}
+          </button>
         </div>
       </header>
-      {page}
-      <footer className="foot">
-        <div className="wrap foot-in">
-          <span>
-            <Mark size={20} /> Noren on Avalanche Fuji. Test tokens only: tUSDC and tWBTC have no value.
-          </span>
-          <span className="foot-links">
-            <a href="https://github.com/ava-labs/EncryptedERC" target="_blank" rel="noreferrer">
-              Ava Labs eERC
-            </a>
-            <a href="https://docs.chain.link/data-feeds/price-feeds/addresses?network=avalanche&page=1" target="_blank" rel="noreferrer">
-              Chainlink feeds
-            </a>
-          </span>
+
+      <main className="nk-main">
+        <div className="nk-home">
+          {tab === 'credit' && <CreditTab market={market} />}
+          {tab === 'pay' && <PayTab slug={slug} market={market} />}
+          {tab === 'debt' && <DebtFreeTab market={market} />}
+          {tab === 'merchant' && <MerchantTab market={market} />}
+          {tab === 'accountant' && <AccountantTab market={market} />}
+          {tab === 'auditor' && <AuditorTab market={market} />}
+          {tab === null && (
+            <>
+              <div className="nk-home-main">
+                <section className="nk-card">
+                  <div className="nk-card-h">
+                    <div>
+                      <b>Nothing here</b>
+                      <p>This page doesn’t exist.</p>
+                    </div>
+                  </div>
+                  <Empty art="warning" title="No Noren page at this link" action={<>
+                    <a className="nk-btn" {...linkProps('/shop/harbor-loom')}>Pay a shop</a>
+                    <a className="nk-btn" {...linkProps('/')}>Back to Noren</a>
+                  </>}>
+                    Try paying Harbor &amp; Loom, or go back to the start.
+                  </Empty>
+                </section>
+              </div>
+              <CustomerSide market={market} />
+            </>
+          )}
         </div>
-      </footer>
+      </main>
+      <p className="nk-foot">
+        Avalanche Fuji only. tUSDC and tWBTC are test tokens with no value. Private amounts use Ava Labs eERC; prices come from Chainlink. <a {...linkProps('/')}>About Noren on Avalanche</a>
+      </p>
+      {wallet && <WalletSheet close={() => setWallet(false)} />}
+    </div>
+  );
+}
+
+function WalletSheet({ close }: { close: () => void }) {
+  const who = useWho();
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const known = hasTestWallet();
+  return (
+    <div className="nk-modal" role="dialog" aria-modal="true" aria-label="Your wallet" onClick={(e) => e.target === e.currentTarget && close()} onKeyDown={(e) => e.key === 'Escape' && close()}>
+      <div className="nk-sheet">
+        <div className="nk-sheet-h">
+          <b>{who ? 'Your wallet' : 'Connect a wallet'}</b>
+          <button className="nk-x" onClick={close} aria-label="Close">
+            ×
+          </button>
+        </div>
+        <div style={{ overflowY: 'auto' }}>
+          {who && (
+            <div className="nc-sheet-3d">
+              <span className="nk-ava" aria-hidden />
+              <p style={{ overflowWrap: 'anywhere' }}>
+                <b className="na-who">{who.label}</b>
+                <span className="mono">{who.address}</span>
+              </p>
+            </div>
+          )}
+          {QA ? (
+            <div className="nk-box">
+              <label htmlFor="qa-signer">QA signer · Fuji test keys from the harness</label>
+              <select id="qa-signer" className="nk-search" style={{ marginTop: 10 }} value={who?.label ?? ''} onChange={(e) => selectQa(e.target.value)}>
+                {qaRoles().map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <ul className="nk-list">
+              <li>
+                <button
+                  type="button"
+                  aria-selected={who?.kind === 'guest'}
+                  onClick={() => {
+                    openTestWallet();
+                    close();
+                  }}
+                >
+                  <span className="nk-ava" aria-hidden />
+                  <span>
+                    <b>{known ? 'Your test wallet' : 'Test wallet'}</b>
+                    <small>{known ? 'Kept in this browser' : 'Made in this browser, funded in one tap'}</small>
+                  </span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  aria-selected={who?.kind === 'wallet'}
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    setErr(null);
+                    try {
+                      await connectWallet();
+                      close();
+                    } catch (e) {
+                      setErr(readable(e));
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  <span className="nk-ava na-ava-core" aria-hidden />
+                  <span>
+                    <b>{busy ? 'Opening your wallet…' : 'Browser wallet'}</b>
+                    <small>Core or MetaMask, switched to Fuji</small>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          )}
+          {err && <p className="nk-err" role="alert">{err}</p>}
+          {who && (
+            <div className="na-btns">
+              <a className="nk-btn" href={addressUrl(who.address)} target="_blank" rel="noreferrer">
+                Open on Snowtrace <Icon.ext />
+              </a>
+              {!QA && (
+                <button
+                  className="nk-btn"
+                  onClick={() => {
+                    disconnect();
+                    close();
+                  }}
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
+          )}
+          <p className="nc-fine">
+            {who?.kind === 'guest'
+              ? 'The test wallet’s key stays in this browser. It holds Fuji test funds only; signing out keeps it here for next time.'
+              : 'No wallet? The test wallet works with nothing installed: NorenGasStation funds it with gas and test tokens in one tap.'}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

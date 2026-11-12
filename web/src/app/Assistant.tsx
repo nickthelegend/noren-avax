@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import type { Shop } from '@noren-avax/sdk';
 import { api } from '../lib/api';
 import { readable } from '../lib/chain';
-import type { Book } from '../pages/Merchant';
+import type { Book } from './MerchantTab';
+import { Card, Pill } from './common';
 
 // The merchant assistant. Claude (through Noren's API, which holds the key) asks for tools; the tools run here, over
 // the books this tab decrypted with the shop's key. Claude sees only the tool results it asks for.
@@ -115,45 +116,43 @@ export function Assistant({ shop, book }: { shop: Shop; book: Book }) {
   }
 
   return (
-    <section className="card">
-      <div className="card-h">
-        <h2>Ask about {shop.name}</h2>
-        <span className="chip">Claude</span>
+    <Card title={`Ask about ${shop.name}`} sub="Claude answers from your decrypted books; the tools run in this tab" art="receipt" pill={<Pill tone="live">Claude</Pill>}>
+      <div className="nk-pad">
+        {view.length === 0 && (
+          <div className="nk-band na-suggest" aria-label="Suggested questions">
+            {SUGGEST.map((s) => (
+              <button key={s} type="button" onClick={() => ask(s)} disabled={busy}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        {view.length > 0 && (
+          <div className="na-chat" aria-live="polite">
+            {view.map((v, i) => (
+              <div key={i} className={`na-msg na-${v.kind}`} title={v.kind === 'tool' ? 'Ran in this tab over your decrypted books' : undefined}>
+                {v.kind === 'tool' ? <span className="mono">ran {v.text}</span> : v.text}
+              </div>
+            ))}
+            {busy && <div className="na-msg na-bot na-thinking">Thinking…</div>}
+            <div ref={end} />
+          </div>
+        )}
+        <form
+          className="nk-box na-ask"
+          onSubmit={(e) => {
+            e.preventDefault();
+            ask(q);
+          }}
+        >
+          <input className="nc-addr na-sans" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask about your sales" maxLength={300} aria-label="Ask about your sales" />
+          <button className="nk-btn na-kaki" disabled={busy || !q.trim()}>
+            Ask
+          </button>
+        </form>
+        {err && <p className="nk-err">{err}</p>}
+        <p className="nc-fine">Your key and books stay in this tab. Claude sees only what the tools return.</p>
       </div>
-      {view.length === 0 && (
-        <div className="chat-ask">
-          {SUGGEST.map((s) => (
-            <button key={s} onClick={() => ask(s)} disabled={busy}>
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-      {view.length > 0 && (
-        <div className="chat" aria-live="polite">
-          {view.map((v, i) => (
-            <div key={i} className={`chat-msg chat-${v.kind}`} title={v.kind === 'tool' ? 'Ran in this tab over your decrypted books' : undefined}>
-              {v.kind === 'tool' ? `ran ${v.text}` : v.text}
-            </div>
-          ))}
-          {busy && <div className="chat-msg chat-bot faint">Thinking…</div>}
-          <div ref={end} />
-        </div>
-      )}
-      <form
-        className="chat-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          ask(q);
-        }}
-      >
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask about your sales" maxLength={300} aria-label="Ask about your sales" />
-        <button className="btn btn-dark" disabled={busy || !q.trim()}>
-          Ask
-        </button>
-      </form>
-      {err && <p className="err">{err}</p>}
-      <p className="muted small">Your key and books stay in this tab. Claude sees only what the tools above return.</p>
-    </section>
+    </Card>
   );
 }

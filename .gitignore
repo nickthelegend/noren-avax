@@ -16,3 +16,4 @@ playwright-report/
 test-results/
 web/public/circuits/
 .anvil/
+deployments/fuji-hub.json

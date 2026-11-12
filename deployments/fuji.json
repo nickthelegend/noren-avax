@@ -50,6 +50,136 @@
       "hash": "0x6136dbf02e98fa05fe2746449c34d7cc3cb98b2617863eec2861944770dd375d",
       "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
       "what": "lists Wool throw at 64 tUSDC"
+    },
+    "gas_hub": {
+      "hash": "0x85a957739420583e54210be4604686cf9f2734ef2e7f6794348882b76ee081e8",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deployer sends 0.004 AVAX for gas to the hub account"
+    },
+    "gas_relayer": {
+      "hash": "0x0385bc97e5a9df15b60f3c4ee4092b4a5b3c9553232669d8dd9d3eba2790808e",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deployer sends 0.006 AVAX for gas to the relayer account"
+    },
+    "gas_merchant2": {
+      "hash": "0x5ab810824dbc46cb1fd916fde61e86cd478c1eead597da367662e7d59dfeb102",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deployer sends 0.002 AVAX for gas to the merchant2 account"
+    },
+    "gas_merchant3": {
+      "hash": "0x0f4dda2198f389f40785ebfbcacff77487b6c5fa63b55db77b37ba5e3fcb72b3",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deployer sends 0.002 AVAX for gas to the merchant3 account"
+    },
+    "gas_accountant": {
+      "hash": "0x009cb734f0d67d4a397bd53ab1c3c72a362ff6b23de872c43d6f6ca9a2123770",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deployer sends 0.002 AVAX for gas to the accountant account"
+    },
+    "register_hub": {
+      "hash": "0xd25af7e93e514b7465753282b94c8b4ded93fbd1adbb6a29b0e9afca923cd4ec",
+      "by": "0x58e374A4c704f1806BAbD04726FB60e86e76A6A7",
+      "what": "hub registers its eERC public key (Groth16 registration proof)"
+    },
+    "register_merchant2": {
+      "hash": "0x35b4594e312c182705193f43d9795e914cfc98bb764875ea65ebbfe7a41ec68b",
+      "by": "0xB29f8351fefE4F7b7594907e36079c469f1C3745",
+      "what": "merchant2 registers its eERC public key (Groth16 registration proof)"
+    },
+    "register_merchant3": {
+      "hash": "0xa4b2fb11c0ff1cd3b4cf9cdac50d846303ac90ab606d883cf127c3a2916ba3c8",
+      "by": "0xC836A53D22F0435aE4065Db4304A82D1b70eBFaf",
+      "what": "merchant3 registers its eERC public key (Groth16 registration proof)"
+    },
+    "register_accountant": {
+      "hash": "0x73962da6409a3a9692a371a0eeaad07b20b5ba0596a80d76b287f699ce39066f",
+      "by": "0x05165314E8EC0c0DfD7B33685592BB053648d36d",
+      "what": "accountant registers its eERC public key (Groth16 registration proof)"
+    },
+    "open_kiln-row": {
+      "hash": "0x087a3242c9b438332975d32af411ac2783d3f161f79be22c397cdd57d59aeabf",
+      "by": "0xB29f8351fefE4F7b7594907e36079c469f1C3745",
+      "what": "Kiln Row opens on Noren Merchant"
+    },
+    "list_kiln-row_0": {
+      "hash": "0xfe95d1a09a4d4659ebd3e73a0243b07c364fc37dcf163cc4afa9e277eb44d434",
+      "by": "0xB29f8351fefE4F7b7594907e36079c469f1C3745",
+      "what": "Kiln Row lists Speckled bowl at 22 tUSDC"
+    },
+    "list_kiln-row_1": {
+      "hash": "0x533eeb6363f8814e80610b149465a31d5d0af8bf5d82a9aa39fde881ae3c4252",
+      "by": "0xB29f8351fefE4F7b7594907e36079c469f1C3745",
+      "what": "Kiln Row lists Pour-over cone at 28 tUSDC"
+    },
+    "list_kiln-row_2": {
+      "hash": "0xdeb89e578d491fb9bacd0811fabed2ecc7520e8a2b8b9b2402c5353e3c1720ca",
+      "by": "0xB29f8351fefE4F7b7594907e36079c469f1C3745",
+      "what": "Kiln Row lists Bud vase at 16 tUSDC"
+    },
+    "open_paper-lantern": {
+      "hash": "0x7d06e816dd368704a536f4f28899625b53f1b8d1a0c7de9ff9259920a1e1e2e9",
+      "by": "0xC836A53D22F0435aE4065Db4304A82D1b70eBFaf",
+      "what": "Paper Lantern opens on Noren Merchant"
+    },
+    "list_paper-lantern_0": {
+      "hash": "0x2def03366f048d9f0b00d9f982055dd44cd4480707a0dd047a118c8165c25600",
+      "by": "0xC836A53D22F0435aE4065Db4304A82D1b70eBFaf",
+      "what": "Paper Lantern lists Washi notebook at 14 tUSDC"
+    },
+    "list_paper-lantern_1": {
+      "hash": "0xaf918438a6d7cd11eac4e169db6ad103a9c4f5c0eb24863858cabdf462e76faa",
+      "by": "0xC836A53D22F0435aE4065Db4304A82D1b70eBFaf",
+      "what": "Paper Lantern lists Brass pen at 32 tUSDC"
+    },
+    "list_paper-lantern_2": {
+      "hash": "0xe85b0361fbcf352a7456e7e720329c9090fbb921812a02878e73bc76541efc81",
+      "by": "0xC836A53D22F0435aE4065Db4304A82D1b70eBFaf",
+      "what": "Paper Lantern lists Letterpress cards at 12 tUSDC"
+    },
+    "hub_deploy_0": {
+      "hash": "0x8123f47374d0e7c6baf2d74a3b9a510b0e3287c10bac7f15397ca6de6f40ce87",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deploy NorenSettlement"
+    },
+    "hub_deploy_1": {
+      "hash": "0x4d4e8cf35fb3cedffee93236910fe476fd8f9268c4c431c55c693fe2340a75d4",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "deploy NorenGasStation"
+    },
+    "hub_deploy_2": {
+      "hash": "0x27994f8a30c22cdc4ace78771cda98a4caad74a55a6c81d79bc3d29447886ee0",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "mint(address,uint256) (station stock or AVAX)"
+    },
+    "hub_deploy_3": {
+      "hash": "0xad7c59012608ec39d3a1ba6c3db14bf46960f9d059427fe80907479aca0c270b",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "mint(address,uint256) (station stock or AVAX)"
+    },
+    "hub_deploy_4": {
+      "hash": "0x0da1960d3cbf6ad74e1a8bc26a67eed15e76f819cf1a3521ae62e7a3afa1d2e8",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "call (station stock or AVAX)"
+    },
+    "set_accountant": {
+      "hash": "0x82ff349b022b5804e0bdb259016039e8f157b6f9f75fcf1cf3073ea60bb79be5",
+      "by": "0x4E3952B0aAB4CC3EC3aC1AbB6bE98c604D919FC5",
+      "what": "Harbor & Loom names its accountant in NorenSettlement"
+    },
+    "station_stock_usdc": {
+      "hash": "0x5b2dcc4c0801df38c01be42aa5f65c157291c3fe918eb1de87615d64423f0dd3",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "mint 15000 tUSDC into NorenGasStation"
+    },
+    "station_stock_wbtc": {
+      "hash": "0x7c2cacdaa4a42dfd8f87fe1fd7d5a9c21529b1c34dc669a685371c1447ba2f4c",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "mint 1.5 tWBTC into NorenGasStation"
+    },
+    "station_topup_hub": {
+      "hash": "0x39d9d6b6efa0cae960baec2032c5a59e171a5f36b915f7aa7281da5a82e9b37b",
+      "by": "0x25caFd8dA001EEAC9b80931cA3079e08c44124Ed",
+      "what": "Avalanche funding hub sends 0.03 AVAX to NorenGasStation"
     }
   },
   "auditor": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61",
@@ -270,5 +400,11 @@
       "address": "0xe151590170cc22b8e34c93abd43f9bad26ddb039",
       "fn": null
     }
-  ]
+  ],
+  "hub": "0x58e374A4c704f1806BAbD04726FB60e86e76A6A7",
+  "hubDeployBlock": 60951969,
+  "norenGasStation": "0x5e8A47127F06b6ec93f2b49FB79768D561887513",
+  "norenSettlement": "0x096Bb172202953FF4D5f4d570CEFD815bc4C6558",
+  "relayer": "0x3452fE8B3999761d6E889cbc130571A5951e19A9",
+  "accountant": "0x05165314E8EC0c0DfD7B33685592BB053648d36d"
 }

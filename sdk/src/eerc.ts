@@ -211,9 +211,9 @@ export class NorenPrivate {
       try {
         const t = await this.pub.getTransaction({ hash: tx });
         const call = decodeFunctionData({ abi: encryptedErcAbi, data: t.input });
-        const proof = (call.args as unknown[])[2] as { publicSignals: readonly bigint[] };
+        const proof = (call.args as unknown as unknown[])[2] as { publicSignals: readonly bigint[] };
         p.cents = this.eerc.decryptPCT(proof.publicSignals.slice(16, 23) as bigint[]);
-        if ((call.args as unknown[]).length > 4) p.memo = await this.memo(tx, l.blockNumber!, merchant);
+        if ((call.args as unknown as unknown[]).length > 4) p.memo = await this.memo(tx, l.blockNumber!, merchant);
       } catch (e) {
         p.error = (e as Error).message;
       }

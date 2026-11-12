@@ -1,0 +1,43 @@
+# Noren's API (settlement hub + gas relay + assistant) on the hackathon VPS, behind Coolify's Traefik.
+# Server layout: /opt/hk/noren-avax/{app/ (git archive of HEAD), .env (mode 600), circuits/ (Ava Labs eERC circuits)}.
+# .env holds only NOREN_HUB_KEY, NOREN_RELAYER_KEY, NOREN_GAS_SALT and ANTHROPIC_API_KEY (read by name, never printed).
+# Redeploy: cd /opt/hk/noren-avax/app && docker compose -f deploy/docker-compose.yml up -d --build
+# Only one hub may run: never start the hub on the Mac with the same key while this is up.
+name: noren-avax
+services:
+  api:
+    build: { context: .., dockerfile: deploy/Dockerfile }
+    image: hk-noren-avax:latest
+    restart: unless-stopped
+    networks: [coolify]
+    mem_limit: 640m
+    memswap_limit: 900m
+    cpus: 0.75
+    environment:
+      NOREN_ENV_FILE: /app/.env
+      NOREN_CIRCUITS: /app/circuits
+      NOREN_STATE: /app/state/state.json
+      NOREN_SETTLE_EVERY: "180"
+      NOREN_COVER_MIN: "3"
+    volumes:
+      - /opt/hk/noren-avax/.env:/app/.env:ro
+      - /opt/hk/noren-avax/circuits:/app/circuits:ro
+      - noren-avax-state:/app/state
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5370/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.hk-noren-avax.rule=Host(`noren-avax-api.201-18-198-162.sslip.io`)
+      - traefik.http.routers.hk-noren-avax.entrypoints=https
+      - traefik.http.routers.hk-noren-avax.tls=true
+      - traefik.http.routers.hk-noren-avax.tls.certresolver=letsencrypt
+      - traefik.http.services.hk-noren-avax.loadbalancer.server.port=5370
+volumes:
+  noren-avax-state:
+networks:
+  coolify:
+    external: true

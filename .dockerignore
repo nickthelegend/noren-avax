@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+.env
+.env.*
+web/dist
+web/dist-qa
+web/public/circuits
+contracts
+.anvil
+.hub

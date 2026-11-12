@@ -1,3 +1,4 @@
+/// <reference path="./blake-hash.d.ts" />
 // Noren's settlement hub, shared by the hub service, the web app and the tests.
 //
 // Customers pay the hub (an eERC account) instead of the shop, with a note encrypted to the hub that names the shop
@@ -268,4 +269,63 @@ export function gasDigest(chainId: number, station: Address, to: Address, deadli
 /** The text a hub receipt signature covers (EIP-191, signed by the hub key named in NorenSettlement.hub()). */
 export function receiptText(r: { tx: Hex; shopId: number; cents: string; order: string; chainId: number }): string {
   return `Noren receipt\nchain ${r.chainId}\npayment ${r.tx.toLowerCase()}\nshop ${r.shopId}\namount ${r.cents}\norder ${r.order}`;
+}
+
+/**
+ * The eERC auditor's check of one batch: decrypt its auditor copy, then hold every line against the auditor
+ * ciphertext of the transfer it names. `amountOf` returns what the auditor key decrypts for a transfer (or null).
+ */
+export function auditBatch(
+  b: BatchRecord,
+  aud: AuditorStatement,
+  payouts: PayoutRecord[],
+  amountOf: (tx: Hex) => bigint | null,
+): { problems: string[]; paidIn: bigint; paidOut: bigint; shops: number; cover: number } {
+  const problems: string[] = [];
+  let paidIn = 0n;
+  let paidOut = 0n;
+  let cover = 0;
+  const seen = new Map<string, number>();
+  const low = (h: string) => h.toLowerCase();
+  if (aud.batch !== b.batchId) problems.push(`statement is for batch ${aud.batch}`);
+  for (const p of aud.payouts) {
+    const st = parseStatement(p.statement);
+    if (!st) {
+      problems.push(`shop ${p.shop}: unreadable statement`);
+      continue;
+    }
+    if (st.cover) cover++;
+    const rec = payouts.find((x) => low(x.payoutTx) === low(p.payoutTx));
+    if (!rec) problems.push(`shop ${p.shop}: payout not recorded in this batch`);
+    else if (rec.digest !== statementDigest(p.statement)) problems.push(`shop ${p.shop}: statement digest differs from the chain`);
+    const out = amountOf(p.payoutTx);
+    if (out == null) problems.push(`shop ${p.shop}: payout amount unreadable`);
+    else {
+      paidOut += out;
+      problems.push(...checkStatement(st, out).map((m) => `shop ${p.shop}: ${m}`));
+    }
+    for (const it of st.items) {
+      seen.set(low(it.tx), (seen.get(low(it.tx)) ?? 0) + 1);
+      const a = amountOf(it.tx);
+      if (a !== BigInt(it.cents)) problems.push(`payment ${it.tx.slice(0, 10)}…: statement says ${it.cents}, ciphertext ${a ?? 'unreadable'}`);
+    }
+  }
+  for (const r of aud.refunds) {
+    seen.set(low(r.tx), (seen.get(low(r.tx)) ?? 0) + 1);
+    const a = amountOf(r.tx);
+    const back = amountOf(r.refundTx);
+    if (a == null || a !== back) problems.push(`refund ${r.refundTx.slice(0, 10)}…: returns ${back ?? '?'} of ${a ?? '?'}`);
+    if (back != null) paidOut += back;
+  }
+  for (const tx of b.payments) {
+    const a = amountOf(tx);
+    if (a == null) problems.push(`payment ${tx.slice(0, 10)}…: unreadable`);
+    else paidIn += a;
+    const n = seen.get(low(tx)) ?? 0;
+    // A zero transfer with no note needs no line; anything else must appear exactly once.
+    if (n !== 1 && !(n === 0 && a === 0n)) problems.push(`payment ${tx.slice(0, 10)}… appears ${n} times`);
+  }
+  for (const tx of seen.keys()) if (!b.payments.some((p) => low(p) === tx)) problems.push(`line ${tx.slice(0, 10)}… is not a payment of this batch`);
+  if (paidIn !== paidOut) problems.push(`paid in ${paidIn}, paid out ${paidOut}`);
+  return { problems, paidIn, paidOut, shops: aud.payouts.length, cover };
 }

@@ -1,7 +1,9 @@
 // Screenshots of every route at 1440 and 375 from the QA build, with overflow and console-error checks.
 // Unlocking a private view is a local signature (no transaction).
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { BASE, SHOTS, qaPage, serve, withBrowser } from './harness.mjs';
+import { BASE, SHOTS as ROOT_SHOTS, qaPage, serve, withBrowser } from './harness.mjs';
+
+const SHOTS = process.env.NOREN_SHOTS ?? ROOT_SHOTS;
 
 const routes = [
   { name: 'landing', path: '/', as: 'customer' },
@@ -10,6 +12,7 @@ const routes = [
   { name: 'merchant', path: '/merchant', as: 'merchant', unlock: 'Decrypt revenue' },
   { name: 'auditor', path: '/auditor', as: 'auditor', unlock: 'Decrypt the ledger' },
   { name: 'auditor-other', path: '/auditor', as: 'customer' },
+  { name: 'accountant', path: '/auditor', as: 'accountant', unlock: 'Read my statements' },
 ];
 const only = process.argv[2];
 mkdirSync(SHOTS, { recursive: true });

@@ -50,7 +50,7 @@ export async function withBrowser(fn) {
 
 export async function qaPage(browser, { width = 1440, height = 900, as = 'customer', mobile = false } = {}) {
   const e = env();
-  const keys = { customer: e.NOREN_CUSTOMER_KEY, merchant: e.NOREN_MERCHANT_KEY, auditor: e.NOREN_AUDITOR_KEY };
+  const keys = { customer: e.NOREN_CUSTOMER_KEY, merchant: e.NOREN_MERCHANT_KEY, auditor: e.NOREN_AUDITOR_KEY, accountant: e.NOREN_ACCOUNTANT_KEY };
   const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
   await ctx.addInitScript(([k, who]) => {
     window.__NOREN_QA__ = { keys: k };

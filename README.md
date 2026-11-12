@@ -11,6 +11,8 @@ its own key, its accountant gets a copy encrypted to the accountant's key, and t
 
 **Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
 
+Every screen and state, scored at 1440 and 375: [`docs/SCREEN-AUDIT.md`](docs/SCREEN-AUDIT.md).
+
 | Paid through the hub, receipt signed | Merchant: payouts checked ✓, assistant | Auditor: every batch checked ✓ |
 |---|---|---|
 | ![Checkout receipt](docs/img/hub-judge-2-settled.jpg) | ![Merchant](docs/img/hub-merchant-1440.jpg) | ![Auditor](docs/img/hub-auditor-1440.jpg) |

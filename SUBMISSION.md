@@ -59,6 +59,7 @@ Not used: ICM / ICTT (optional in the brief; not built), mainnet, a custom L1.
 - Repo: (to be pushed by Nick)
 - Demo video (≤ 3 min): (to be recorded)
 - Slides: `docs/SLIDES.md`
+- Screen audit (every route and state at 1440 and 375): `docs/SCREEN-AUDIT.md`
 - Contracts on Snowtrace:
   - EncryptedERC: https://testnet.snowtrace.io/address/0x35f9E1A8f9e570b5C1f12bdE4202683878867153#code
   - Registrar: https://testnet.snowtrace.io/address/0xf3876666123fC4A15b4503b17Dc8188481f1bDc4#code

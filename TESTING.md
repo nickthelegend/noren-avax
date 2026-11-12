@@ -15,6 +15,7 @@ Fuji, and the live demo sends real Fuji transactions from the web app.
 | `hub.test.ts` | Local Anvil, Deploy + DeployHub, real proofs, the hub service's own code (`hub/src`) | 12 | `node --test --test-force-exit scripts/anvil/hub.test.ts` |
 | Judge path | Avalanche Fuji, the hosted production site, a fresh browser and test wallet (no QA signer, no local keys) | 1 run, every step | `node scripts/qa/judge.mjs` |
 | Live demo | Avalanche Fuji, through the web app with the QA signer | 5 steps | `node scripts/qa/demo.mjs` |
+| Screen states | Production build (or the hosted site with `NOREN_URL`), no keys: every route signed out, a fresh test wallet, wallet menu, unknown shop, 404 | 11 states × 2 widths | `node scripts/qa/states.mjs` |
 
 Last run (Nov 12 2026, settlement-hub round): 77 passed in `forge test` (the 4 fork tests skip unless
 `NOREN_FORK=1`), 10 of 10 in `privacy.test.ts` and 12 of 12 in `hub.test.ts`, **each Anvil suite five times in a row,
@@ -134,3 +135,7 @@ step's transactions to `deployments/fuji.json` under `demo`. See the README for 
 `node scripts/qa/shots.mjs` captures every route at 1440 and 375 px into
 `/Volumes/Extreme SSD/Projects/grokbot/orchestration/shots/avax-noren/` and checks horizontal overflow and console
 errors (`report.json`). Copies used in this repo are in `docs/img/`.
+
+Ship round (Nov 12, after the redeploy): `NOREN_URL=https://noren-avax.vercel.app node scripts/qa/states.mjs` → 22 of
+22 shots with 0 console errors and 0 px overflow at 1440 and 375; `shots.mjs` (the signed-in roles) 14 of 14 the same.
+Per-screen scores: `docs/SCREEN-AUDIT.md`.

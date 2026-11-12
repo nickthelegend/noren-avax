@@ -87,7 +87,8 @@ export function MerchantTab({ market }: { market: Market }) {
         lines: lines.sort((a, b) => b.time - a.time),
         payouts: payouts.sort((a, b) => b.time - a.time),
         balance: bal.cents,
-        withdrawn: wlogs.map((l) => ({ hash: l.transactionHash!, cents: (l.args.amount as bigint) / 10_000n, time: times.get(String(l.blockNumber)) ?? 0 })),
+        // eERC's Withdraw event reports the amount in eERC units (2 decimals), i.e. cents.
+        withdrawn: wlogs.map((l) => ({ hash: l.transactionHash!, cents: l.args.amount as bigint, time: times.get(String(l.blockNumber)) ?? 0 })),
       };
     },
     [who?.address, unlocked, ver, shop?.id],

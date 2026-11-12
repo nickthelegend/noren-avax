@@ -25,7 +25,7 @@ export function CreditSheet({ action, close, connect }: { action: CreditAct; clo
   const p = a?.pos;
   const pick = action === 'deposit' || action === 'withdraw';
   const unit = action === 'borrow' || action === 'repay' ? 'tUSDC' : asset === 'btc' ? 'tWBTC' : 'AVAX';
-  const placeholder = action === 'deposit' ? (asset === 'btc' ? '0.01' : '0.005') : action === 'repay' ? 'Everything owed' : action === 'borrow' ? (p ? (u6(p.available)! > 0 ? Math.min(20, Math.floor(u6(p.available)!)).toFixed(2) : '0.00') : '20.00') : '0.00';
+  const placeholder = action === 'deposit' ? (asset === 'btc' ? '0.01' : '0.005') : action === 'repay' ? (p && p.debt > 0n ? (Math.ceil(Number(p.debt) / 1e4) / 100).toFixed(2) : '0.00') : action === 'borrow' ? (p ? (u6(p.available)! > 0 ? Math.min(20, Math.floor(u6(p.available)!)).toFixed(2) : '0.00') : '20.00') : '0.00';
 
   async function run() {
     if (!who) return connect();

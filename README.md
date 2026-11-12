@@ -11,33 +11,46 @@ its own key, its accountant gets a copy encrypted to the accountant's key, and t
 
 **Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
 
+**Demo film (2:59.9):** recorded live in one take on the hosted app and Fuji: a fresh test wallet pays Harbor & Loom
+privately, then on credit, the hub settles the batch, the shop, its accountant and the eERC auditor read it, and the
+customer repays. File: `videos/noren-avax/noren-avax-film.mp4` in the hackathon workspace (upload link in SUBMISSION).
+
 Every screen and state, scored at 1440 and 375: [`docs/SCREEN-AUDIT.md`](docs/SCREEN-AUDIT.md).
 
-| Paid through the hub, receipt signed | Merchant: payouts checked ✓, assistant | Auditor: every batch checked ✓ |
+The app wears Noren on NEAR's approved UI (same system, same components, see [Prior work](#prior-work-disclosure)):
+Credit · Pay anyone · Debt-free for customers, Merchant · Accountant · Auditor for shops and their books.
+
+| Pay anyone: a shop, privately or on credit | Merchant: orders decrypted, payouts checked ✓, assistant | Auditor: every batch checked ✓ |
 |---|---|---|
-| ![Checkout receipt](docs/img/hub-judge-2-settled.jpg) | ![Merchant](docs/img/hub-merchant-1440.jpg) | ![Auditor](docs/img/hub-auditor-1440.jpg) |
+| ![Pay anyone](docs/img/pay-1440.jpg) | ![Merchant](docs/img/merchant-1440.jpg) | ![Auditor](docs/img/auditor-1440.jpg) |
+
+| Credit: limit, health bar, collateral at Chainlink prices | Debt-free: repay and release | Accountant: statements checked against the chain |
+|---|---|---|
+| ![Credit](docs/img/credit-1440.jpg) | ![Debt-free](docs/img/debt-free-1440.jpg) | ![Accountant](docs/img/accountant-1440.jpg) |
 
 - **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, check each payout,
   name an accountant, ask the assistant about your sales, withdraw.
-- **Noren app**: the checkout (pay with tUSDC or with credit) and the credit line.
+- **Noren app**: Pay anyone (a shop's checkout, paid from a private tUSDC balance or on credit), the credit line
+  and Debt-free (repay, release collateral).
 - **Noren hub** (`hub/`): the settlement hub, the gas-station relay and the assistant's Claude proxy, on a VPS.
 - **Noren SDK** (`sdk/`): the eERC private-payment rail, notes and statements, the hub records and the credit reads.
 
 ## Try it in a minute, with no wallet and no AVAX
 
-1. Open https://noren-avax.vercel.app/shop/harbor-loom, **Connect wallet → Test wallet** (a fresh Fuji key kept in
-   your browser).
+1. Open https://noren-avax.vercel.app/shop/harbor-loom (the **Pay anyone** tab), press **Connect wallet** (the pill
+   top right) → **Test wallet** (a fresh Fuji key kept in your browser).
 2. Press **Pay 24.00 tUSDC**. The first step is NorenGasStation's starter pack: one relayed transaction sends the new
    wallet gas, 100 tUSDC and 0.01 tWBTC. Then the page registers your eERC key, tops up and pays the hub privately. The
    receipt shows the hub's signature and, after the next batch (every 3 minutes, on the clock), "Settled".
-3. **Merchant → Open shop** (filled in for you), then **Use this wallet** as accountant, pay your own shop from its
-   checkout, and after the batch read the revenue, the payout check (✓) and the statement. Ask the assistant
-   "How much did I make this week?".
-4. **Auditor → Read my statements**: the accountant's view of the same payouts.
+3. **Merchant → Open shop** (filled in for you), then **Accountant → Use this wallet**, pay your own shop from Pay
+   anyone, and after the batch read the revenue, the payout check (✓) and the statement in **Merchant**. Ask the
+   assistant "How much did I make this week?".
+4. **Accountant → Read my statements**: the accountant's view of the same payouts.
+5. **Debt-free → Repay**: after paying on credit, repay in full and withdraw the collateral.
 
-**Pay with credit** works the same way from the same wallet (it borrows against the tWBTC from the starter pack). The
-global eERC auditor view needs the auditor key; its screenshot is above (`docs/img/hub-auditor-1440.jpg`). Judge-run
-screenshots: `docs/img/hub-judge-*.jpg`.
+**Pay with → Credit** works the same way from the same wallet (it borrows against the tWBTC from the starter pack). The
+global eERC auditor view needs the auditor key; its screenshot is above (`docs/img/auditor-1440.jpg`). Judge-run
+screenshots from the earlier UI: `docs/img/hub-judge-*.jpg`.
 
 ## Live on Avalanche Fuji
 
@@ -113,11 +126,15 @@ browser. Screenshots of each step are in `docs/img/`.
 | 5. Customer repays the credit line in full | customer | approve tUSDC: [`0x51d50365…`](https://testnet.snowtrace.io/tx/0x51d503658026ff10b7f000fafa48fb75f6bce26b78b3910b9131b29be6b9722f)<br>repay in full: [`0xea2a053d…`](https://testnet.snowtrace.io/tx/0xea2a053dfb815c2f8fca27305180e53453728220fc3f1bbc0ec494f0a27d1c47) |
 <!-- /demo -->
 
+Screenshots of this first run, in the earlier UI:
+
 | Merchant: revenue decrypted locally | Auditor: the ledger | Credit line after repayment |
 |---|---|---|
 | ![Merchant dashboard](docs/img/demo-3-merchant-withdraw.jpg) | ![Auditor ledger](docs/img/demo-4-auditor.jpg) | ![Credit line](docs/img/demo-5-repay.jpg) |
 
-Every route at 1440 and 375 px: `docs/img/<route>-<width>.jpg` (no horizontal overflow, no console errors).
+Every route at 1440 and 375 px in the current UI: `docs/img/<route>-<width>.jpg` (landing, credit, pay, debt-free,
+merchant, accountant, auditor, wallet sheet, fresh test wallet; no horizontal overflow, no console errors). Side-by-side
+contact sheets against the approved NEAR screens: [`docs/SCREEN-AUDIT.md`](docs/SCREEN-AUDIT.md).
 
 One-time setup (scripts/fuji/setup.ts):
 
@@ -265,6 +282,11 @@ registered with the eERC Registrar, so every shop can be paid privately.
 - Deposits and withdrawals are public, and eERC deposit ciphertexts use fixed randomness (an upstream design note).
 - Payments made before the hub (the first live demo below) went straight to the shop and show the customer's address.
 - The pool is seeded by the deployer; there is no lender interface in this build.
+- **Payout statements are not padded yet.** A payout's amount is encrypted, but its statement (encrypted to the shop
+  and the accountant) grows with the number of orders. So on Snowtrace a zero-value cover payout carries less data
+  and a slightly lower fee than a real one, and a payout's size hints at how many orders it settles (found by the
+  film's independent judge, Nov 13: batch #7's real payout is 2181 bytes against 1989 for its covers). The fix is to
+  pad every statement to one fixed size in the hub; until then covers hide amounts, not which payouts are real.
 
 ## Run it
 
@@ -298,15 +320,21 @@ Tests: [TESTING.md](TESTING.md) (77 Foundry tests, 4 Fuji-fork tests, 22 Anvil e
 ## Prior work (disclosure)
 
 Noren existed before this hackathon. What came from earlier Noren work:
-- **Product, positioning and design language** from the NEAR edition (repo `noren-near`, branch `near`, Nov 6 to 12
-  2026): the credit app (borrow and pay a shop), the credit card and health-bar layout, the checkout split page, the
-  cream-and-dark look, the Urbanist and Space Mono pair and the persimmon accent. The NEAR edition's indigo lacquer is
-  not reused; this build has its own palette and a new 3D object set.
+- **UI from Noren on NEAR** (repo `noren-near`, branch `near`, `packages/web`, Nov 6 to 12 2026). Since Nov 13 the web
+  app uses the NEAR edition's approved UI as is: its stylesheets (`styles.css`, `app-base.css`, `near.css`,
+  `landing.css`, copied verbatim into `web/src/ui/nk/`), its brand, ambient, 3D-object and logo components, its navy
+  lacquer 3D art and mark, its fonts, and its layout (centred pill tabs, the credit hero and health bar, The contract
+  and Activity side cards, sheets, the night-hero landing). Only the chain layer and the labels differ (NEAR →
+  Avalanche, NearBlocks → Snowtrace, Meteor → the test wallet, Core or MetaMask), and Avalanche-only screens (Merchant,
+  Accountant, Auditor, the hub receipt, the assistant) are built from the same components; their additions live in
+  `web/src/ui/nk/avax.css`. Before Nov 13 this build had its own warm-black look (see `docs/img/hub-*.jpg`).
+- **Product and positioning** also come from the NEAR edition: the credit app (borrow and pay a shop) and the
+  debt-free view.
 - **Earlier EVM versions** of Noren (branches `wif`, Arc, Robinhood Chain) had a Solidity credit line
   (`NorenCreditLine`) on a different design. It informed the shape of `NorenCredit`, but no Solidity was copied.
 
 Written for this build (Nov 12 2026): `NorenCredit`, `NorenMerchants`, `NorenSettlement`, the eERC integration and
-SDK, the hub, every test, the web app, the Fuji deployment and demo. `NorenGasStation` follows the design of
+SDK, the hub, every test, the web app's screens and chain layer, the Fuji deployment and demo. `NorenGasStation` follows the design of
 `KumiGasStation` from the author's Kumi entry in the same event, with a token pack added. The eERC contracts and circuits are Ava Labs' (unmodified).
 
 ## Credits and license

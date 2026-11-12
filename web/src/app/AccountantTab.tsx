@@ -78,7 +78,7 @@ export function AccountantTab({ market }: { market: Market }) {
                 'Encrypted'
               )}
             </b>
-            <p>{unlocked ? 'Paid out to the shops that named you, read from statements encrypted to your key. Each statement’s hash is on chain.' : `Each payout to ${books.data!.map((b) => b.name).join(', ')} carries a statement encrypted to your key. Sign once to read them here.`}</p>
+            <p>{unlocked ? 'Paid out since these shops named you, read from statements encrypted to your key. Each statement’s hash is on chain.' : `Each payout to ${books.data!.map((b) => b.name).join(', ')} carries a statement encrypted to your key. Sign once to read them here.`}</p>
             {unlocked ? (
               <div className="nc-tiles">
                 <span>

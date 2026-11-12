@@ -4,13 +4,17 @@ import { ago, useLoad, useNow } from '../lib/hooks';
 import { linkProps } from '../lib/router';
 import { Addr, Art, Money, Skeleton, TxLink } from '../ui/kit';
 
-const CONTRACTS: [string, string, string][] = [
-  ['EncryptedERC', D.encryptedERC, 'Ava Labs eERC, converter mode over tUSDC'],
-  ['Registrar', D.registrar, 'eERC public keys'],
-  ['NorenCredit', D.norenCredit, 'Credit line on Chainlink prices'],
-  ['NorenMerchants', D.norenMerchants, 'Shops and catalogues'],
-  ['tUSDC', D.tUSDC, 'Test USDC (6 decimals)'],
-  ['tWBTC', D.tWBTC, 'Test WBTC (8 decimals)'],
+const DX = D as typeof D & { norenSettlement?: string; norenGasStation?: string; hub?: string };
+const CONTRACTS: [string, string | undefined, string, boolean][] = [
+  ['EncryptedERC', D.encryptedERC, 'Ava Labs eERC, converter mode over tUSDC', true],
+  ['NorenSettlement', DX.norenSettlement, 'Hub batches and statement digests', true],
+  ['Noren hub', DX.hub, 'eERC account that pays shops in batches', false],
+  ['NorenCredit', D.norenCredit, 'Credit line on Chainlink prices', true],
+  ['NorenMerchants', D.norenMerchants, 'Shops and catalogues', true],
+  ['NorenGasStation', DX.norenGasStation, 'Starter pack for new wallets', true],
+  ['Registrar', D.registrar, 'eERC public keys', true],
+  ['tUSDC', D.tUSDC, 'Test USDC (6 decimals)', true],
+  ['tWBTC', D.tWBTC, 'Test WBTC (8 decimals)', true],
 ];
 
 export function Landing() {
@@ -37,7 +41,7 @@ export function Landing() {
             <h1>
               Let customers pay <em>privately.</em>
             </h1>
-            <p className="lede">With stablecoins, or with credit against their coins. Noren settles on Avalanche with eERC through its own hub, so a shop’s revenue is encrypted and its customers are unlinkable: the shop and its auditor read it, Snowtrace can’t.</p>
+            <p className="lede">For shops that take crypto. Customers pay in stablecoins, or on credit against their bitcoin, and only you and your accountant see who paid and how much. Settled on Avalanche with eERC, its encrypted token.</p>
             <div className="hero-cta">
               <a className="btn btn-light" {...linkProps('/shop/harbor-loom')}>
                 Try the checkout
@@ -156,7 +160,7 @@ export function Landing() {
             </header>
             <Art name="receipt" size={88} />
             <p>
-              The exact amount and the order, decrypted in the browser with the shop’s own key. Its accountant gets each statement encrypted to its own key, and nobody else reads it.
+              The exact amount and the order, decrypted in the browser with the shop’s own key. Its accountant gets a copy; nobody else can read it.
             </p>
             <div className="view-acts">
               <a className="btn btn-dark" {...linkProps('/merchant')}>
@@ -178,7 +182,7 @@ export function Landing() {
           <article className="way">
             <Art name="sealed-coin" size={120} />
             <h3>Pay with stablecoins</h3>
-            <p>Customers top up a private tUSDC balance once and pay any Noren shop from it. Each payment is a zero-knowledge proof made in the browser.</p>
+            <p>Top up a private tUSDC balance once, then pay any Noren shop from it. Each payment is a zero-knowledge proof made in the browser.</p>
           </article>
           <article className="way way-dark">
             <Art name="btc-coin" size={120} />
@@ -191,7 +195,7 @@ export function Landing() {
           <article className="way">
             <Art name="ledger" size={120} />
             <h3>Books that still balance</h3>
-            <p>Every payment carries a ciphertext for the auditor, and each shop’s accountant gets its statements, so the books reconcile without making revenue public.</p>
+            <p>The auditor and each shop’s accountant can check every payment, so the books reconcile without making revenue public.</p>
           </article>
         </div>
       </section>
@@ -199,14 +203,14 @@ export function Landing() {
       <section className="wrap live">
         <div className="sec-h">
           <h2>Live on Avalanche Fuji</h2>
-          <p>Verified contracts. Every screen in this app reads them directly.</p>
+          <p>Verified contracts. Every screen reads them live.</p>
         </div>
         <div className="contracts">
-          {CONTRACTS.map(([n, a, d]) => (
-            <a key={n} className="contract" href={`${addressUrl(a)}#code`} target="_blank" rel="noreferrer">
+          {CONTRACTS.filter(([, a]) => !!a).map(([n, a, d, code]) => (
+            <a key={n} className="contract" href={`${addressUrl(a!)}${code ? '#code' : ''}`} target="_blank" rel="noreferrer">
               <b>{n}</b>
               <span>{d}</span>
-              <code>{`${a.slice(0, 10)}…${a.slice(-6)}`}</code>
+              <code>{`${a!.slice(0, 10)}…${a!.slice(-6)}`}</code>
             </a>
           ))}
         </div>

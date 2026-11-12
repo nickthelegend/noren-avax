@@ -1,0 +1,17 @@
+{
+  "name": "noren-avax",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.29.2",
+  "scripts": {
+    "build:contracts": "cd contracts && forge build",
+    "test:contracts": "cd contracts && forge test",
+    "abi": "node scripts/gen-abi.mjs",
+    "circuits": "bash scripts/fetch-circuits.sh",
+    "test:anvil": "node --test --test-force-exit scripts/anvil/privacy.test.ts",
+    "dev": "pnpm --filter @noren-avax/web dev",
+    "build": "pnpm --filter @noren-avax/web build",
+    "build:qa": "pnpm --filter @noren-avax/web build:qa"
+  }
+}

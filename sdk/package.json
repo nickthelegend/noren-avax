@@ -1,0 +1,15 @@
+{
+  "name": "@noren-avax/sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@avalabs/eerc-sdk": "1.0.2",
+    "@tanstack/react-query": "5.105.0",
+    "react": "19.3.1",
+    "viem": "2.57.13",
+    "wagmi": "2.19.5"
+  }
+}

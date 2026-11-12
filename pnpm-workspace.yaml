@@ -1,0 +1,6 @@
+packages:
+  - sdk
+  - web
+  - scripts
+onlyBuiltDependencies:
+  - esbuild

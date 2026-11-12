@@ -1,0 +1,13 @@
+{
+  "name": "@noren-avax/scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@avalabs/eerc-sdk": "1.0.2",
+    "@noren-avax/sdk": "workspace:*",
+    "@types/node": "24.10.1",
+    "blake-hash": "2.0.0",
+    "playwright-core": "1.56.1",
+    "viem": "2.57.13"
+  }
+}

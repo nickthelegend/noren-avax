@@ -4,16 +4,35 @@
 
 Noren is a checkout for shops. A customer pays in test USDC from a private balance, or borrows against their BTC or
 AVAX and pays in the same flow. The payment is an [eERC](https://github.com/ava-labs/EncryptedERC) transfer on
-Avalanche, so its amount is a ciphertext on chain: the shop decrypts its revenue with its own key, its accountant
-decrypts it with the auditor key, and Snowtrace shows neither.
+Avalanche, so its amount is a ciphertext on chain. And it goes to Noren's **settlement hub**, not to the shop: the hub
+pays shops in batches, several shops per batch, some of them zero. Snowtrace shows "this customer paid Noren" and
+"Noren paid these shops", never who paid whom or how much. The shop decrypts its payouts and itemised statements with
+its own key, its accountant gets a copy encrypted to the accountant's key, and the eERC auditor can check every batch.
 
 **Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
 
 ![Checkout after a private payment on Fuji](docs/img/demo-1-private.jpg)
 
-- **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, withdraw it.
+- **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, check each payout,
+  name an accountant, ask the assistant about your sales, withdraw.
 - **Noren app**: the checkout (pay with tUSDC or with credit) and the credit line.
-- **Noren SDK** (`sdk/`): the eERC private-payment rail and the credit reads, used by the web app and the scripts.
+- **Noren hub** (`hub/`): the settlement hub, the gas-station relay and the assistant's Claude proxy, on a VPS.
+- **Noren SDK** (`sdk/`): the eERC private-payment rail, notes and statements, the hub records and the credit reads.
+
+## Try it in a minute, with no wallet and no AVAX
+
+1. Open https://noren-avax.vercel.app/shop/harbor-loom, **Connect wallet → Test wallet** (a fresh Fuji key kept in
+   your browser).
+2. Press **Pay 24.00 tUSDC**. The first step is NorenGasStation's starter pack: one relayed transaction sends the new
+   wallet gas, 100 tUSDC and 0.01 tWBTC. Then the page registers your eERC key, tops up and pays the hub privately. The
+   receipt shows the hub's signature and, after the next batch (every 3 minutes, on the clock), "Settled".
+3. **Merchant → Open shop** (filled in for you), then **Use this wallet** as accountant, pay your own shop from its
+   checkout, and after the batch read the revenue, the payout check (✓) and the statement. Ask the assistant
+   "How much did I make this week?".
+4. **Auditor → Read my statements**: the accountant's view of the same payouts.
+
+**Pay with credit** works the same way from the same wallet (it borrows against the tWBTC from the starter pack). The
+global eERC auditor view needs the auditor key; its screenshot is in `docs/img/`.
 
 ## Live on Avalanche Fuji
 
@@ -25,6 +44,10 @@ All contracts are verified on Snowtrace (Routescan). Addresses: [`deployments/fu
 | Registrar (Ava Labs) | [`0xf3876666…f1bDc4`](https://testnet.snowtrace.io/address/0xf3876666123fC4A15b4503b17Dc8188481f1bDc4#code) | eERC public keys, registered with a Groth16 proof |
 | NorenCredit | [`0x8E11c777…Ef0713`](https://testnet.snowtrace.io/address/0x8E11c777f31368c3630992Cd918D42a44EEf0713#code) | Credit line against tWBTC / AVAX at Chainlink prices |
 | NorenMerchants | [`0xE1515901…ddB039`](https://testnet.snowtrace.io/address/0xE151590170cc22b8e34c93ABD43f9BAD26ddB039#code) | Shops and catalogues; a shop opens only for a registered eERC key |
+| NorenSettlement | [`0x096Bb172…4C6558`](https://testnet.snowtrace.io/address/0x096Bb172202953FF4D5f4d570CEFD815bc4C6558#code) | The hub's batch record: payments settled once, per-shop payouts with statement digests, accountant and auditor copies |
+| NorenGasStation | [`0x5e8A4712…887513`](https://testnet.snowtrace.io/address/0x5e8A47127F06b6ec93f2b49FB79768D561887513#code) | One relayed tx gives a new wallet 0.0002 AVAX, 100 tUSDC and 0.01 tWBTC; limits on chain |
+| Noren hub (eERC account) | [`0x58e374A4…76A6A7`](https://testnet.snowtrace.io/address/0x58e374A4c704f1806BAbD04726FB60e86e76A6A7) | Receives customer payments, pays shops in batches; key only on the API server |
+| Noren gas relayer | [`0x3452fE8B…1e19A9`](https://testnet.snowtrace.io/address/0x3452fE8B3999761d6E889cbc130571A5951e19A9) | The only caller of `drip`; key only on the API server |
 | tUSDC (test, 6 decimals) | [`0x788a627c…6303A1`](https://testnet.snowtrace.io/address/0x788a627ceD9B795517A9c481A4377Ea0E26303A1#code) | Faucet: 250 per address per day |
 | tWBTC (test, 8 decimals) | [`0x04e7f9a2…A6e754`](https://testnet.snowtrace.io/address/0x04e7f9a2b3c793884Fb9a5C5F424a4739AA6e754#code) | Faucet: 0.01 per address per day |
 | Chainlink BTC / USD (Fuji) | [`0x31CF013A…19c602a`](https://testnet.snowtrace.io/address/0x31CF013A08c6Ac228C94551d535d5BAfE19c602a) | Price for tWBTC collateral |
@@ -33,7 +56,43 @@ All contracts are verified on Snowtrace (Routescan). Addresses: [`deployments/fu
 The eERC verifiers (registration, transfer, withdraw, mint, burn) are Ava Labs' production verifiers; their addresses
 are in the deploy transactions recorded in `deployments/fuji.json` (`deployTxs`).
 
-### Live demo, through the web app
+### Judge path on the hosted site (zero setup)
+
+<!-- judge -->
+Run 2026-11-12 15:24 UTC on https://noren-avax.vercel.app by `scripts/qa/judge.mjs` (a fresh browser, Test wallet 9E69, no keys from this machine):
+
+| Step | Transaction (Snowtrace) |
+|---|---|
+| starter pack: gas, 100 tUSDC, 0.01 tWBTC | [`0x040fbc9d…`](https://testnet.snowtrace.io/tx/0x040fbc9d17189af243550b582bba9d22568d89b62be82fe1668d6c97db70138b) |
+| register eERC key | [`0x554dffa9…`](https://testnet.snowtrace.io/tx/0x554dffa94276b2cd96098574ee04cc418eea5077a0b1fe70dd3497ada0f5dde1) |
+| approve tUSDC for eERC | [`0xc293f126…`](https://testnet.snowtrace.io/tx/0xc293f126d965eeaf1c8b8d1485dfedf4857aecb295227b1d37dea5371153f084) |
+| top up private balance | [`0x8ad54f8a…`](https://testnet.snowtrace.io/tx/0x8ad54f8a716de8db5cd3466ba4d556b9bd3143347c01ea373eeca5882d0d582f) |
+| private payment via Noren for Harbor & Loom | [`0x2656c639…`](https://testnet.snowtrace.io/tx/0x2656c639f00d91648fd06e0859d81c1590b1156f2e975c620465f4a0be2265e0) |
+| open shop | [`0x394ea662…`](https://testnet.snowtrace.io/tx/0x394ea6622c522217d60d6856d0bc609e0f1b547e7f57159facc97cb0f51d96ca) |
+| list item | [`0xbd3f0f78…`](https://testnet.snowtrace.io/tx/0xbd3f0f781eef92a3933c6814ae3bc776c43b0bd01cbd0035be5537525e8c3d8c) |
+| name the shop accountant | [`0xbba7208d…`](https://testnet.snowtrace.io/tx/0xbba7208d4f1223e614bf74433dfe057133a73d534e4aef6e9c254f8555705232) |
+| private payment via Noren for Test shop 9e69 | [`0x1c1ac680…`](https://testnet.snowtrace.io/tx/0x1c1ac68094d975bb3a5ac381c81d31ec3a94d6222ecb46525e277002265888eb) |
+| hub payout to the test shop (batch) | [`0x05fe1765…`](https://testnet.snowtrace.io/tx/0x05fe1765c4e35f041dc2df516b5776ddea98b9b1817faa72811e6c9ba1731e0d) |
+
+Assistant's answer to "How much did I make this week?": "You made $12.00 this week, from 1 order (average $12.00)."
+<!-- /judge -->
+
+### Hub batches on Fuji
+
+Every batch the hub has settled, read back from `NorenSettlement` (`scripts/fuji/record-batches.ts`). Shop ids: 0
+Harbor & Loom, 1 Kiln Row, 2 Paper Lantern, 3 and up are shops opened by test wallets. Open any payout on Snowtrace:
+it is a hub-to-shop eERC transfer whose amount is ciphertext, and zero-value cover payouts look the same.
+
+<!-- batches -->
+| Batch | When (UTC) | Customer payments in | Shop payouts (real or cover; amounts encrypted) | Record |
+|---|---|---|---|---|
+| #0 | 2026-11-12 15:06 | [`0x2ada496d…`](https://testnet.snowtrace.io/tx/0x2ada496debc2b18479f218049a6b079f476161c13a409a4ceee9344aca81258c) | shop 1: [`0x4b428257…`](https://testnet.snowtrace.io/tx/0x4b42825740c8de2238f7dc042e5af579c096e6d7cca8852a6616141131655335)<br>shop 2: [`0xc1af61ec…`](https://testnet.snowtrace.io/tx/0xc1af61ec1f696fa809eb127437b157edef05cb0e8e1b40231bb1215fca7278b3)<br>shop 0: [`0x3525cb4e…`](https://testnet.snowtrace.io/tx/0x3525cb4ecbaf145f0c24172af4aa7f3863448f07a413dd097398cdba8cece3c3) | [`0xe5eb1160…`](https://testnet.snowtrace.io/tx/0xe5eb116085e345c99d68f7f3025a84b7d76791a68e44a98b86af542de7bbb9b5) |
+| #1 | 2026-11-12 15:09 | [`0xa240b516…`](https://testnet.snowtrace.io/tx/0xa240b516033d2e5edc39bc0558be2fe9e5f2c7eed20eebf117a082be0bfe3408) | shop 0: [`0x97b48704…`](https://testnet.snowtrace.io/tx/0x97b48704f53d6cad4f28e8f03711a47b62a3b112a2ed6502ec60bf5b9d5f6765)<br>shop 3: [`0x3fef6efa…`](https://testnet.snowtrace.io/tx/0x3fef6efa26f2bdf813a09f273bbef9ccf4ca17ed756ef849b7ed86f4b917ca2d)<br>shop 2: [`0xfbb804b2…`](https://testnet.snowtrace.io/tx/0xfbb804b2268df6043892c28a1b101c3590e7fdced0bf8eaf3cc538a0d84fd937) | [`0x462471ac…`](https://testnet.snowtrace.io/tx/0x462471ac6fde26fd8d6df49b83254e1ccd26683ff1eceefba30bf211810c8275) |
+| #2 | 2026-11-12 15:21 | [`0xc4078550…`](https://testnet.snowtrace.io/tx/0xc4078550ebf229fc7279af2c2e33799df165675f1716ba1805ae2a9171c69e84) | shop 1: [`0x75dbc65a…`](https://testnet.snowtrace.io/tx/0x75dbc65aec6d24193bb79f2ba836fdbf94ac37706e8cb1c1aa60bdf6232e3257)<br>shop 0: [`0xc5ff472c…`](https://testnet.snowtrace.io/tx/0xc5ff472c7b0ce2709a028f021c685636cc99278483b63da7aae2265ae0e566fb)<br>shop 3: [`0x92270ec9…`](https://testnet.snowtrace.io/tx/0x92270ec9a2435a1adf85841f4718872a20718d8a6f095e41a62879bf7ce02feb) | [`0x868dc610…`](https://testnet.snowtrace.io/tx/0x868dc610bd5b6f84aace16cb4576d69402fa7f60c4e07dcab95dae85c0666bf6) |
+| #3 | 2026-11-12 15:24 | [`0xa71fe9f0…`](https://testnet.snowtrace.io/tx/0xa71fe9f08269a9a73e90d4c212af604fdc7fd34edf1b8649d2058cd1f5fa32f4) [`0x2656c639…`](https://testnet.snowtrace.io/tx/0x2656c639f00d91648fd06e0859d81c1590b1156f2e975c620465f4a0be2265e0) [`0x1c1ac680…`](https://testnet.snowtrace.io/tx/0x1c1ac68094d975bb3a5ac381c81d31ec3a94d6222ecb46525e277002265888eb) | shop 4: [`0x05fe1765…`](https://testnet.snowtrace.io/tx/0x05fe1765c4e35f041dc2df516b5776ddea98b9b1817faa72811e6c9ba1731e0d)<br>shop 2: [`0xce07b033…`](https://testnet.snowtrace.io/tx/0xce07b033b5a64a1323865b3f6bbe09b71e5617e90b3188f3c19efdc9cb9d6718)<br>shop 0: [`0xf1b006b6…`](https://testnet.snowtrace.io/tx/0xf1b006b6d859b388b96881b8e171f3cec507c096da8e1e6bb4985a6af22d45c2) | [`0x21788c15…`](https://testnet.snowtrace.io/tx/0x21788c15a0da5107b2c37d5037fbfced5f65bb65a5366ce7b88a2b5d28940e54) |
+<!-- /batches -->
+
+### First live demo, through the web app (before the hub; direct payments)
 
 Run on Fuji by `scripts/qa/demo.mjs`, which drives the QA build of the web app in headless Chrome with the QA signer
 (a build flag plus Fuji test keys injected at runtime; production builds contain neither). Every proof was made in the
@@ -68,11 +127,93 @@ One-time setup (scripts/fuji/setup.ts):
 | lists Waxed canvas apron at 36 tUSDC | [`0xcf8c7c39…`](https://testnet.snowtrace.io/tx/0xcf8c7c391bef14c69e41b7459c0f6ea27c93dee033dbd0f383bf6fd3552b6ebb) |
 | lists Stoneware mug at 18 tUSDC | [`0x73ce4a61…`](https://testnet.snowtrace.io/tx/0x73ce4a61cb200171488d36d6fb68e0a13c9681bd17cf281a58822c9d0d1c21bf) |
 | lists Wool throw at 64 tUSDC | [`0x6136dbf0…`](https://testnet.snowtrace.io/tx/0x6136dbf02e98fa05fe2746449c34d7cc3cb98b2617863eec2861944770dd375d) |
+| deployer sends 0.004 AVAX for gas to the hub account | [`0x85a95773…`](https://testnet.snowtrace.io/tx/0x85a957739420583e54210be4604686cf9f2734ef2e7f6794348882b76ee081e8) |
+| deployer sends 0.006 AVAX for gas to the relayer account | [`0x0385bc97…`](https://testnet.snowtrace.io/tx/0x0385bc97e5a9df15b60f3c4ee4092b4a5b3c9553232669d8dd9d3eba2790808e) |
+| deployer sends 0.002 AVAX for gas to the merchant2 account | [`0x5ab81082…`](https://testnet.snowtrace.io/tx/0x5ab810824dbc46cb1fd916fde61e86cd478c1eead597da367662e7d59dfeb102) |
+| deployer sends 0.002 AVAX for gas to the merchant3 account | [`0x0f4dda21…`](https://testnet.snowtrace.io/tx/0x0f4dda2198f389f40785ebfbcacff77487b6c5fa63b55db77b37ba5e3fcb72b3) |
+| deployer sends 0.002 AVAX for gas to the accountant account | [`0x009cb734…`](https://testnet.snowtrace.io/tx/0x009cb734f0d67d4a397bd53ab1c3c72a362ff6b23de872c43d6f6ca9a2123770) |
+| hub registers its eERC public key (Groth16 registration proof) | [`0xd25af7e9…`](https://testnet.snowtrace.io/tx/0xd25af7e93e514b7465753282b94c8b4ded93fbd1adbb6a29b0e9afca923cd4ec) |
+| merchant2 registers its eERC public key (Groth16 registration proof) | [`0x35b4594e…`](https://testnet.snowtrace.io/tx/0x35b4594e312c182705193f43d9795e914cfc98bb764875ea65ebbfe7a41ec68b) |
+| merchant3 registers its eERC public key (Groth16 registration proof) | [`0xa4b2fb11…`](https://testnet.snowtrace.io/tx/0xa4b2fb11c0ff1cd3b4cf9cdac50d846303ac90ab606d883cf127c3a2916ba3c8) |
+| accountant registers its eERC public key (Groth16 registration proof) | [`0x73962da6…`](https://testnet.snowtrace.io/tx/0x73962da6409a3a9692a371a0eeaad07b20b5ba0596a80d76b287f699ce39066f) |
+| Kiln Row opens on Noren Merchant | [`0x087a3242…`](https://testnet.snowtrace.io/tx/0x087a3242c9b438332975d32af411ac2783d3f161f79be22c397cdd57d59aeabf) |
+| Kiln Row lists Speckled bowl at 22 tUSDC | [`0xfe95d1a0…`](https://testnet.snowtrace.io/tx/0xfe95d1a09a4d4659ebd3e73a0243b07c364fc37dcf163cc4afa9e277eb44d434) |
+| Kiln Row lists Pour-over cone at 28 tUSDC | [`0x533eeb63…`](https://testnet.snowtrace.io/tx/0x533eeb6363f8814e80610b149465a31d5d0af8bf5d82a9aa39fde881ae3c4252) |
+| Kiln Row lists Bud vase at 16 tUSDC | [`0xdeb89e57…`](https://testnet.snowtrace.io/tx/0xdeb89e578d491fb9bacd0811fabed2ecc7520e8a2b8b9b2402c5353e3c1720ca) |
+| Paper Lantern opens on Noren Merchant | [`0x7d06e816…`](https://testnet.snowtrace.io/tx/0x7d06e816dd368704a536f4f28899625b53f1b8d1a0c7de9ff9259920a1e1e2e9) |
+| Paper Lantern lists Washi notebook at 14 tUSDC | [`0x2def0336…`](https://testnet.snowtrace.io/tx/0x2def03366f048d9f0b00d9f982055dd44cd4480707a0dd047a118c8165c25600) |
+| Paper Lantern lists Brass pen at 32 tUSDC | [`0xaf918438…`](https://testnet.snowtrace.io/tx/0xaf918438a6d7cd11eac4e169db6ad103a9c4f5c0eb24863858cabdf462e76faa) |
+| Paper Lantern lists Letterpress cards at 12 tUSDC | [`0xe85b0361…`](https://testnet.snowtrace.io/tx/0xe85b0361fbcf352a7456e7e720329c9090fbb921812a02878e73bc76541efc81) |
+| deploy NorenSettlement | [`0x8123f473…`](https://testnet.snowtrace.io/tx/0x8123f47374d0e7c6baf2d74a3b9a510b0e3287c10bac7f15397ca6de6f40ce87) |
+| deploy NorenGasStation | [`0x4d4e8cf3…`](https://testnet.snowtrace.io/tx/0x4d4e8cf35fb3cedffee93236910fe476fd8f9268c4c431c55c693fe2340a75d4) |
+| mint(address,uint256) (station stock or AVAX) | [`0x27994f8a…`](https://testnet.snowtrace.io/tx/0x27994f8a30c22cdc4ace78771cda98a4caad74a55a6c81d79bc3d29447886ee0) |
+| mint(address,uint256) (station stock or AVAX) | [`0xad7c5901…`](https://testnet.snowtrace.io/tx/0xad7c59012608ec39d3a1ba6c3db14bf46960f9d059427fe80907479aca0c270b) |
+| call (station stock or AVAX) | [`0x0da1960d…`](https://testnet.snowtrace.io/tx/0x0da1960d3cbf6ad74e1a8bc26a67eed15e76f819cf1a3521ae62e7a3afa1d2e8) |
+| Harbor & Loom names its accountant in NorenSettlement | [`0x82ff349b…`](https://testnet.snowtrace.io/tx/0x82ff349b022b5804e0bdb259016039e8f157b6f9f75fcf1cf3073ea60bb79be5) |
+| mint 15000 tUSDC into NorenGasStation | [`0x5b2dcc4c…`](https://testnet.snowtrace.io/tx/0x5b2dcc4c0801df38c01be42aa5f65c157291c3fe918eb1de87615d64423f0dd3) |
+| mint 1.5 tWBTC into NorenGasStation | [`0x7c2cacda…`](https://testnet.snowtrace.io/tx/0x7c2cacdaa4a42dfd8f87fe1fd7d5a9c21529b1c34dc669a685371c1447ba2f4c) |
+| Avalanche funding hub sends 0.03 AVAX to NorenGasStation | [`0x39d9d6b6…`](https://testnet.snowtrace.io/tx/0x39d9d6b6efa0cae960baec2032c5a59e171a5f36b915f7aa7281da5a82e9b37b) |
 <!-- /setup -->
 
 ## How it works
 
-**Private revenue with eERC.** Noren deploys Ava Labs' EncryptedERC in **converter mode** over tUSDC. Converter mode
+**Who paid whom stays private: the settlement hub.** An eERC transfer hides the amount but not the two addresses, so
+a direct payment tells Snowtrace that this customer shops at that shop. Noren puts a hub between them:
+
+1. The checkout pays the hub's eERC account. The order note (`shop id, order, item, claim secret`) is encrypted to the
+   hub's key in eERC's own metadata format, so on chain it is ciphertext.
+2. The hub (`hub/src/hub.ts`, on the VPS) reads its incoming transfers every 10 s, decrypts each amount from the
+   proof's receiver ciphertext and each note, and queues them. A payment with no valid note is refunded in the next
+   batch.
+3. Every 3 minutes, on the clock, if anything is queued, the hub pays each shop it owes the sum of its orders in one
+   private transfer whose encrypted note is the itemised statement (JSON with a random salt). It adds **zero-value
+   cover transfers** to other shops so that at least 3 shops are paid per batch: from outside, a zero and a 42.00
+   payout are the same ciphertext. Payouts go out in random order.
+4. It records the batch in `NorenSettlement`: the payments it settles (each at most once, enforced on chain), one
+   payout per shop with the keccak256 of that shop's statement, the statement encrypted to the shop's accountant if
+   it has one, and the whole batch encrypted to the eERC auditor.
+
+| | Snowtrace (anyone) | The shop | The shop's accountant | eERC auditor | Noren's hub |
+|---|---|---|---|---|---|
+| Customer → hub payment | sender, hub, time; amount encrypted | — | — | amount | amount, shop, order |
+| Hub → shop payout | hub, shop, time; amount encrypted; zero and real look alike | amount + statement, checked against the digest on chain | statement, checked against the digest | amount + whole batch | everything |
+| Which customer bought from which shop | **hidden** (only "paid Noren" and "Noren paid ≥3 shops") | its orders, not customer addresses' other shops | same as the shop | yes | yes |
+
+**What it hides, exactly.** The link between a customer and a shop, and every amount. An observer sees that a
+customer paid Noren at time t, and that at the next 3-minute boundary Noren paid a set of at least 3 shops. With little
+traffic (a testnet) the set of candidate shops for one payment is that batch's payout set; it grows with every shop
+that is owed money in the same batch. Not hidden: that the customer uses Noren; top-ups and withdrawals (public
+ERC-20 amounts: the checkout tops up in round 50s, and a shop's withdrawal shows what it takes out); which shops are
+in each batch's payout set.
+
+**The trust it adds.** The hub is an operator, like a payment processor. It sees every payment's shop, order and
+amount, and it holds customers' money for up to one batch (about 3 minutes). It could delay or withhold a payout. It
+cannot do so silently: each customer gets a receipt signed by the hub key named in `NorenSettlement.hub()` and can see
+`settledIn(tx)` on chain; each shop checks that its statement adds up to the payout its key decrypts and matches the
+digest on chain (the dashboard shows ✓ or ✗); the eERC auditor checks every batch against the auditor ciphertexts
+(each payment once, each payout equals its statement, paid in = paid out; `auditBatch` in the SDK); and the contract
+refuses to settle a payment twice. If the hub stops, payments wait on chain and the hub finishes a half-done batch on
+restart (tested: `scripts/anvil/hub.test.ts`).
+
+**Per-shop accountant.** A shop names an accountant (any address with an eERC key) in `NorenSettlement.setAccountant`.
+Each payout's statement is then also encrypted to that key, and the accountant reads it in **Auditor → Read my
+statements**, checked against the digest on chain. This is a statement copy, not a second eERC auditor: unmodified eERC
+has one auditor per contract (the transfer circuit proves the auditor ciphertext against that single key), so a
+cryptographic per-shop auditor would mean one eERC deployment per merchant group. The accountant trusts the amounts in
+the statement; the shop (its key) and the eERC auditor (every ciphertext) can confirm them.
+
+**Zero-setup start: NorenGasStation.** A new wallet signs a request (station, chain, wallet, deadline); Noren's API
+relays it, and in one transaction the station sends 0.0002 AVAX (about a billion gas at Fuji's ~160 wei), 100 tUSDC
+and 0.01 tWBTC. The station pays only a wallet that signed, holds no AVAX, has never been paid and is not a contract,
+and only within 40 packs a day and 3 per requester (a keyed hash of the IP, made on the API; no IP on chain). The same
+design as Kumi's gas station, extended with the token pack; funded with 0.05 AVAX (250 packs).
+
+**Merchant assistant.** "Ask about your shop" sends your question to Claude (`claude-haiku-5-5`) through Noren's API,
+which holds the API key. Claude answers by calling tools (`revenue`, `top_items`, `recent_orders`, `payouts`,
+`balance`) that run **in your browser** over the books your key decrypted; the chat shows each tool call. Claude sees
+the tool results, never your key or the full ledger.
+
+**Private amounts with eERC.** Noren deploys Ava Labs' EncryptedERC in **converter mode** over tUSDC. Converter mode
 is what makes "pay, private revenue, merchant withdraws" work end to end with a dollar token: customers deposit tUSDC
 and get an encrypted balance; payments are `transfer` calls whose amount is an ElGamal ciphertext (BabyJubJub) proven
 with a Groth16 proof made in the browser; the shop withdraws back to public tUSDC with a withdraw proof. (Standalone
@@ -105,17 +246,19 @@ registered with the eERC Registrar, so every shop can be paid privately.
   [`8dc98cd`](https://github.com/ava-labs/EncryptedERC/tree/8dc98cd4d63ad3aa6d86b70b8f4bbcd70f1e8be1) (checked file by
   file), circuits fetched from the same commit, proofs and decryption with the official `@avalabs/eerc-sdk` 1.0.2.
 - **Chainlink Data Feeds on Fuji** for collateral prices.
+- **Native AVAX** as collateral, and as gas from NorenGasStation for new wallets.
 - **ICM / ICTT: not built.** Accepting USDC from another ICM-enabled L1 was optional and is not in this build; nothing
   here claims it.
 - **Not mainnet.** Fuji only, test tokens only.
 
 ## Limits, honestly
 
-- One eERC deployment means one auditor key for every shop on it. A merchant group that wants its own accountant as
-  the only auditor deploys its own converter contract; the app reads whichever one `deployments/fuji.json` names.
-- Deposits are public and eERC deposit ciphertexts use fixed randomness (an upstream design note), so a balance gains
-  confidentiality once it has received or sent a private transfer. The payer and payee addresses of a transfer are
-  public; only the amount and the note are hidden.
+- The hub is trusted to stay up and pay out (see "The trust it adds"); it is one key on one server.
+- The anonymity set is a batch: on a quiet testnet that can be one customer and three shops.
+- One eERC deployment means one eERC auditor for every shop. Shops get per-shop accountants as statement copies,
+  not as eERC auditors.
+- Deposits and withdrawals are public, and eERC deposit ciphertexts use fixed randomness (an upstream design note).
+- Payments made before the hub (the first live demo below) went straight to the shop and show the customer's address.
 - The pool is seeded by the deployer; there is no lender interface in this build.
 
 ## Run it
@@ -125,23 +268,27 @@ pnpm install
 git submodule update --init
 pnpm circuits                 # eERC circuit wasm + zkey from the pinned upstream commit
 pnpm build:contracts && pnpm test:contracts
-pnpm test:anvil               # needs anvil on PATH
-pnpm dev                      # http://127.0.0.1:5361, connect Core or MetaMask on Fuji
+pnpm test:anvil               # needs anvil on PATH: privacy suite + hub suite
+pnpm dev                      # http://127.0.0.1:5361; /api goes to the hosted Noren API (NOREN_API to change)
+node hub/src/server.ts        # the hub + gas relay + assistant (keys from .env); only one hub per key may run
 ```
 
 Fuji scripts (keys in a gitignored `.env`, see `.env.example`): `scripts/fuji/keys.ts`, `fund.ts`, `deploy.ts`,
-`setup.ts`. QA: `pnpm build:qa`, then `node scripts/qa/shots.mjs` and `node scripts/qa/demo.mjs`.
+`setup.ts`, `setup-hub.ts` (hub, shops, NorenSettlement, NorenGasStation), `stock-station.ts`, `balances.ts`. The API
+runs on the VPS from `deploy/` (Docker; keys in a mode-600 env file there). QA: `pnpm build:qa`, then `node scripts/qa/shots.mjs` and `node scripts/qa/demo.mjs`.
 
 ```
-contracts/   Foundry: NorenCredit, NorenMerchants, NorenTestToken, vendored eERC; tests and fixtures
-sdk/         @noren-avax/sdk: eERC rail (NorenPrivate), credit and shop reads, ABIs
+contracts/   Foundry: NorenCredit, NorenMerchants, NorenSettlement, NorenGasStation, NorenTestToken, vendored eERC
+sdk/         @noren-avax/sdk: eERC rail (NorenPrivate), notes and statements, hub records, credit and shop reads
+hub/         Noren's API: settlement hub, gas relay, assistant proxy
+deploy/      Dockerfile and compose for the API on the VPS
 web/         Vite + React app: landing, checkout, merchant, auditor, credit
 scripts/     Fuji deploy/setup, Anvil end-to-end test, Playwright QA and demo
 deployments/ fuji.json: addresses, setup and demo transactions
 docs/        SLIDES.md, ART-3D.md, screenshots
 ```
 
-Tests: [TESTING.md](TESTING.md) (37 Foundry tests, 4 Fuji-fork tests, 10 Anvil end-to-end tests).
+Tests: [TESTING.md](TESTING.md) (77 Foundry tests, 4 Fuji-fork tests, 22 Anvil end-to-end tests).
 
 ## Prior work (disclosure)
 
@@ -153,8 +300,9 @@ Noren existed before this hackathon. What came from earlier Noren work:
 - **Earlier EVM versions** of Noren (branches `wif`, Arc, Robinhood Chain) had a Solidity credit line
   (`NorenCreditLine`) on a different design. It informed the shape of `NorenCredit`, but no Solidity was copied.
 
-Written for this build (Nov 12 2026): `NorenCredit`, `NorenMerchants`, the eERC integration and SDK, every test, the
-web app, the Fuji deployment and demo. The eERC contracts and circuits are Ava Labs' (unmodified).
+Written for this build (Nov 12 2026): `NorenCredit`, `NorenMerchants`, `NorenSettlement`, the eERC integration and
+SDK, the hub, every test, the web app, the Fuji deployment and demo. `NorenGasStation` follows the design of
+`KumiGasStation` from the author's Kumi entry in the same event, with a token pack added. The eERC contracts and circuits are Ava Labs' (unmodified).
 
 ## Credits and license
 

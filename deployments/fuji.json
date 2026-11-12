@@ -406,5 +406,173 @@
   "norenGasStation": "0x5e8A47127F06b6ec93f2b49FB79768D561887513",
   "norenSettlement": "0x096Bb172202953FF4D5f4d570CEFD815bc4C6558",
   "relayer": "0x3452fE8B3999761d6E889cbc130571A5951e19A9",
-  "accountant": "0x05165314E8EC0c0DfD7B33685592BB053648d36d"
+  "accountant": "0x05165314E8EC0c0DfD7B33685592BB053648d36d",
+  "judge": {
+    "at": "2026-11-12T15:24:53.975Z",
+    "site": "https://noren-avax.vercel.app",
+    "wallet": "Test wallet 9E69",
+    "shop": "test-9e6912",
+    "assistant": "You made $12.00 this week, from 1 order (average $12.00).",
+    "txs": [
+      {
+        "hash": "0x040fbc9d17189af243550b582bba9d22568d89b62be82fe1668d6c97db70138b",
+        "what": "starter pack: gas, 100 tUSDC, 0.01 tWBTC",
+        "page": "/shop/harbor-loom"
+      },
+      {
+        "hash": "0x554dffa94276b2cd96098574ee04cc418eea5077a0b1fe70dd3497ada0f5dde1",
+        "what": "register eERC key",
+        "page": "/shop/harbor-loom"
+      },
+      {
+        "hash": "0xc293f126d965eeaf1c8b8d1485dfedf4857aecb295227b1d37dea5371153f084",
+        "what": "approve tUSDC for eERC",
+        "page": "/shop/harbor-loom"
+      },
+      {
+        "hash": "0x8ad54f8a716de8db5cd3466ba4d556b9bd3143347c01ea373eeca5882d0d582f",
+        "what": "top up private balance",
+        "page": "/shop/harbor-loom"
+      },
+      {
+        "hash": "0x2656c639f00d91648fd06e0859d81c1590b1156f2e975c620465f4a0be2265e0",
+        "what": "private payment via Noren for Harbor & Loom",
+        "page": "/shop/harbor-loom"
+      },
+      {
+        "hash": "0x394ea6622c522217d60d6856d0bc609e0f1b547e7f57159facc97cb0f51d96ca",
+        "what": "open shop",
+        "page": "/merchant"
+      },
+      {
+        "hash": "0xbd3f0f781eef92a3933c6814ae3bc776c43b0bd01cbd0035be5537525e8c3d8c",
+        "what": "list item",
+        "page": "/merchant"
+      },
+      {
+        "hash": "0xbba7208d4f1223e614bf74433dfe057133a73d534e4aef6e9c254f8555705232",
+        "what": "name the shop accountant",
+        "page": "/merchant"
+      },
+      {
+        "hash": "0x1c1ac68094d975bb3a5ac381c81d31ec3a94d6222ecb46525e277002265888eb",
+        "what": "private payment via Noren for Test shop 9e69",
+        "page": "/shop/test-9e6912"
+      },
+      {
+        "hash": "0x05fe1765c4e35f041dc2df516b5776ddea98b9b1817faa72811e6c9ba1731e0d",
+        "what": "hub payout to the test shop (batch)",
+        "page": "/shop/test-9e6912"
+      }
+    ],
+    "consoleErrors": []
+  },
+  "hubBatches": [
+    {
+      "batch": 0,
+      "at": "2026-11-12T15:06:41.000Z",
+      "record": "0xe5eb116085e345c99d68f7f3025a84b7d76791a68e44a98b86af542de7bbb9b5",
+      "payments": [
+        "0x2ada496debc2b18479f218049a6b079f476161c13a409a4ceee9344aca81258c"
+      ],
+      "payouts": [
+        {
+          "shop": 1,
+          "tx": "0x4b42825740c8de2238f7dc042e5af579c096e6d7cca8852a6616141131655335",
+          "accountant": false
+        },
+        {
+          "shop": 2,
+          "tx": "0xc1af61ec1f696fa809eb127437b157edef05cb0e8e1b40231bb1215fca7278b3",
+          "accountant": false
+        },
+        {
+          "shop": 0,
+          "tx": "0x3525cb4ecbaf145f0c24172af4aa7f3863448f07a413dd097398cdba8cece3c3",
+          "accountant": true
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "batch": 1,
+      "at": "2026-11-12T15:09:40.000Z",
+      "record": "0x462471ac6fde26fd8d6df49b83254e1ccd26683ff1eceefba30bf211810c8275",
+      "payments": [
+        "0xa240b516033d2e5edc39bc0558be2fe9e5f2c7eed20eebf117a082be0bfe3408"
+      ],
+      "payouts": [
+        {
+          "shop": 0,
+          "tx": "0x97b48704f53d6cad4f28e8f03711a47b62a3b112a2ed6502ec60bf5b9d5f6765",
+          "accountant": true
+        },
+        {
+          "shop": 3,
+          "tx": "0x3fef6efa26f2bdf813a09f273bbef9ccf4ca17ed756ef849b7ed86f4b917ca2d",
+          "accountant": true
+        },
+        {
+          "shop": 2,
+          "tx": "0xfbb804b2268df6043892c28a1b101c3590e7fdced0bf8eaf3cc538a0d84fd937",
+          "accountant": false
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "batch": 2,
+      "at": "2026-11-12T15:21:39.000Z",
+      "record": "0x868dc610bd5b6f84aace16cb4576d69402fa7f60c4e07dcab95dae85c0666bf6",
+      "payments": [
+        "0xc4078550ebf229fc7279af2c2e33799df165675f1716ba1805ae2a9171c69e84"
+      ],
+      "payouts": [
+        {
+          "shop": 1,
+          "tx": "0x75dbc65aec6d24193bb79f2ba836fdbf94ac37706e8cb1c1aa60bdf6232e3257",
+          "accountant": false
+        },
+        {
+          "shop": 0,
+          "tx": "0xc5ff472c7b0ce2709a028f021c685636cc99278483b63da7aae2265ae0e566fb",
+          "accountant": true
+        },
+        {
+          "shop": 3,
+          "tx": "0x92270ec9a2435a1adf85841f4718872a20718d8a6f095e41a62879bf7ce02feb",
+          "accountant": true
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "batch": 3,
+      "at": "2026-11-12T15:24:41.000Z",
+      "record": "0x21788c15a0da5107b2c37d5037fbfced5f65bb65a5366ce7b88a2b5d28940e54",
+      "payments": [
+        "0xa71fe9f08269a9a73e90d4c212af604fdc7fd34edf1b8649d2058cd1f5fa32f4",
+        "0x2656c639f00d91648fd06e0859d81c1590b1156f2e975c620465f4a0be2265e0",
+        "0x1c1ac68094d975bb3a5ac381c81d31ec3a94d6222ecb46525e277002265888eb"
+      ],
+      "payouts": [
+        {
+          "shop": 4,
+          "tx": "0x05fe1765c4e35f041dc2df516b5776ddea98b9b1817faa72811e6c9ba1731e0d",
+          "accountant": true
+        },
+        {
+          "shop": 2,
+          "tx": "0xce07b033b5a64a1323865b3f6bbe09b71e5617e90b3188f3c19efdc9cb9d6718",
+          "accountant": false
+        },
+        {
+          "shop": 0,
+          "tx": "0xf1b006b6d859b388b96881b8e171f3cec507c096da8e1e6bb4985a6af22d45c2",
+          "accountant": true
+        }
+      ],
+      "refunds": []
+    }
+  ]
 }

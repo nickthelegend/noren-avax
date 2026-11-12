@@ -126,3 +126,6 @@
   .na-views, .na-contracts { grid-template-columns: minmax(0, 1fr); }
   .na-contracts .nl-coin footer { display: block; }
 }
+
+/* lists whose title is the point (ledger, orders, statements): wrap instead of truncating, so phones show who and what */
+.na-wrap b { white-space: normal; overflow-wrap: anywhere; }

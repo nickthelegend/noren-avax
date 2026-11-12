@@ -142,7 +142,7 @@ export function AccountantTab({ market }: { market: Market }) {
             {statements.error && <div className="nk-pad"><p className="nk-err">{statements.error}</p></div>}
             {statements.data && statements.data.length === 0 && <Empty title="No statements yet">Each batch that pays these shops sends you a copy, encrypted to your key.</Empty>}
             {statements.data && statements.data.length > 0 && (
-              <ul className="nk-acts nc-acts">
+              <ul className="nk-acts nc-acts na-wrap">
                 {statements.data.slice(0, 14).map((x) => (
                   <Row
                     key={x.payoutTx}

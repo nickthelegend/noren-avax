@@ -188,7 +188,7 @@ export function MerchantTab({ market }: { market: Market }) {
             </Empty>
           )}
           {book.data && book.data.lines.length > 0 && (
-            <ul className="nk-acts nc-acts">
+            <ul className="nk-acts nc-acts na-wrap">
               {book.data.lines.slice(0, 12).map((x) => (
                 <Row
                   key={x.key}

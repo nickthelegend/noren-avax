@@ -139,7 +139,7 @@ export function AuditorTab({ market }: { market: Market }) {
             {audit.error && <div className="nk-pad"><p className="nk-err">{audit.error}</p></div>}
             {audit.data && audit.data.length === 0 && <Empty title="Nothing to audit yet">No eERC activity since the deploy block.</Empty>}
             {audit.data && audit.data.length > 0 && (
-              <ul className="nk-acts nc-acts">
+              <ul className="nk-acts nc-acts na-wrap">
                 {audit.data.slice(0, 16).map((r) => (
                   <Row
                     key={`${r.tx}-${r.kind}`}

@@ -11,7 +11,9 @@ its own key, its accountant gets a copy encrypted to the accountant's key, and t
 
 **Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
 
-![Checkout after a private payment on Fuji](docs/img/demo-1-private.jpg)
+| Paid through the hub, receipt signed | Merchant: payouts checked ✓, assistant | Auditor: every batch checked ✓ |
+|---|---|---|
+| ![Checkout receipt](docs/img/hub-judge-2-settled.jpg) | ![Merchant](docs/img/hub-merchant-1440.jpg) | ![Auditor](docs/img/hub-auditor-1440.jpg) |
 
 - **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, check each payout,
   name an accountant, ask the assistant about your sales, withdraw.
@@ -32,7 +34,8 @@ its own key, its accountant gets a copy encrypted to the accountant's key, and t
 4. **Auditor → Read my statements**: the accountant's view of the same payouts.
 
 **Pay with credit** works the same way from the same wallet (it borrows against the tWBTC from the starter pack). The
-global eERC auditor view needs the auditor key; its screenshot is in `docs/img/`.
+global eERC auditor view needs the auditor key; its screenshot is above (`docs/img/hub-auditor-1440.jpg`). Judge-run
+screenshots: `docs/img/hub-judge-*.jpg`.
 
 ## Live on Avalanche Fuji
 

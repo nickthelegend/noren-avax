@@ -405,6 +405,12 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
   .ccard-sub { max-width: 100%; }
   .card { padding: 18px; }
   .table-wrap { margin: 0 -18px; padding: 0 18px; }
+  .table .sm-hide { display: none; }
+  .table td.sm-wrap { white-space: normal; }
+  .table td.sm-wrap .addr { display: inline; white-space: normal; }
+  .table th, .table td { padding-right: 7px; }
+  .table .kind { padding: 3px 8px; }
+  .table .memo { min-width: 120px; }
   .qa-pick span { display: none; }
   .ev > div { grid-template-columns: 64px minmax(0, 1fr); }
   .tabs button { padding: 8px 6px; font-size: 13px; }

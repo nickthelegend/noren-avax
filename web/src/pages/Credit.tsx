@@ -5,6 +5,7 @@ import { D, pub, readable } from '../lib/chain';
 import { ago, useLoad, useNow } from '../lib/hooks';
 import { useWho, write } from '../lib/signer';
 import { Art, Money, Note, Skeleton, TxLink } from '../ui/kit';
+import { StarterPack } from '../ui/StarterPack';
 
 const usd8 = (v: bigint) => Number(v) / 1e8;
 const usd6 = (v: bigint) => Number(v) / 1e6;
@@ -158,7 +159,7 @@ export function Credit() {
               <div>
                 <h2>How much of your coin is spoken for</h2>
                 <p className="muted">
-                  {p ? `${usd6(p.debt).toFixed(2)} owed of ${usd6(p.liquidationValue).toFixed(2)} at the liquidation line. Liquidation starts when health drops below 1.` : 'Your debt against the liquidation line.'}
+                  {p && p.liquidationValue === 0n ? 'Nothing locked yet.' : p ? `${usd6(p.debt).toFixed(2)} owed of ${usd6(p.liquidationValue).toFixed(2)} at the liquidation line. Liquidation starts when health drops below 1.` : 'Your debt against the liquidation line.'}
                 </p>
               </div>
               <Art name="gauge" size={64} />
@@ -174,6 +175,7 @@ export function Credit() {
             </div>
           </section>
 
+          {who && acct.data?.wallet.avax === 0n && <StarterPack address={who.address} />}
           <section className="card">
             <div className="tabs" role="tablist">
               {(['collateral', 'borrow', 'repay', 'withdraw'] as Act[]).map((t) => (
@@ -196,15 +198,15 @@ export function Credit() {
               <span>
                 {tab === 'collateral'
                   ? asset === 'btc'
-                    ? 'tWBTC to lock (empty = 0.01 from the faucet)'
-                    : 'AVAX to lock (empty = 0.005)'
+                    ? 'tWBTC to lock'
+                    : 'AVAX to lock'
                   : tab === 'borrow'
                     ? `tUSDC to borrow${p ? ` (up to ${usd6(p.available).toFixed(2)})` : ''}`
                     : tab === 'repay'
-                      ? 'tUSDC to repay (empty = everything)'
+                      ? 'tUSDC to repay'
                       : `${asset === 'btc' ? 'tWBTC' : 'AVAX'} to withdraw`}
               </span>
-              <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
+              <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={tab === 'collateral' ? (asset === 'btc' ? '0.01' : '0.005') : tab === 'repay' ? 'Everything owed' : '0.00'} />
             </label>
             <button className="btn btn-dark wide" disabled={!who || !!busy} onClick={act}>
               {busy ? 'Confirming on Fuji…' : tab === 'collateral' ? 'Lock collateral' : tab === 'borrow' ? 'Borrow to my wallet' : tab === 'repay' ? 'Repay' : 'Withdraw collateral'}

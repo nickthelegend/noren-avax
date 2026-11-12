@@ -122,7 +122,7 @@ export function Merchant() {
         )}
       </div>
 
-      {!who && <Note art="stall" title="Connect the shop’s wallet">The dashboard decrypts revenue with the shop owner’s eERC key, in this tab only.</Note>}
+      {!who && <Note art="stall" title="Connect the shop’s wallet">Or pick Test wallet to open your own shop. Revenue decrypts in this tab only.</Note>}
       {who && avax.data === 0n && <StarterPack address={who.address} />}
       {who && shops.loading && !shops.data && <Skeleton h={120} />}
       {who && shops.data && !shop && <OpenShop onDone={() => shops.reload()} sample={who.kind === 'guest' ? who.address : null} />}
@@ -184,7 +184,7 @@ export function Merchant() {
                     <thead>
                       <tr>
                         <th>When</th>
-                        <th>From</th>
+                        <th className="sm-hide">From</th>
                         <th>Order</th>
                         <th className="r">Amount</th>
                         <th className="r">On Snowtrace</th>
@@ -194,11 +194,11 @@ export function Merchant() {
                       {book.data.lines.map((x) => (
                         <tr key={x.key}>
                           <td>{ago(x.time, now)}</td>
-                          <td>{x.from ? <Addr a={x.from} /> : <span className="faint">Batch #{x.batch}</span>}</td>
+                          <td className="sm-hide">{x.from ? <Addr a={x.from} /> : <span className="faint">Batch #{x.batch}</span>}</td>
                           <td className="memo">{x.memo ?? <span className="faint">No note</span>}</td>
                           <td className="r num">{x.cents != null ? <Money usd={Number(x.cents) / 100} /> : <span className="bad">{x.error ?? 'unreadable'}</span>}</td>
                           <td className="r">
-                            <span className="cipher" title="What everyone else sees: an encrypted amount">encrypted</span> <TxLink hash={x.tx} label="tx" />
+                            <span className="cipher sm-hide" title="What everyone else sees: an encrypted amount">encrypted</span> <TxLink hash={x.tx} label="tx" />
                           </td>
                         </tr>
                       ))}
@@ -213,7 +213,7 @@ export function Merchant() {
                 <div className="card-h">
                   <h2>Withdraw</h2>
                 </div>
-                <p className="muted">Turns private tUSDC into public tUSDC in this wallet. A zero-knowledge proof shows the balance covers it.</p>
+                <p className="muted">Moves private tUSDC to this wallet’s public balance. The amount becomes public.</p>
                 <label className="field">
                   <span>Amount (tUSDC)</span>
                   <input inputMode="decimal" placeholder={book.data ? (Number(book.data.balance) / 100).toFixed(2) : '0.00'} value={amount} onChange={(e) => setAmount(e.target.value)} />
@@ -278,7 +278,7 @@ export function Merchant() {
                 </ul>
                 <p className="muted">
                   {VIA_HUB ? (
-                    <>Customers pay the hub; it pays shops in batches with other shops, some of them zero. Your accountant reads your statements in the <a {...linkProps('/auditor')}>books</a>.</>
+                    <>Customers pay the hub; it pays shops in batches, some of them zero. Your accountant reads your statements in the <a {...linkProps('/auditor')}>books</a>.</>
                   ) : (
                     <>Your accountant reads the same payments with the <a {...linkProps('/auditor')}>auditor key</a>.</>
                   )}
@@ -382,7 +382,7 @@ function Payouts({ payouts, now }: { payouts: Payout[]; now: number }) {
           </li>
         ))}
       </ul>
-      <p className="muted">✓ means the statement adds up to what your key decrypts and matches the digest in NorenSettlement.</p>
+      <p className="muted">✓ the statement matches what your key decrypts and its digest on chain.</p>
     </section>
   );
 }

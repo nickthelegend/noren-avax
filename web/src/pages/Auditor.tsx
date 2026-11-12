@@ -141,8 +141,8 @@ export function Auditor() {
       {!who && <Note art="ledger" title={VIA_HUB ? 'Connect the auditor’s or an accountant’s wallet' : 'Connect the auditor’s wallet'}>The ledger below decrypts in this tab with the auditor key; nothing is sent anywhere.</Note>}
       {who && meta.data && !isAuditor && books.data && !isAccountant && (
         <Note art="ledger" title="This wallet isn’t the auditor">
-          The auditor ciphertexts are encrypted to <Addr a={meta.data.auditor} />. Any other key gets noise, which is the point.
-          {VIA_HUB && <> A shop can name any Noren key as its accountant in Merchant; that key reads the shop’s statements here.</>}
+          The auditor ciphertexts are encrypted to <Addr a={meta.data.auditor} />. Any other key gets noise.
+          {VIA_HUB && <> A shop’s accountant reads its statements here.</>}
         </Note>
       )}
       {(isAuditor || isAccountant) && !unlocked && (
@@ -187,10 +187,10 @@ export function Auditor() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>When</th>
+                    <th className="sm-hide">When</th>
                     <th>Shop</th>
                     <th>Batch</th>
-                    <th>Orders</th>
+                    <th className="sm-hide">Orders</th>
                     <th className="r">Paid out</th>
                     <th className="r">Check</th>
                   </tr>
@@ -198,12 +198,12 @@ export function Auditor() {
                 <tbody>
                   {statements.data.map((x) => (
                     <tr key={x.payoutTx}>
-                      <td>{ago(x.at, now)}</td>
-                      <td>{x.shop}</td>
+                      <td className="sm-hide">{ago(x.at, now)}</td>
+                      <td className="sm-wrap">{x.shop}</td>
                       <td>
                         #{x.batch} <TxLink hash={x.payoutTx} label="payout" />
                       </td>
-                      <td>{x.cover ? <span className="faint">cover</span> : x.orders}</td>
+                      <td className="sm-hide">{x.cover ? <span className="faint">cover</span> : x.orders}</td>
                       <td className="r num">
                         <Money usd={Number(x.total) / 100} />
                       </td>
@@ -216,7 +216,7 @@ export function Auditor() {
               </table>
             </div>
           )}
-          <p className="muted small">The hub encrypts each statement to your key and commits its hash on chain; the shop and the auditor can check the amounts against the eERC ciphertexts.</p>
+          <p className="muted small">Each statement is encrypted to your key and its hash is on chain.</p>
         </section>
       )}
       {isAuditor && unlocked && (
@@ -233,27 +233,27 @@ export function Auditor() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>When</th>
+                      <th className="sm-hide">When</th>
                       <th>Kind</th>
                       <th>From</th>
                       <th>To</th>
                       <th className="r">Amount</th>
-                      <th className="r">Tx</th>
+                      <th className="r sm-hide">Tx</th>
                     </tr>
                   </thead>
                   <tbody>
                     {audit.data.map((r) => (
                       <tr key={`${r.tx}-${r.kind}`}>
-                        <td>{ago(r.time, now)}</td>
+                        <td className="sm-hide">{ago(r.time, now)}</td>
                         <td>
                           <span className={`kind kind-${r.kind.toLowerCase()}`}>{r.kind === 'Transfer' ? 'Payment' : r.kind === 'Deposit' ? 'Top-up' : 'Withdrawal'}</span>
                         </td>
-                        <td>
+                        <td className="sm-wrap">
                           <Addr a={r.from} />
                         </td>
-                        <td>{r.to ? <Addr a={r.to} /> : <span className="faint">—</span>}</td>
+                        <td className="sm-wrap">{r.to ? <Addr a={r.to} /> : <span className="faint">—</span>}</td>
                         <td className="r num">{r.cents != null ? <Money usd={Number(r.cents) / 100} /> : <span className="bad">{r.error}</span>}</td>
-                        <td className="r">
+                        <td className="r sm-hide">
                           <TxLink hash={r.tx} label="tx" />
                         </td>
                       </tr>

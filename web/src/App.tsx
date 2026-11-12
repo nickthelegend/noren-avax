@@ -102,9 +102,15 @@ export function App() {
     page = (
       <main className="wrap page-404">
         <h1>Nothing here</h1>
-        <p>
-          <a {...linkProps('/')}>Back to Noren</a>
-        </p>
+        <p className="sub">This page doesn’t exist.</p>
+        <div className="hero-cta">
+          <a className="btn btn-dark" {...linkProps('/')}>
+            Back to Noren
+          </a>
+          <a className="btn btn-quiet" {...linkProps('/shop/harbor-loom')}>
+            Try the checkout
+          </a>
+        </div>
       </main>
     );
   return (

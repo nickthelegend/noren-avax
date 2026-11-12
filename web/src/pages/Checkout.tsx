@@ -222,14 +222,18 @@ export function Checkout({ slug }: { slug: string }) {
       <section className="co-left">
         <div className="co-left-in">
           <div className="co-shop">
-            <span className="co-avatar" aria-hidden="true">{shop?.name.slice(0, 1) ?? ''}</span>
+            <span className="co-avatar" aria-hidden="true">{shop?.name.slice(0, 1) ?? '?'}</span>
             {shop ? <b>{shop.name}</b> : shops.loading ? <Skeleton w={140} /> : <b>No shop at “{slug}”</b>}
           </div>
-          <p className="co-label">Pay {shop?.name ?? ''}</p>
-          <div className="co-total">
-            <Money usd={item ? Number(item.priceCents) / 100 : null} />
-            <span className="co-unit">tUSDC</span>
-          </div>
+          {(shop || shops.loading) && (
+            <>
+              <p className="co-label">Pay {shop?.name ?? ''}</p>
+              <div className="co-total">
+                <Money usd={item ? Number(item.priceCents) / 100 : null} />
+                <span className="co-unit">tUSDC</span>
+              </div>
+            </>
+          )}
           {shop && items.length > 0 && (
             <ul className="co-items" role="radiogroup" aria-label="Item">
               {items.map((it) => (
@@ -245,7 +249,7 @@ export function Checkout({ slug }: { slug: string }) {
           {shop && items.length === 0 && <p className="co-empty">This shop has not listed anything yet.</p>}
           {!shop && !shops.loading && (
             <p className="co-empty">
-              Shops are read from NorenMerchants on Fuji. Try <a {...linkProps('/shop/harbor-loom')}>Harbor &amp; Loom</a>.
+              No shop on Fuji uses this link. Try <a {...linkProps('/shop/harbor-loom')}>Harbor &amp; Loom</a>.
             </p>
           )}
           <dl className="co-lines">
@@ -299,7 +303,7 @@ export function Checkout({ slug }: { slug: string }) {
 
           {!who ? (
             <Note art="ledger" title="Connect a wallet on Avalanche Fuji">
-              Noren asks for one signature to derive your private-balance key, then each payment is one or two Fuji transactions.
+              Connect wallet → Test wallet works with nothing installed.
             </Note>
           ) : (
             <>

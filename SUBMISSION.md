@@ -57,7 +57,7 @@ Not used: ICM / ICTT (optional in the brief; not built), mainnet, a custom L1.
 - Live app: https://noren-avax.vercel.app (Fuji testnet; no wallet needed: Connect wallet → Test wallet)
 - Noren API (hub, gas relay, assistant): https://noren-avax-api.201-18-198-162.sslip.io/api/health
 - Repo: (to be pushed by Nick)
-- Demo video (≤ 3 min): (to be recorded)
+- Demo video (2:55): `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and `noren-avax-film-share.mp4` (720p, 9.5 MB); upload link: (to be added by Nick)
 - Slides: `docs/SLIDES.md`
 - Screen audit (every route and state at 1440 and 375): `docs/SCREEN-AUDIT.md`
 - Contracts on Snowtrace:

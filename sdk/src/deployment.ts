@@ -13,6 +13,12 @@ export interface Deployment {
   norenCredit: Address;
   norenMerchants: Address;
   auditor?: Address;
+  // Settlement hub and judge gas station (DeployHub.s.sol)
+  norenSettlement?: Address;
+  norenGasStation?: Address;
+  hub?: Address;
+  relayer?: Address;
+  hubDeployBlock?: number;
 }
 
 /** eERC runs in converter mode with 2 decimals: one unit is one cent of tUSDC. */

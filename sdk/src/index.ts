@@ -4,3 +4,4 @@ export * from './credit.ts';
 export * from './deployment.ts';
 export * from './eerc.ts';
 export * from './format.ts';
+export * from './hub.ts';

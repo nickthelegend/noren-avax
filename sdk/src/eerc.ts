@@ -15,6 +15,7 @@ import {
 } from 'viem';
 import { encryptedErcAbi, registrarAbi } from './abi.ts';
 import { EERC_DECIMALS, type Deployment } from './deployment.ts';
+import { decryptNote, formatKey } from './hub.ts';
 
 export interface CircuitURLs {
   register: { wasm: string; zkey: string };
@@ -76,7 +77,7 @@ export const withdrawEvent = parseAbiItem(
   'event Withdraw(address indexed user, uint256 amount, uint256 tokenId, uint256[7] auditorPCT, address indexed auditorAddress)',
 );
 export const depositEvent = parseAbiItem('event Deposit(address indexed user, uint256 amount, uint256 dust, uint256 tokenId)');
-const privateMessageEvent = parseAbiItem(
+export const privateMessageEvent = parseAbiItem(
   'event PrivateMessage(address indexed from, address indexed to, (address messageFrom, address messageTo, string messageType, bytes encryptedMsg) metadata)',
 );
 
@@ -85,7 +86,8 @@ export async function scanLogs<E extends AbiEvent>(
   pub: PublicClient,
   q: { address: Address; event: E; args?: Record<string, unknown>; fromBlock: bigint; toBlock?: bigint; step?: bigint },
 ) {
-  const to = q.toBlock ?? (await pub.getBlockNumber());
+  // cacheTime 0: viem caches the block number for ~4 s, so a scan right after a transaction could end a block short.
+  const to = q.toBlock ?? (await pub.getBlockNumber({ cacheTime: 0 }));
   const step = q.step ?? 2_000n;
   const windows: [bigint, bigint][] = [];
   for (let a = q.fromBlock; a <= to; a += step) windows.push([a, a + step - 1n > to ? to : a + step - 1n]);
@@ -183,13 +185,40 @@ export class NorenPrivate {
     return { approve, deposit: r.transactionHash };
   }
 
-  /** Private payment: the amount is a Groth16-proven ciphertext; the memo is encrypted to the payee. */
+  /**
+   * Private payment: the amount is a Groth16-proven ciphertext; the memo is encrypted to the payee.
+   * A zero amount (the settlement hub's cover payouts) is valid for eERC's transfer circuit and contract; only the
+   * SDK's client-side check refuses it, so that one check is relaxed for zero, just for this call.
+   */
   async pay(to: Address, cents: bigint, memo?: string): Promise<Hex> {
+    if (cents < 0n) throw new Error('A payment cannot be negative.');
     const bal = await this.balance();
     if (bal.cents < cents) throw new Error(`Private balance is ${bal.cents} cents; this payment needs ${cents}.`);
-    const r = await this.eerc.transfer(to, cents, bal.encrypted, bal.cents, await this.auditorPublicKey(), this.d.tUSDC, memo);
-    await this.wait(r.transactionHash);
-    return r.transactionHash;
+    const e = this.eerc as unknown as { validateAmount: (a: bigint, f?: bigint) => void };
+    const own = Object.prototype.hasOwnProperty.call(e, 'validateAmount');
+    if (cents === 0n)
+      e.validateAmount = (a: bigint, f?: bigint) => {
+        if (a < 0n || (f != null && a > f)) throw new Error('Invalid amount!');
+      };
+    try {
+      const r = await this.eerc.transfer(to, cents, bal.encrypted, bal.cents, await this.auditorPublicKey(), this.d.tUSDC, memo);
+      await this.wait(r.transactionHash);
+      return r.transactionHash;
+    } finally {
+      if (cents === 0n && !own) delete (e as { validateAmount?: unknown }).validateAmount;
+    }
+  }
+
+  /** The formatted BabyJubJub secret of this wallet's eERC key (for notes and statements). Needs unlock(). */
+  secretKey(): bigint {
+    const k = (this.eerc as unknown as { decryptionKey?: string }).decryptionKey;
+    if (!k) throw new Error('Unlock the private balance first.');
+    return formatKey(k);
+  }
+
+  /** Decrypts any note encrypted to this wallet's eERC key (payment memos, statements). */
+  readNote(note: Hex): string {
+    return decryptNote(this.eerc.poseidon as never, this.secretKey(), note);
   }
 
   /** Turns private cents back into public tUSDC in the caller's wallet. */
@@ -222,14 +251,12 @@ export class NorenPrivate {
     return out.sort((a, b) => Number(b.block - a.block));
   }
 
-  private async memo(tx: Hex, block: bigint, to: Address): Promise<string | null> {
+  /** The encrypted note an eERC transaction carried to `to`, decrypted with this wallet's key; null if it has none. */
+  async memo(tx: Hex, block: bigint, to: Address = this.me): Promise<string | null> {
     const logs = await this.pub.getLogs({ address: this.d.encryptedERC, event: privateMessageEvent, args: { to }, fromBlock: block, toBlock: block });
-    if (!logs.some((l) => l.transactionHash === tx)) return null;
-    // decryptMessage reads the block's first PrivateMessage; only trust it when it is ours.
-    const first = (await this.pub.getLogs({ address: this.d.encryptedERC, event: privateMessageEvent, fromBlock: block, toBlock: block }))[0];
-    if (first?.transactionHash !== tx) return null;
-    const m = await this.eerc.decryptMessage(tx);
-    return m.decryptedMessage;
+    const mine = logs.find((l) => l.transactionHash === tx);
+    if (!mine) return null;
+    return this.readNote((mine.args.metadata as { encryptedMsg: Hex }).encryptedMsg);
   }
 
   /** Every transfer and withdrawal on the contract, decrypted with the auditor key (only works for the auditor). */

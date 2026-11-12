@@ -1,0 +1,16 @@
+{
+  "name": "@noren-avax/hub",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/server.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.7.0",
+    "@avalabs/eerc-sdk": "1.0.2",
+    "@noren-avax/sdk": "workspace:*",
+    "@types/node": "24.10.1",
+    "viem": "2.57.13"
+  }
+}

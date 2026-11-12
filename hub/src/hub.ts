@@ -326,7 +326,8 @@ export class Hub {
       coverMin: this.o.coverMin,
       queued: this.state.queued.length,
       settling: !!this.state.inflight,
-      nextSettleAt: this.nextSettleAt(),
+      // When payments wait, the batch runs at the first boundary after the oldest was seen.
+      nextSettleAt: this.state.queued.length ? this.nextSettleAt(Math.min(...this.state.queued.map((q) => q.seenAt))) : this.nextSettleAt(),
       lastBatchAt: this.state.lastBatchAt || null,
       lastError: this.state.lastError,
     };

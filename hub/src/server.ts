@@ -141,7 +141,8 @@ const server = createServer(async (req, res) => {
       if (!/^0x[0-9a-fA-F]{64}$/.test(String(b.tx)) || typeof b.claim !== 'string') throw new HttpError(400, 'tx and claim are required');
       const r = await hub.receipt(String(b.tx).toLowerCase() as Hex, b.claim);
       if (r.status === 'forbidden') throw new HttpError(403, 'That claim does not match this payment.');
-      if (r.status === 'unknown') throw new HttpError(404, 'The hub has not seen this payment yet. It reads Fuji every 10 seconds.');
+      // Not an error: the hub reads Fuji every 10 seconds, so a fresh payment is briefly unseen.
+      if (r.status === 'unknown') return send(res, 200, { status: 'unseen' });
       return send(res, 200, r);
     }
     if (url.pathname === '/api/ask' && req.method === 'POST') return send(res, 200, await ask.reply((await body(req)) as never, ipOf(req)));

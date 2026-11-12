@@ -37,7 +37,7 @@ export function Landing() {
             <h1>
               Let customers pay <em>privately.</em>
             </h1>
-            <p className="lede">With stablecoins, or with credit against their coins. Noren settles on Avalanche with eERC, so a shop’s revenue is encrypted on chain: the shop and its auditor read it, Snowtrace can’t.</p>
+            <p className="lede">With stablecoins, or with credit against their coins. Noren settles on Avalanche with eERC through its own hub, so a shop’s revenue is encrypted and its customers are unlinkable: the shop and its auditor read it, Snowtrace can’t.</p>
             <div className="hero-cta">
               <a className="btn btn-light" {...linkProps('/shop/harbor-loom')}>
                 Try the checkout
@@ -156,7 +156,7 @@ export function Landing() {
             </header>
             <Art name="receipt" size={88} />
             <p>
-              The exact amount and the order note, decrypted in the browser with the shop’s own key. Its accountant sees the same with the auditor key, and nobody else does.
+              The exact amount and the order, decrypted in the browser with the shop’s own key. Its accountant gets each statement encrypted to its own key, and nobody else reads it.
             </p>
             <div className="view-acts">
               <a className="btn btn-dark" {...linkProps('/merchant')}>
@@ -191,7 +191,7 @@ export function Landing() {
           <article className="way">
             <Art name="ledger" size={120} />
             <h3>Books that still balance</h3>
-            <p>Every payment carries a second ciphertext for the auditor key, so the accountant can reconcile without making revenue public.</p>
+            <p>Every payment carries a ciphertext for the auditor, and each shop’s accountant gets its statements, so the books reconcile without making revenue public.</p>
           </article>
         </div>
       </section>

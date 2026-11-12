@@ -8,6 +8,7 @@ export const pub = publicClientFor(fuji);
 export const circuits = circuitURLs(`${location.origin}/circuits`);
 
 const NAMES: Record<string, string> = {};
+if (D.hub) NAMES[D.hub.toLowerCase()] = 'Noren hub';
 export function nameOf(a?: string | null): string {
   if (!a) return '';
   return NAMES[a.toLowerCase()] ?? `${a.slice(0, 6)}…${a.slice(-4)}`;

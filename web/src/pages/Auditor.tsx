@@ -138,7 +138,7 @@ export function Auditor() {
         </div>
       </div>
 
-      {!who && <Note art="ledger" title="Connect the auditor’s wallet">The ledger below decrypts in this tab with the auditor key; nothing is sent anywhere.</Note>}
+      {!who && <Note art="ledger" title={VIA_HUB ? 'Connect the auditor’s or an accountant’s wallet' : 'Connect the auditor’s wallet'}>The ledger below decrypts in this tab with the auditor key; nothing is sent anywhere.</Note>}
       {who && meta.data && !isAuditor && books.data && !isAccountant && (
         <Note art="ledger" title="This wallet isn’t the auditor">
           The auditor ciphertexts are encrypted to <Addr a={meta.data.auditor} />. Any other key gets noise, which is the point.

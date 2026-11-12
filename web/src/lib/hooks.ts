@@ -4,7 +4,7 @@ import { readable } from './chain';
 export type Load<T> = { data: T | undefined; error: string | null; loading: boolean; reload: () => void };
 
 /** Loads `fn`, reloads after every Noren transaction and every `everyMs`. Keeps the last good data while refreshing. */
-export function useLoad<T>(fn: () => Promise<T>, deps: unknown[], everyMs = 0): Load<T> {
+export function useLoad<T>(fn: () => Promise<T>, deps: unknown[], everyMs = 0, afterTxMs: number[] = [400, 3500]): Load<T> {
   const [data, setData] = useState<T>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,14 +26,17 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[], everyMs = 0): 
     setData(undefined);
     run();
     // Public Fuji RPCs sit behind load balancers and can trail a block: read now and once more a bit later.
+    // A burst of transactions (a payment plan sends several) re-reads once per delay, not once per transaction.
+    let timers: ReturnType<typeof setTimeout>[] = [];
     const onTx = () => {
-      setTimeout(run, 400);
-      setTimeout(run, 3500);
+      timers.forEach(clearTimeout);
+      timers = afterTxMs.map((ms) => setTimeout(run, ms));
     };
     addEventListener('noren:tx', onTx);
     const t = everyMs ? setInterval(run, everyMs) : undefined;
     return () => {
       removeEventListener('noren:tx', onTx);
+      timers.forEach(clearTimeout);
       if (t) clearInterval(t);
     };
   }, [run, everyMs]);

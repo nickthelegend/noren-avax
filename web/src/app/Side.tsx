@@ -14,6 +14,17 @@ const creditEvents = [
   parseAbiItem('event Repaid(address indexed payer, address indexed user, uint256 amount, uint256 debt)'),
 ] as const;
 
+/** Every NorenCredit event in one windowed scan (the contract is quiet; the caller filters by user). */
+async function creditLogs(fromBlock: bigint) {
+  const to = await pub.getBlockNumber({ cacheTime: 0 });
+  const out = [];
+  for (let a = fromBlock; a <= to; a += 2_000n) {
+    const b = a + 1_999n > to ? to : a + 1_999n;
+    out.push(...(await pub.getLogs({ address: D.norenCredit, events: creditEvents, fromBlock: a, toBlock: b })));
+  }
+  return out;
+}
+
 type Demo = { title: string; as: string; at: string; txs: { hash: Hex; what: string }[] };
 const DEMO = Object.values(((D as unknown as { demo?: Record<string, Demo> }).demo ?? {}) as Record<string, Demo>);
 
@@ -90,15 +101,17 @@ export function Activity() {
   const acts = useLoad<Act[] | null>(async () => {
     if (!who) return null;
     const from = BigInt(D.deployBlock);
-    const [credit, sent, tops, shops] = await Promise.all([
-      Promise.all(creditEvents.map((ev) => scanLogs(pub as never, { address: D.norenCredit, event: ev, args: { user: who.address }, fromBlock: from }))),
+    const [creditAll, sent, tops, shops] = await Promise.all([
+      creditLogs(from),
       scanLogs(pub as never, { address: D.encryptedERC, event: privateTransferEvent, args: { from: who.address }, fromBlock: from }),
       scanLogs(pub as never, { address: D.encryptedERC, event: depositEvent, args: { user: who.address }, fromBlock: from }),
       readShops(pub as never, D).catch(() => []),
     ]);
     shops.forEach((s) => setName(s.owner, s.name));
+    const me = who.address.toLowerCase();
+    const credit = creditAll.filter((r) => ((r.args as { user?: string }).user ?? '').toLowerCase() === me);
     const rows = [
-      ...credit.flat().map((r) => {
+      ...credit.map((r) => {
         const a = r.args as Record<string, unknown>;
         const amt = (k: string) => a[k] as bigint;
         const coll = () => ((a.asset as string) === AVAX ? `${formatEther(amt('amount'))} AVAX` : `${Number(amt('amount')) / 1e8} tWBTC`);
@@ -115,7 +128,7 @@ export function Activity() {
     return rows
       .map((x) => ({ hash: x.r.transactionHash as Hex, title: x.title, sub: x.sub, kind: x.kind, at: t.get(String(x.r.blockNumber)) ?? 0 }))
       .sort((a, b) => b.at - a.at);
-  }, [who?.address, ver]);
+  }, [who?.address, ver], 0, [6000]);
 
   const recorded: Act[] = DEMO.flatMap((d) => d.txs.map((tx) => ({ hash: tx.hash, title: cap(tx.what), sub: d.title, at: Date.parse(d.at) / 1000 }))).reverse();
   const list = who ? acts.data : recorded;

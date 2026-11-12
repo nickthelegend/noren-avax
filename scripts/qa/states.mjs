@@ -10,7 +10,7 @@ const BASE = HOSTED ?? LOCAL;
 mkdirSync(OUT, { recursive: true });
 
 const testWallet = async (p) => {
-  await p.getByRole('button', { name: 'Connect a wallet' }).click();
+  await p.locator('header .nk-chip').click();
   await p.getByRole('button', { name: /test wallet/i }).click();
 };
 const shots = [
@@ -23,7 +23,7 @@ const shots = [
   { name: 'out-auditor', path: '/auditor' },
   { name: 'unknown-shop', path: '/shop/no-such-shop' },
   { name: 'not-found', path: '/nope' },
-  { name: 'wallet-sheet', path: '/shop/harbor-loom', act: async (p) => p.getByRole('button', { name: 'Connect a wallet' }).click() },
+  { name: 'wallet-sheet', path: '/shop/harbor-loom', act: async (p) => p.locator('header .nk-chip').click() },
   { name: 'deposit-sheet', path: '/credit', act: async (p) => p.getByRole('button', { name: /^Add collateral/ }).first().click() },
   { name: 'fresh-wallet-pay', path: '/shop/harbor-loom', act: testWallet },
   { name: 'fresh-wallet-merchant', path: '/merchant', act: testWallet },

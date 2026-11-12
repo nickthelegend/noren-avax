@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Abi, Address, Hex } from 'viem';
-import { accountantOf, hasHub, norenSettlementAbi, parseStatement, readPayouts, readShops, statementDigest, type Shop } from '@noren-avax/sdk';
+import { accountantOf, hasHub, norenSettlementAbi, parseStatement, readBatches, readPayouts, readShops, statementDigest, type Shop } from '@noren-avax/sdk';
 import { D, pub, readable, setName } from '../lib/chain';
 import { ago, useLoad, useNow } from '../lib/hooks';
 import { isUnlocked, privateSession, unlock, useSignerVersion, useWho, write } from '../lib/signer';
@@ -217,22 +217,32 @@ function NameAccountant({ shop, me }: { shop: Shop; me: Address }) {
   );
 }
 
-/** Hub batches recorded by the judge run (deployments/fuji.json), each opening its record on Snowtrace. */
+/** Settlement batches, read live from NorenSettlement (public: ids, counts and transactions, never amounts). */
 export function RecordedBatches({ shops }: { shops?: Shop[] }) {
-  if (!BATCHES.length) return null;
+  const now = useNow();
+  const live = useLoad(() => (VIA_HUB ? readBatches(pub as never, D as never) : Promise.resolve([])), [], 60_000);
   const name = (id: number) => shops?.[id]?.name ?? `shop #${id}`;
+  const rec = (id: number) => BATCHES.find((b) => b.batch === id);
   return (
-    <Card title="Recorded batches" sub="Settled on Avalanche Fuji by Noren’s hub" pill={<Pill>{BATCHES.length}</Pill>}>
-      <ul className="nk-acts nc-acts">
-        {BATCHES.map((b) => (
-          <Row
-            key={b.record}
-            title={`Batch #${b.batch}: ${b.payments.length} in, ${b.payouts.length} payouts`}
-            sub={`${b.payouts.map((p) => name(p.shop)).join(', ')} · ${b.payouts.filter((p) => p.accountant).length} statement${b.payouts.filter((p) => p.accountant).length === 1 ? '' : 's'} for an accountant`}
-            right={<TxRef hash={b.record} />}
-          />
-        ))}
-      </ul>
+    <Card title="Settlement batches" sub="Read from NorenSettlement on Avalanche Fuji" pill={<Pill tone={live.error ? 'bad' : 'live'}>{live.data ? live.data.length : '…'}</Pill>}>
+      {live.error && <p className="nc-fine">Couldn’t read NorenSettlement just now ({live.error.slice(0, 80)}).</p>}
+      {!live.data && !live.error && <ul className="nk-acts nc-acts"><Row state="run" title="Reading NorenSettlement…" /></ul>}
+      {live.data && live.data.length === 0 && <Empty title="No batches yet" />}
+      {live.data && live.data.length > 0 && (
+        <ul className="nk-acts nc-acts">
+          {live.data.slice(0, 6).map((b) => {
+            const r = rec(b.batchId);
+            return (
+              <Row
+                key={b.tx}
+                title={`Batch #${b.batchId}: ${b.payments.length} in, ${b.payoutTxs.length} payouts`}
+                sub={`${ago(b.at, now)}${r ? ` · ${r.payouts.map((p) => name(p.shop)).join(', ')}` : ''}`}
+                right={<TxRef hash={b.tx} />}
+              />
+            );
+          })}
+        </ul>
+      )}
     </Card>
   );
 }

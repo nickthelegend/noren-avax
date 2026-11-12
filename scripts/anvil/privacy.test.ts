@@ -5,7 +5,7 @@
 //   node --test --test-force-exit scripts/anvil/privacy.test.ts   (snarkjs keeps worker threads alive)
 import { test, after, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -36,36 +36,24 @@ import {
 } from '@noren-avax/sdk';
 import { ROOT } from '../lib/env.ts';
 import { formatKey } from '../lib/babyjub.ts';
+import { startAnvil } from './chain.ts';
 
-const PORT = 5391;
-const RPC = `http://127.0.0.1:${PORT}`;
 // Anvil's well-known first dev account (public test key, holds nothing anywhere else).
 const ANVIL_DEV_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 // Same keys as Foundry's makeAddr(label): key = keccak256(label), so the fixtures replay at the same addresses.
 const keyOf = (label: string) => keccak256(toHex(label));
 
-const chain = local(RPC);
-const pub = publicClientFor(chain, http(RPC));
 const circuits = circuitURLs(join(ROOT, 'web/public/circuits'));
+let RPC: string;
+let chain: ReturnType<typeof local>;
+let pub: ReturnType<typeof publicClientFor>;
 const wallet = (k: Hex) => createWalletClient({ account: privateKeyToAccount(k), chain, transport: http(RPC) });
 
-let anvil: ChildProcess;
+let stopAnvil: () => void;
 let d: Deployment;
 const W: Record<string, WalletClient> = {};
 const P: Record<string, NorenPrivate> = {};
 const fx: Record<string, unknown> = {};
-
-async function waitRpc() {
-  for (let i = 0; i < 50; i++) {
-    try {
-      await pub.getBlockNumber();
-      return;
-    } catch {
-      await new Promise((r) => setTimeout(r, 200));
-    }
-  }
-  throw new Error('anvil did not start');
-}
 
 async function send(w: WalletClient, address: Address, abi: readonly unknown[], functionName: string, args: unknown[], value?: bigint) {
   const hash = await w.writeContract({ address, abi: abi as never, functionName, args: args as never, value, account: w.account!, chain } as never);
@@ -80,8 +68,8 @@ async function expectRevert(from: Address, to: Address, data: Hex) {
 }
 
 before(async () => {
-  anvil = spawn('anvil', ['--port', String(PORT), '--chain-id', '31337', '--silent', '--code-size-limit', '100000'], { stdio: 'ignore' });
-  await waitRpc();
+  const a = await startAnvil();
+  ({ rpc: RPC, chain, pub, stop: stopAnvil } = a);
   const out = join(ROOT, '.anvil');
   mkdirSync(out, { recursive: true });
   execFileSync('forge', ['script', 'script/Deploy.s.sol', '--rpc-url', RPC, '--broadcast', '--slow'], {
@@ -98,9 +86,7 @@ before(async () => {
   }
 });
 
-after(() => {
-  anvil?.kill('SIGTERM');
-});
+after(() => stopAnvil?.());
 
 test('three parties register their eERC keys with Groth16 proofs', async () => {
   fx.registrations = {};
@@ -257,4 +243,3 @@ test('write the Foundry fixtures', async () => {
   writeFileSync(join(ROOT, 'contracts/test/fixtures/eerc-anvil.json'), JSON.stringify(out, null, 2));
 });
 
-process.on('exit', () => anvil?.kill('SIGTERM'));

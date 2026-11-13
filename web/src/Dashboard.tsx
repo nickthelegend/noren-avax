@@ -219,7 +219,7 @@ function Home({ rows, shop, store, onCreate }: { rows: Row[] | null; shop: strin
         <div className="sd-today-side">
           <div className="sd-stat"><span>Private balance</span>
             {books.unlocked ? <b>{books.book ? fmt(Number(books.book.balance) / 100) : <span className="sd-skel w80" />} <em>tUSDC</em></b> : <b className="sd-enc">Encrypted</b>}
-            <small>{books.err ? <span className="sd-err-t">{books.err}</span> : books.unlocked ? "eERC balance, decrypted in this tab with your key" : books.mine ? "Snowtrace shows ciphertext. Sign once to read it here." : "Sign in with the store’s wallet to read it."}</small>
+            <small>{books.err ? <span className="sd-err-t">{books.err}</span> : books.unlocked ? "eERC balance, decrypted in this tab with your key" : books.mine ? "The explorer shows ciphertext. Sign once to read it here." : "Sign in with the store’s wallet to read it."}</small>
             {books.unlocked ? <a href="#/dashboard/balances">View balance <Icon.arrow /></a> : books.mine && <button className="sd-btn sm" disabled={books.busy} onClick={books.open}>{books.busy ? <span className="spin" /> : <Icon.lock />} Decrypt</button>}
           </div>
           <div className="sd-stat"><span>Payouts</span><b>Every {hub.data ? Math.round(hub.data.everySec / 60) : 3} min</b><small>Noren’s hub pays you in a batch with other shops{hub.data ? ` · next ${hub.data.nextSettleAt > now ? `in ${Math.max(1, Math.round((hub.data.nextSettleAt - now) / 60))} min` : "now"}` : ""}.</small></div>
@@ -350,7 +350,7 @@ function Balances({ store }: { store: Store }) {
       {!books.unlocked ? (
         <section className="sd-panel narrow">
           <h2>Encrypted</h2>
-          <p className="sd-muted">Snowtrace shows only that Noren’s hub paid shop #{store.shopId}, never who the customers were or how much. {books.mine ? "Sign once to derive your key and decrypt your books here." : "Sign in with the store’s wallet to decrypt."}</p>
+          <p className="sd-muted">An Avalanche explorer shows only that Noren’s hub paid shop #{store.shopId}, never who the customers were or how much. {books.mine ? "Sign once to derive your key and decrypt your books here." : "Sign in with the store’s wallet to decrypt."}</p>
           {books.mine && <button className="sd-btn primary" disabled={books.busy} onClick={books.open}>{books.busy ? <><span className="spin" /> Decrypting…</> : <><Icon.lock /> Decrypt my books</>}</button>}
           {books.err && <p className="sd-err-t">{books.err}</p>}
         </section>
@@ -516,7 +516,7 @@ function PaymentPage({ id, rows, store, token, tick }: { id: string; rows: Row[]
           <section className="sd-panel">
             <h2>Payment method</h2>
             {pub_ ? (
-              <dl className="sd-dl"><dt>Type</dt><dd>Public tUSDC transfer</dd><dt>Customer</dt><dd>a public wallet (visible on Snowtrace)</dd></dl>
+              <dl className="sd-dl"><dt>Type</dt><dd>Public tUSDC transfer</dd><dt>Customer</dt><dd>a public wallet (visible on the explorer)</dd></dl>
             ) : (
               <dl className="sd-dl">
                 <dt>Type</dt><dd>{r.method === "stocks" ? "Stocks sold at checkout, then an eERC payment" : r.method === "payin3" ? "Pay in 3 against stocks, then an eERC payment" : r.method === "paylater" ? "Pay later against stocks, then an eERC payment" : "eERC private payment"}</dd>

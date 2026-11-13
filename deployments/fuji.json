@@ -180,6 +180,16 @@
       "hash": "0x39d9d6b6efa0cae960baec2032c5a59e171a5f36b915f7aa7281da5a82e9b37b",
       "by": "0x25caFd8dA001EEAC9b80931cA3079e08c44124Ed",
       "what": "Avalanche funding hub sends 0.03 AVAX to NorenGasStation"
+    },
+    "register_aubelle": {
+      "hash": "0x44cb7421dcd67d2327c4a16eb88dd0d15a46940e2516f4567a2aeb9de68422e1",
+      "by": "0xeef4317D588BC1965Af9DDbE2b5482961f5DD7aD",
+      "what": "Aubelle registers its eERC public key (Groth16 registration proof)"
+    },
+    "open_aubelle": {
+      "hash": "0x579130072d447ce0d518b83b51a85c053d0545a143a5ec4e97b0ab6b99012aba",
+      "by": "0xeef4317D588BC1965Af9DDbE2b5482961f5DD7aD",
+      "what": "Aubelle opens on Noren Merchant"
     }
   },
   "auditor": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61",
@@ -585,5 +595,10 @@
   "tMSFT": "0x773f0d46CB1e3361CBEeB256ACa3cf7DFA585628",
   "tNVDA": "0x280E22513Ac8a4a214fCa3593080501AD455916B",
   "tSPY": "0x6952540325545650D36e7aa83FEBda5F54E1dBBe",
-  "tTSLA": "0xF255d832b186cEE8632aFe1cEA25b7B2f70FA016"
+  "tTSLA": "0xF255d832b186cEE8632aFe1cEA25b7B2f70FA016",
+  "aubelle": {
+    "shopId": 5,
+    "storeId": "st_7kkaj4h363",
+    "owner": "0xeef4317D588BC1965Af9DDbE2b5482961f5DD7aD"
+  }
 }

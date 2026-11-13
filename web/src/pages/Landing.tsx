@@ -213,7 +213,7 @@ export function Landing() {
         <ol className="nl-how">
           {[
             { n: '01', a: 'shield' as Art3dKey, t: 'Pay from a private balance', s: ['live', 'proof'] as Status[], d: 'Top up once with public tUSDC, then pay any Noren shop. Each payment is a zero-knowledge proof made in your browser; the amount is an eERC ciphertext.' },
-            { n: '02', a: 'btc-coin' as Art3dKey, t: 'Or pay on credit', s: ['live', 'test'] as Status[], d: 'Lock tWBTC or AVAX in NorenCredit, borrow tUSDC at Chainlink prices and pay in the same flow. Borrowing is public; the payment is not.' },
+            { n: '02', a: 'btc-coin' as Art3dKey, t: 'Or pay on credit', s: ['live', 'test'] as Status[], d: 'Lock tWBTC or AVAX in NorenCredit and borrow tUSDC at Chainlink prices, in round lots of 50 so the public loan doesn’t show the price, then pay in the same flow.' },
             { n: '03', a: 'hourglass' as Art3dKey, t: 'The hub pays shops in batches', s: ['live'] as Status[], d: 'Customers pay Noren’s hub. Every few minutes it pays each shop from one account, with zero-value cover payouts, and records each statement’s hash in NorenSettlement.' },
             { n: '04', a: 'receipt' as Art3dKey, t: 'Books that still balance', s: ['live'] as Status[], d: 'The shop decrypts its orders, its accountant reads statements encrypted to their key, and the auditor checks every batch: in equals out.' },
           ].map((x, i) => (

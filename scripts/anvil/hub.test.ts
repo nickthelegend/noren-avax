@@ -189,6 +189,9 @@ test('one batch pays Harbor & Loom its total, two other shops zero as cover, and
     const ev = parseEventLogs({ abi: encryptedErcAbi, logs: (await A.pub.getTransactionReceipt({ hash: p.payoutTx })).logs, eventName: 'PrivateTransfer' })[0]!;
     assert.equal((ev.args as { from: string }).from.toLowerCase(), d.hub.toLowerCase());
   }
+  // Statements are padded: the real payout and the zero-value covers send exactly the same amount of data.
+  const sizes = await Promise.all(payouts.map(async (p) => (await A.pub.getTransaction({ hash: p.payoutTx })).input.length));
+  assert.equal(new Set(sizes).size, 1, `payout calldata sizes differ: ${sizes.join(', ')}`);
   assert.equal((await P.customer!.balance()).cents, 10_000n - 2_400n - 1_800n - 500n + 500n);
 });
 

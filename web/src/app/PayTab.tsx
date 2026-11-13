@@ -26,6 +26,10 @@ const claimSecret = () => Array.from(crypto.getRandomValues(new Uint8Array(16)),
 const VIA_HUB = hasHub(D);
 const hhmm = (sec: number) => new Date(sec * 1000).toISOString().slice(11, 16);
 const t2 = (c: bigint) => (Number(c) / 100).toFixed(2);
+/** Credit is borrowed and moved into the private balance in round lots of 50 tUSDC (like private top-ups), so the public
+ *  borrow and top-up don't show the price. The rest stays in the private balance. */
+const LOT = 5_000n;
+const lotOf = (c: bigint) => ((c + LOT - 1n) / LOT) * LOT;
 type Demo = { title: string; txs: { hash: Hex; what: string }[] };
 const RECORDED = Object.values((D as unknown as { demo?: Record<string, Demo> }).demo ?? {}).find((d) => d.txs.some((t) => t.what.startsWith('private payment')) && !/credit/i.test(d.title));
 
@@ -157,7 +161,7 @@ export function PayTab({ slug, market }: { slug: string; market: Market }) {
         key: 'collateral',
         title: 'Add collateral: 0.01 test tWBTC',
         detail: 'Locks tWBTC in NorenCredit, priced by Chainlink BTC / USD',
-        needed: async () => (await readPosition(pub as never, D, who.address)).available < usdcOf(price),
+        needed: async () => (await readPosition(pub as never, D, who.address)).available < usdcOf(lotOf(price)),
         run: async () => {
           const w = await readWallet(pub as never, D, who.address);
           if (w.wbtc < 1_000_000n) await write(D.tWBTC, norenTokenAbi as Abi, 'faucet', [], 'tWBTC faucet');
@@ -168,18 +172,18 @@ export function PayTab({ slug, market }: { slug: string; market: Market }) {
       },
       {
         key: 'borrow',
-        title: `Borrow ${t2(price)} tUSDC on credit`,
-        detail: 'NorenCredit checks the Chainlink price is fresh and your limit holds',
+        title: `Borrow ${t2(lotOf(price))} tUSDC on credit`,
+        detail: 'A round lot, so the public loan doesn’t show the price; NorenCredit checks the Chainlink price and your limit',
         needed: async () => true,
-        run: () => write(D.norenCredit, norenCreditAbi as Abi, 'borrow', [usdcOf(price), who.address], `borrow ${t2(price)} tUSDC`),
+        run: () => write(D.norenCredit, norenCreditAbi as Abi, 'borrow', [usdcOf(lotOf(price)), who.address], `borrow ${t2(lotOf(price))} tUSDC`),
       },
       {
         key: 'shield',
         title: 'Move the credit into your private balance',
-        detail: 'Deposits the borrowed tUSDC into eERC so the payment is encrypted',
+        detail: `Deposits the ${t2(lotOf(price))} tUSDC into eERC; the payment comes out of it, encrypted`,
         needed: async () => true,
         run: async () => {
-          const r = await p().shield(usdcOf(price));
+          const r = await p().shield(usdcOf(lotOf(price)));
           if (r.approve) announceTx(r.approve, 'approve tUSDC for eERC');
           announceTx(r.deposit, 'credit into private balance');
           return r.deposit;

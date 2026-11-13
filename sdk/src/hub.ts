@@ -124,6 +124,22 @@ export interface ShopStatement {
   total: string;
   cover: boolean;
   items: StatementItem[];
+  /** Filler so every statement in a batch, real or cover, has the same length on chain (see padStatement). */
+  pad?: string;
+}
+
+/** Statement size floor and step: a statement is padded to 1536 characters, or to the next multiple of 512 above it. */
+export const STATEMENT_SIZE = 1536;
+export const STATEMENT_STEP = 512;
+
+/**
+ * JSON for a shop statement, padded with a `pad` field to a fixed length, so a zero-value cover payout carries exactly
+ * as much encrypted data as a real one (up to about eight orders; beyond that it grows in 512-character steps).
+ */
+export function padStatement(st: ShopStatement): string {
+  const bare = JSON.stringify({ ...st, pad: '' });
+  const target = bare.length <= STATEMENT_SIZE ? STATEMENT_SIZE : Math.ceil(bare.length / STATEMENT_STEP) * STATEMENT_STEP;
+  return JSON.stringify({ ...st, pad: '0'.repeat(target - bare.length) });
 }
 
 export interface Refund {

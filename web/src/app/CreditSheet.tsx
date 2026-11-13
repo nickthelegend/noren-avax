@@ -61,7 +61,12 @@ export function CreditSheet({ action, close, connect }: { action: CreditAct; clo
         const debt = (await readPosition(pub as never, D, who.address)).debt;
         if (debt === 0n) throw Error('Nothing is owed on this wallet.');
         const need = all ? debt + debt / 1000n + 10n : amt;
-        const wal = await readWallet(pub as never, D, who.address);
+        let wal = await readWallet(pub as never, D, who.address);
+        // Short of public tUSDC (interest, or credit kept in the private balance): draw test tUSDC from its faucet once.
+        if (wal.usdc < need) {
+          await w(D.tUSDC, norenTokenAbi as Abi, 'faucet', [], 'tUSDC faucet');
+          wal = await readWallet(pub as never, D, who.address);
+        }
         if (wal.usdc < (all ? debt : amt)) throw Error(`You need ${usd(u6(all ? debt : amt))} public tUSDC in this wallet to repay; you have ${usd(u6(wal.usdc))}.`);
         const al = await pub.readContract({ address: D.tUSDC, abi: erc20Abi, functionName: 'allowance', args: [who.address, D.norenCredit] });
         if (al < need) await w(D.tUSDC, erc20Abi as Abi, 'approve', [D.norenCredit, 2n ** 255n], 'approve tUSDC');
@@ -161,7 +166,7 @@ export function CreditSheet({ action, close, connect }: { action: CreditAct; clo
               : action === 'borrow'
                 ? 'NorenCredit checks the Chainlink price is fresh and your limit holds, then lends from the pool.'
                 : action === 'repay'
-                  ? 'Repaying needs public tUSDC in this wallet and works even when a price is stale.'
+                  ? 'Repaying uses public tUSDC (test tUSDC from its faucet if this wallet is short) and works even when a price is stale.'
                   : 'Collateral returns to this wallet. What stays locked must still cover the debt.'}
           </p>
         </div>

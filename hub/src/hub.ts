@@ -25,6 +25,7 @@ import {
   readShops,
   receiptText,
   scanLogs,
+  padStatement,
   statementDigest,
   type AuditorStatement,
   type CircuitURLs,
@@ -221,7 +222,8 @@ export class Hub {
         cover: items.length === 0,
         items,
       };
-      payouts.push({ shop: id, owner: byId.get(id)!.owner, cents: st.total, statement: JSON.stringify(st), payoutTx: null });
+      // Padded: real and cover statements are the same size on chain.
+      payouts.push({ shop: id, owner: byId.get(id)!.owner, cents: st.total, statement: padStatement(st), payoutTx: null });
     }
     shuffle(payouts);
     this.state.inflight = { batch, payments: fresh.map((q) => q.tx), payouts, refunds, salt: randomBytes(16).toString('hex') };

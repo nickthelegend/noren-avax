@@ -73,7 +73,7 @@ Live runs through the hosted UI on Nov 13 (each an eERC payment to the hub; amou
 | The hub settles batch #15 (three shops paid, two of them zero covers) | [`0x213aa76b…`](https://testnet.snowtrace.io/tx/0x213aa76b55093455537d4814afe56063b5ec89cc55a7d375a7b5e405bd8d6eb0) |
 | A signed stock price report submitted by the relayer | [`0x69236726…`](https://testnet.snowtrace.io/tx/0x69236726b97a6f214059c6026182ff394eccd0f2a9c56a2de2cf3525db0259de) |
 
-### The demo film's run (Avalanche Fuji, Nov 13 2026: transactions 09:11–09:18 UTC; the explorer and café-view shots re-filmed read-only at 09:34–09:36 UTC)
+### The demo film's run (Avalanche Fuji, Nov 13 2026: transactions 09:11–09:18 UTC; the explorer and café-view shots re-filmed read-only at 09:34–09:36 UTC, the café view again at 09:51)
 
 Wallets: Riya `0xf0a643de127c5d8e54d674877b48959d16271ec1` (browser test wallet), Juhu Chai House shop #12 on NorenMerchants (payout wallet `0x036Ec409bB38a14B079F68fE27cd5BF12e871D52`, store opened in `0xf9b642…09d9`), Noren's hub `0x58e374A4c704f1806BAbD04726FB60e86e76A6A7`. Café link `indlflm7bq2a`, Aubelle invoice `inytes4l6ui8` (order AUB-718B5B). Both settled in batch #26.
 Since API d472720 the shops never receive the customer's payment transaction: Aubelle's order page and the café's payment page show the method, the batch and the payout only.

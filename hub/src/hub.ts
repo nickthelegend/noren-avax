@@ -27,6 +27,8 @@ import {
   scanLogs,
   padStatement,
   statementDigest,
+  lineRef,
+  lineFor,
   type AuditorStatement,
   type CircuitURLs,
   type HubDeployment,
@@ -218,12 +220,15 @@ export class Hub {
     const cover = others.slice(0, Math.max(0, this.o.coverMin - due.size));
     const payouts: InFlight['payouts'] = [];
     for (const id of [...due.keys(), ...cover]) {
-      const items = (due.get(id) ?? []).map((q) => ({ tx: q.tx, cents: q.cents, order: q.order, item: q.item }));
+      const salt = randomBytes(16).toString('hex');
+      // Each line carries a salted reference to the customer's payment, not the tx: the shop never gets a handle on
+      // the customer's wallet. The auditor resolves it against the batch's payments (auditBatch).
+      const items = (due.get(id) ?? []).map((q) => ({ tx: lineRef(q.tx, salt), cents: q.cents, order: q.order, item: q.item }));
       const st: ShopStatement = {
         v: 1,
         batch,
         shop: id,
-        salt: randomBytes(16).toString('hex'),
+        salt,
         total: String(items.reduce((a, it) => a + BigInt(it.cents), 0n)),
         cover: items.length === 0,
         items,
@@ -281,8 +286,8 @@ export class Hub {
       this.log(`batch ${f.batch}: recorded ${h}`);
     }
     for (const tx of f.payments) {
-      const p = f.payouts.find((x) => x.statement.includes(tx));
-      const st = p ? (JSON.parse(p.statement) as ShopStatement).items.find((i) => i.tx === tx) : null;
+      const p = f.payouts.find((x) => !!lineFor(JSON.parse(x.statement) as ShopStatement, tx));
+      const st = p ? lineFor(JSON.parse(p.statement) as ShopStatement, tx) : null;
       const rf = f.refunds.find((x) => x.tx === tx);
       this.state.settled[tx] = {
         batch: f.batch,
@@ -319,8 +324,8 @@ export class Hub {
     let rec: { shopId: number | null; cents: string; order: string; claim: string; status: string; batch: number | null; payoutTx: Hex | null; refundTx: Hex | null } | null = null;
     if (q) rec = { ...q, status: q.problem ? 'refund pending' : 'queued', batch: null, payoutTx: null, refundTx: null };
     else if (inflight) {
-      const p = this.state.inflight!.payouts.find((x) => x.statement.includes(tx));
-      const it = p ? (JSON.parse(p.statement) as ShopStatement).items.find((i) => i.tx === tx) : null;
+      const p = this.state.inflight!.payouts.find((x) => !!lineFor(JSON.parse(x.statement) as ShopStatement, tx));
+      const it = p ? lineFor(JSON.parse(p.statement) as ShopStatement, tx) : null;
       rec = { shopId: p?.shop ?? null, cents: it?.cents ?? '0', order: it?.order ?? '', claim: '', status: 'settling', batch: this.state.inflight!.batch, payoutTx: p?.payoutTx ?? null, refundTx: null };
     } else if (this.state.settled[tx]) rec = { ...this.state.settled[tx]!, status: this.state.settled[tx]!.refundTx ? 'refunded' : 'settled' };
     if (!rec) return { status: 'unknown' as const };

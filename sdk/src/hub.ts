@@ -109,7 +109,10 @@ export function parseHubNote(text: string | null | undefined): HubNote | null {
 // ------------------------------------------------------------------ statements
 
 export interface StatementItem {
-  tx: Hex; // the customer's eERC payment to the hub
+  /** A reference to the customer's eERC payment to the hub: `lineRef(tx, statement.salt)`, never the tx itself, so a
+   *  shop can't look the customer up on the explorer. The auditor matches it against the batch's payments. (Statements
+   *  made before Nov 13 08:50 UTC carry the raw tx.) */
+  tx: Hex;
   cents: string;
   order: string;
   item: string;
@@ -160,6 +163,11 @@ export interface AuditorStatement {
 }
 
 export const statementDigest = (json: string): Hex => keccak256(toBytes(json));
+
+/** The salted reference a statement line carries for the customer's payment tx (see StatementItem.tx). */
+export const lineRef = (tx: Hex, salt: string): Hex => keccak256(toBytes(`noren-line:${tx.toLowerCase()}:${salt}`));
+/** Finds the statement line for a payment tx, whether it carries the salted reference or (older statements) the tx. */
+export const lineFor = (st: ShopStatement, tx: Hex) => st.items.find((i) => i.tx.toLowerCase() === lineRef(tx, st.salt) || i.tx.toLowerCase() === tx.toLowerCase());
 
 export function parseStatement(json: string): ShopStatement | null {
   try {
@@ -320,10 +328,12 @@ export function auditBatch(
       paidOut += out;
       problems.push(...checkStatement(st, out).map((m) => `shop ${p.shop}: ${m}`));
     }
+    const byRef = new Map(b.payments.map((t) => [lineRef(t, st.salt), t] as const));
     for (const it of st.items) {
-      seen.set(low(it.tx), (seen.get(low(it.tx)) ?? 0) + 1);
-      const a = amountOf(it.tx);
-      if (a !== BigInt(it.cents)) problems.push(`payment ${it.tx.slice(0, 10)}…: statement says ${it.cents}, ciphertext ${a ?? 'unreadable'}`);
+      const tx = byRef.get(low(it.tx) as Hex) ?? it.tx;
+      seen.set(low(tx), (seen.get(low(tx)) ?? 0) + 1);
+      const a = amountOf(tx);
+      if (a !== BigInt(it.cents)) problems.push(`payment ${tx.slice(0, 10)}…: statement says ${it.cents}, ciphertext ${a ?? 'unreadable'}`);
     }
   }
   for (const r of aud.refunds) {

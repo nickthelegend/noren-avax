@@ -10,7 +10,7 @@ import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createWalletClient, http, keccak256, parseEventLogs, toHex, verifyMessage, type Address, type Hex, type WalletClient } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import {
+import { lineRef,
   NorenPrivate,
   accountantOf,
   checkStatement,
@@ -202,6 +202,9 @@ test('the shop decrypts its payout and statement; both check out against the cha
   const st = parseStatement(got[0]!.memo!)!;
   assert.equal(st.items.length, 2);
   assert.deepEqual(checkStatement(st, got[0]!.cents), []);
+  // The shop's statement names no customer payment tx: only salted references it can't look up.
+  const [b0] = await readBatches(A.pub, d);
+  for (const t of b0!.payments) assert.ok(!got[0]!.memo!.toLowerCase().includes(t.slice(2).toLowerCase()), 'no customer tx in the statement');
   const onChain = (await readPayouts(A.pub, d, shop.a))[0]!;
   assert.equal(onChain.payoutTx, got[0]!.tx);
   assert.equal(onChain.digest, statementDigest(got[0]!.memo!));
@@ -252,8 +255,11 @@ test('the auditor checks the whole batch against eERC ciphertexts: every payment
     assert.equal(amount(p.payoutTx), BigInt(st.total), `payout to shop ${p.shop} matches its statement`);
     outSum += amount(p.payoutTx);
     for (const it of st.items) {
-      assert.equal(amount(it.tx), BigInt(it.cents), `payment ${it.tx} matches`);
-      seen.add(it.tx);
+      // Lines carry a salted reference, not the customer's tx; the auditor resolves it against the batch.
+      const tx = b!.payments.find((t) => lineRef(t, st.salt) === it.tx);
+      assert.ok(tx, `line ${it.tx} resolves to a payment of this batch`);
+      assert.equal(amount(tx!), BigInt(it.cents), `payment ${tx} matches`);
+      seen.add(tx!);
     }
   }
   for (const r of aud.refunds) {

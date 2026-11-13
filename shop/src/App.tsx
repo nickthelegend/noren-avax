@@ -204,7 +204,7 @@ function ProductPage({ product }: { product: Product }) {
             </div>
           </fieldset>
           <button className="btn btn-dark btn-wide" onClick={add}>{size ? `Add to bag · ${usd(product.price)}` : 'Add to bag'}</button>
-          <p className="pdp-note">Free shipping and returns · Pay privately with Noren at checkout</p>
+          <p className="pdp-note">Free shipping and returns · Pay with stocks, privately, with Noren</p>
           <details className="acc" open><summary>Details</summary><ul>{product.details.map(d => <li key={d}>{d}</li>)}</ul></details>
           <details className="acc"><summary>Fit</summary><p>True to size. Our model-free fittings use a size S dress form (bust 86 cm, waist 68 cm).</p></details>
         </div>
@@ -260,7 +260,7 @@ function CheckoutButton() {
       <button className="btn btn-noren btn-wide" onClick={start} disabled={busy || !config || lines.length === 0} aria-busy={busy}>
         {busy ? 'Opening Noren…' : <>Checkout with <NorenMark /> <span className="noren-word">Noren</span></>}
       </button>
-      <p className="noren-note">Four ways at Noren's checkout: pay privately, pay with test USDC, pay with stocks, or Pay in 3 / pay later against your stocks. Every way ends in a private payment on Avalanche, so Aubelle never sees your wallet.</p>
+      <p className="noren-note">Four ways at Noren's checkout: pay with stocks, Pay in 3 / pay later against your stocks, pay privately, or pay with test USDC. The first three end in a private payment on Avalanche, so Aubelle never sees your wallet.</p>
       {fail && <p className="error" role="alert">{fail}</p>}
     </>
   );
@@ -412,7 +412,7 @@ function IntegrationPanel() {
         <p>Aubelle's whole payment integration is one file of {lines} lines on the shop's backend: create a Noren invoice for the bag, send the shopper to Noren's hosted checkout, and mark the order paid only when Noren says so.</p>
         <ol className="steps">
           <li><b>Invoice</b> for the bag total, with the order ID in metadata.</li>
-          <li><b>Redirect</b> to Noren's hosted checkout: pay privately, with test USDC, with stocks, or Pay in 3 / pay later against stocks.</li>
+          <li><b>Redirect</b> to Noren's hosted checkout: pay with stocks, Pay in 3 / pay later against stocks, privately, or with test USDC.</li>
           <li><b>Confirm</b> by reading the invoice back from Noren; it is paid once Noren's hub has decrypted the private payment on Avalanche.</li>
         </ol>
         <p className="muted small">The secret key stays on the server. Prices are recomputed there, never taken from the browser.</p>

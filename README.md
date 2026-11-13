@@ -17,7 +17,7 @@ the same product and the same UI, rebuilt on one chain. See [Prior work](#prior-
 
 | Surface | Hosted (Fuji, test tokens only) |
 |---|---|
-| Landing + Noren app (Home · Pay · Earn · Credit · Borrow · Swap) | https://noren-avax.vercel.app · app at `#/app` |
+| Landing + Noren app (Home · Pay · Earn · Credit · Borrow · Swap) | https://noren-avax.vercel.app · app at `#/app` · pop-up checkout at `#/checkout/<invoice>` · auditor at `#/auditor` |
 | Noren Merchant + hosted checkout | https://noren-avax-merchant.vercel.app · checkout at `#/pay/<invoice>` |
 | Aubelle, a demo shop that takes Noren | https://noren-avax-shop.vercel.app (code in `shop/`) |
 | Noren API (hub, gas relay, merchant API, price relayer, assistant) | https://noren-avax-api.201-18-198-162.sslip.io/api/health |
@@ -25,20 +25,29 @@ the same product and the same UI, rebuilt on one chain. See [Prior work](#prior-
 - **Noren Merchant**: sign in with your wallet (SIWE), open your store on Avalanche (`NorenMerchants`, an eERC key
   registered in the browser), payment links, API keys, events, private payouts and itemised statements decrypted in
   your browser and checked against `NorenSettlement`, an accountant, and an assistant (Claude) over your decrypted books.
-- **Hosted checkout, four ways to pay, stocks first**: pay with stocks · pay in 3 / pay later against your stocks ·
+- **Pop-up checkout, like Stripe**: a shop's "Pay with Noren" opens the Noren app's checkout for that invoice in a small
+  window (`noren-avax.vercel.app/#/checkout/<invoice>`): connect a wallet, choose how to pay, pay. The window posts the
+  result to the shop's own origin (taken from the invoice's success URL, never `*`) once Noren's hub has confirmed the
+  payment, then closes; the shop still asks its server, which asks Noren's API, before it shows "Paid". Anyone can pay
+  there; the customer's wallet, stocks and credit line are the Noren app's own. Blocked pop-ups fall back to the hosted
+  checkout page, and payment links (pay-by-link, QR) still work in the app and on `#/pay/<invoice>`.
+- **Four ways to pay, stocks first**: pay with stocks · pay in 3 / pay later against your stocks ·
   pay privately · pay with tUSDC. The first three end in an eERC payment to Noren's hub; only the last is public.
+- **Auditor view** (`#/auditor`): the settlement batches, and the eERC auditor's own key decrypting the auditor copy that
+  every eERC transfer carries, in the browser (any other wallet is told it is not the auditor).
 - **Noren app**: Home (balance, paste a link, activity), Pay, Earn (lock stock for credit; fund the credit pool),
   Credit (limit, plans, repay, the limit rising with on-time repayments), Borrow (tWBTC / AVAX at Chainlink prices),
   Swap (stocks ⇄ tUSDC at the desk).
 
 ## Try it in a minute, with no wallet and no AVAX
 
-1. Open https://noren-avax-shop.vercel.app, pick a dress, **Checkout with Noren**.
-2. On the hosted checkout press **Use a test wallet** (a fresh Fuji key kept in your browser), then **Pay with tNVDA**.
+1. Open https://noren-avax-shop.vercel.app, pick a dress, **Pay with Noren**: Noren's checkout opens in a pop-up window.
+2. In the pop-up press **Use a test wallet** (a fresh Fuji key kept in your browser), then **Pay 148.00 with tNVDA**.
    The steps run on Fuji: NorenGasStation's starter pack (gas, 100 tUSDC, 0.01 tWBTC), your eERC key (a Groth16 proof
    made in the browser), the stock starter pack (2 tNVDA, 1 tTSLA, 2 tAAPL, 1 tMSFT, 1 tSPY), a fresh signed price if
    the on-chain one is over an hour old, the sale at `NorenStockDesk` (a round lot of 50), the top-up into eERC, and the
-   eERC payment to the hub. About 35 seconds; Aubelle's order page turns paid once the hub reads it.
+   eERC payment to the hub. About 35 seconds; the window says Paid once the hub reads it, closes itself, and Aubelle
+   shows Paid, then the order page.
 3. Open https://noren-avax.vercel.app/#/app, **Use a test wallet**, paste a payment link (make one in Noren Merchant,
    or check out at Aubelle again) and choose **Pay in 3 / Pay later**: your stock is locked, a plan opens, the shop is
    paid privately. In **Credit**, repay an installment: your LTV goes from 60% to 65%.

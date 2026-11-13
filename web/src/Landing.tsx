@@ -243,7 +243,7 @@ export function Landing() {
               <figure className={`nx-shot ${s.k === "app" ? "phone" : "browser"}`}>
                 {s.k !== "app" && <span className="nx-dots" aria-hidden><i /><i /><i /></span>}
                 <img src={s.img} alt={`${s.name}: ${s.cap}`} width={s.w} height={s.h} loading="lazy" />
-                <figcaption className="mono">{s.cap} Real capture on the local test chains.</figcaption>
+                <figcaption className="mono">{s.cap} Real capture on Avalanche Fuji.</figcaption>
               </figure>
             </article>
           ))}

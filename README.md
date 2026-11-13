@@ -73,6 +73,21 @@ Live runs through the hosted UI on Nov 13 (each an eERC payment to the hub; amou
 | The hub settles batch #15 (three shops paid, two of them zero covers) | [`0x213aa76b…`](https://testnet.snowtrace.io/tx/0x213aa76b55093455537d4814afe56063b5ec89cc55a7d375a7b5e405bd8d6eb0) |
 | A signed stock price report submitted by the relayer | [`0x69236726…`](https://testnet.snowtrace.io/tx/0x69236726b97a6f214059c6026182ff394eccd0f2a9c56a2de2cf3525db0259de) |
 
+### The demo film's run (Nov 13, 07:22–07:28 UTC, the hosted UI, fresh test wallets)
+
+Riya (`0x79c1…17ed`, a browser test wallet) pays Juhu Chai House (shop #10, opened on camera) with stocks, then pays
+Aubelle in 3 against a locked tTSLA and repays an installment on time.
+
+| What | Transaction |
+|---|---|
+| Riya pays Juhu Chai House 24.00 with stocks: eERC transfer to Noren's hub (amount encrypted) | [`0xb8d21752…a712`](https://testnet.snowtrace.io/tx/0xb8d21752bd27fd39091cb7bfd5a69b42a6c09bba5698909f3698a974a841a712) |
+| The public stock sale before it: 0.302372 tNVDA → 50.00 tUSDC at NorenStockDesk (round lot) | [`0xdeeeef4c…1f8a`](https://testnet.snowtrace.io/tx/0xdeeeef4c68e284519ea7511e4b6bf1fdb4e8e5147156a23766ea0549cd9c1f8a) |
+| Riya locks 1 tTSLA in NorenStockCredit (limit $238.47 at 60%) | [`0xa63629cc…f887`](https://testnet.snowtrace.io/tx/0xa63629ccb44a1e4a6cc67bf500353323b2d4e57c46ec17c80b2f75343741f887) |
+| Pay in 3: the plan draws a round lot of 150.00 tUSDC from the Earn pool | [`0xb46dd6df…0f03`](https://testnet.snowtrace.io/tx/0xb46dd6dfcb6317fbb24bc33eafc393a2f0f65185c4a2a0806ae9752ed35c0f03) |
+| Pay in 3: the private payment of 148.00 to Aubelle via the hub | [`0xf49e607c…6158`](https://testnet.snowtrace.io/tx/0xf49e607cd62545b738580fe2435696f6aa273d1799e50db26cedc3824f9a6158) |
+| Riya repays the first installment, 50.50 tUSDC, on time (LTV 60% → 65%) | [`0x377a87b5…2ea5`](https://testnet.snowtrace.io/tx/0x377a87b5a60b25e6d7bb1f6263e6d8185083c520e217667c71650d7d169f2ea5) |
+| Noren's hub pays Juhu Chai House in batch #22 (eERC transfer, amount encrypted) | [`0x3473e2ea…7eaa`](https://testnet.snowtrace.io/tx/0x3473e2eafcb06c737ae2ce3a575811ae13942b86d9e8234437a5ce568ce87eaa) |
+
 ## Live on Avalanche Fuji
 
 All contracts are verified on Snowtrace (Routescan). Addresses: [`deployments/fuji.json`](deployments/fuji.json).

@@ -3,7 +3,12 @@
 
 /* ---------------------------------------------------------------- nav: two tab groups (people, shops) */
 .na-tabsets { display: flex; gap: 8px; justify-self: center; min-width: 0; }
+/* The right rail stays in view while a long step list scrolls; if it is taller than the window it scrolls on its own. */
 .na .nk-home-side { position: static; }
+@media (min-width: 1081px) {
+  .na .nk-home-side { position: sticky; top: 92px; max-height: calc(100vh - 104px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 0 8px 28px; margin: 0 -8px; }
+  .na .nk-home-side::-webkit-scrollbar { display: none; }
+}
 .na .nk-ava.na-ava-off { background: var(--nk-box-2); }
 .na .nk-ava.na-ava-core { background: conic-gradient(from 200deg, #e84142, var(--nk-kaki), #e9c98f, #e84142); }
 @media (max-width: 1360px) { .na .na-net { display: none !important; } }

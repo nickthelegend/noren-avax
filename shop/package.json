@@ -1,0 +1,27 @@
+{
+  "name": "@noren-avax/shop",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Aubelle: a demo fashion boutique that takes payment with Noren on Avalanche Fuji",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5381 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@types/node": "24.10.1",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.9.3",
+    "vite": "5.4.11"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { cents, savedClaims } from "../lib/api";
+import { cents, claimStockPack, getStarterPack, savedClaims, stockPackClaimed } from "../lib/api";
 import { sentTxs, unlock } from "../lib/signer";
 import { msgOf } from "../ui";
 import { TxLink } from "../tx";
@@ -43,13 +43,22 @@ export function HomeTab({ w, go }: { w: W; go: (t: Tab) => void }) {
           <b className="nk-wallet-total"><i>$</i>{u6(total)}</b>
           <p className="nk-wallet-note">tUSDC at $1, test stocks at their NorenStockOracle price{a.priv === null ? "; your private balance is still locked" : ""}. Avalanche Fuji.</p>
           <div className="nk-wallet-split">
-            <div className="priv"><small className="lg-row"><Mark id="AVAX" size={14} />Private · eERC</small><b>{a.priv !== null ? c2(a.priv) : <button className="nk-btn xs" disabled={busy} onClick={async () => { setBusy(true); setErr(null); try { await unlock(); w.reload(); } catch (e) { setErr(msgOf(e)); } finally { setBusy(false); } }}>{busy ? "…" : "Unlock"}</button>}</b><em>tUSDC, encrypted on chain</em></div>
+            <div className="priv"><small className="lg-row"><Mark id="AVAX" size={14} />Private · eERC</small><b>{a.priv !== null ? c2(a.priv) : <button className="nk-unlock" disabled={busy} onClick={async () => { setBusy(true); setErr(null); try { await unlock(); w.reload(); } catch (e) { setErr(msgOf(e)); } finally { setBusy(false); } }}>{busy ? "…" : "Unlock"}</button>}</b><em>tUSDC, encrypted on chain</em></div>
             <div><small className="lg-row"><Mark id="USDC" size={14} />Public</small><b>{u6(a.usdc)}</b><em>tUSDC</em></div>
             <div><small className="lg-row"><Mark id="NVDA" size={14} />Stocks</small><b>{u6(a.stocks6)}</b><em>{a.stocks.filter((s) => s.balance > 0n).map((s) => `t${s.sym}`).join(", ") || "no stock yet"}</em></div>
             <div><small className="lg-row"><Icon />Credit available</small><b>{available !== null ? u6(available) : "–"}</b><em>{a.credit?.collateral.some((c) => c.amount > 0n) ? `against your stocks · LTV ${a.credit.ltvBps / 100}%` : "lock stock in Credit"}</em></div>
           </div>
           {err && <div className="nk-err">{err}</div>}
         </section>
+
+        {(a.avax === 0n || a.stocks.every((x) => x.balance === 0n)) && (
+          <div className="nk-setup nk-start" role="status">
+            <span className="nk-tag">New wallet</span>
+            <b>Get test funds and test stocks in one tap.</b>
+            <p>NorenGasStation sends gas, 100 tUSDC and 0.01 tWBTC; NorenStockStarter sends 2 tNVDA, 1 tTSLA, 2 tAAPL, 1 tMSFT and 1 tSPY. Fuji test tokens only.</p>
+            <button className="nk-btn ink" disabled={busy} onClick={async () => { setBusy(true); setErr(null); try { if (a.avax === 0n) await getStarterPack(a.address); if (!(await stockPackClaimed(a.address))) await claimStockPack(); w.reload(); } catch (e) { setErr(msgOf(e)); } finally { setBusy(false); } }}>{busy ? "Sending on Fuji…" : "Get test funds and stocks"}</button>
+          </div>
+        )}
 
         <nav className="nk-actions" aria-label="Actions">
           {ACTIONS.map((x, i) => (

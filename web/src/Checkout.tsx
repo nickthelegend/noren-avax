@@ -24,10 +24,10 @@ const usd8 = (p: bigint) => (Number(p) / 1e8).toLocaleString("en-US", { minimumF
 
 /** The four ways to pay. Stocks lead; the first three are private (they end in an eERC payment to Noren's hub). */
 const METHODS: { m: "stocks" | "credit" | "private" | "usdc"; title: string; sub: string }[] = [
-  { m: "stocks", title: "Pay with stocks", sub: "Private · sold at checkout at the live price, your address never reaches the shop" },
-  { m: "credit", title: "Pay in 3 / Pay later", sub: "Private · credit against your stocks, without selling them" },
-  { m: "private", title: "Pay privately", sub: "Private · tUSDC from your encrypted balance" },
-  { m: "usdc", title: "Pay with tUSDC", sub: "Public · straight from your wallet" },
+  { m: "stocks", title: "Pay with stocks", sub: "Private · sold at a signed market price" },
+  { m: "credit", title: "Pay in 3 / Pay later", sub: "Private · credit against your stocks" },
+  { m: "private", title: "Pay privately", sub: "Private · your encrypted tUSDC" },
+  { m: "usdc", title: "Pay with tUSDC", sub: "Public · from your wallet" },
 ];
 
 export function Checkout({ id }: { id: string }) {
@@ -78,7 +78,7 @@ export function Checkout({ id }: { id: string }) {
     } catch (e) { setNote(msgOf(e)); }
   }, [who?.address]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { loadWallet(); const on = () => setTimeout(loadWallet, 800); addEventListener("noren:tx", on); return () => removeEventListener("noren:tx", on); }, [loadWallet]);
-  useEffect(() => { if (hold && !hold.find((h) => h.sym === sym && h.balance > 0n)) { const f = hold.find((h) => h.balance > 0n); if (f) setSym(f.sym); } }, [hold]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === "stocks" && hold && !hold.find((h) => h.sym === sym && h.balance > 0n)) { const f = hold.find((h) => h.balance > 0n); if (f) setSym(f.sym); } }, [hold, tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // After paying: the hub's signed receipt (queued → settled in batch #n) and the invoice turning paid.
   useEffect(() => {
@@ -132,7 +132,7 @@ export function Checkout({ id }: { id: string }) {
             <div className="co-privacy">
               <Icon.eyeOff />
               {method === "usdc" ? <p><b>Only the first three hide you.</b> A tUSDC payment comes straight from your wallet, so {shop} and anyone reading Avalanche can link it to you.</p>
-                : <p><b>{shop} never learns who paid.</b> {method === "stocks" ? "Your shares are sold at the live price into your encrypted balance, " : method === "payin3" || method === "paylater" ? "Your stocks back a credit draw into your encrypted balance, " : "You pay from an encrypted balance, "}then an eERC payment to Noren’s hub, which pays {shop} in a batch with other shops. The amount is encrypted on chain.</p>}
+                : <p><b>{shop} never learns who paid.</b> {method === "stocks" ? "Your shares are sold at a signed market price into your encrypted balance, " : method === "payin3" || method === "paylater" ? "Your stocks back a credit draw into your encrypted balance, " : "You pay from an encrypted balance, "}then an eERC payment to Noren’s hub, which pays {shop} in a batch with other shops. The amount is encrypted on chain.</p>}
             </div>
           </div>
           <footer className="co-foot"><span>Powered by</span><a href="#/"><Logo size={16} /> Noren</a><span className="mono faint">{id}</span></footer>
@@ -237,11 +237,12 @@ function Done({ inv, paid, receipt, total, shop, doneUrl }: { inv: Invoice | nul
   const m = paid?.method ?? inv?.method ?? "private";
   const [leaving, setLeaving] = useState<number | null>(null);
   useEffect(() => {
-    if (!doneUrl || inv?.status !== "paid") return;
+    // Back to the shop on its own only right after paying here; a paid link opened later stays put.
+    if (!doneUrl || inv?.status !== "paid" || !paid) return;
     setLeaving(8);
     const t = setInterval(() => setLeaving((n) => { if (n === null) return n; if (n <= 1) { clearInterval(t); location.assign(doneUrl); return 0; } return n - 1; }), 1000);
     return () => clearInterval(t);
-  }, [doneUrl, inv?.status]);
+  }, [doneUrl, inv?.status, paid]);
   const title = m === "stocks" ? <>Paid with <em>stocks</em>, privately</> : m === "payin3" ? <>Paid in <em>3</em>, privately</> : m === "paylater" ? <>Paid <em>later</em>, privately</> : m === "usdc" ? <>Paid with <em>tUSDC</em></> : <>Paid <em>privately</em></>;
   const tx = paid?.hash ?? inv?.paymentTx;
   return (

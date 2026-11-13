@@ -88,7 +88,7 @@ export type Method = 'private' | 'stocks' | 'credit' | 'payin3' | 'paylater' | '
 export type Invoice = {
   id: string; storeId: string; shopId: number; merchantName: string; amountCents: number; description: string;
   status: 'open' | 'paid' | 'expired'; createdAt: number; expiresAt: number; paidAt?: number; paymentTx?: Hex; method?: Method;
-  batch?: number; payoutTx?: Hex; successUrl?: string; cancelUrl?: string; metadata?: Record<string, string>; url?: string;
+  batch?: number; payoutTx?: Hex; settledAt?: number; successUrl?: string; cancelUrl?: string; metadata?: Record<string, string>; url?: string;
 };
 export type ApiKey = { id: string; prefix: string; createdAt: number };
 export type Store = { id: string; shopId: number; name: string; owner: Address; createdAt: number; keys: ApiKey[] };

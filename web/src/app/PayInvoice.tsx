@@ -19,7 +19,7 @@ export const invoiceIdIn = (s: string) => /(?:#\/pay\/|^)(in[a-z0-9]{6,14})\b/i.
 
 /** The four ways to pay, stocks first. The checkout uses the same ids (`#/pay/<id>?m=<id>`). */
 export const WAYS = [
-  { id: "stocks", title: "Pay with stocks", sub: "Your test stock, sold at the live price into your private balance. The shop never learns who paid.", tag: "Private" },
+  { id: "stocks", title: "Pay with stocks", sub: "Your test stock, sold at a signed market price into your private balance. The shop never learns who paid.", tag: "Private" },
   { id: "payin3", title: "Pay in 3 / Pay later", sub: "Credit against your stocks, without selling them. Paid to the shop privately.", tag: "Private" },
   { id: "private", title: "Pay privately", sub: "tUSDC from your encrypted balance.", tag: "Private" },
   { id: "usdc", title: "Pay with tUSDC", sub: "From your public wallet.", tag: "Public" },
@@ -74,7 +74,13 @@ export function PayInvoice({ w, initial }: { w: W; initial?: string }) {
   }, [id]);
   useEffect(() => { setSteps(null); setPaid(null); setTotal(null); refresh(); }, [refresh]);
   useEffect(() => { if (!id || paid) return; const t = setInterval(refresh, 6000); return () => clearInterval(t); }, [id, paid, refresh]);
-  useEffect(() => { const held = w.acct.stocks.filter((s) => s.balance > 0n); if (held.length && !held.find((s) => s.sym === sym)) setSym(held[0]!.sym); }, [w.acct.stocks]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lockedOf = (x: StockSym) => w.acct.credit?.collateral.find((c) => c.sym === x)?.amount ?? 0n;
+  // Selling needs shares in the wallet; credit can also use shares already locked as collateral.
+  useEffect(() => {
+    const usable = (x: { sym: StockSym; balance: bigint }) => x.balance > 0n || ((way === "payin3" || way === "paylater") && lockedOf(x.sym) > 0n);
+    const ok = w.acct.stocks.filter(usable);
+    if (ok.length && !ok.find((x) => x.sym === sym)) setSym(ok[0]!.sym);
+  }, [w.acct.stocks, way]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shop = inv?.merchantName || "this shop";
   const pay = async () => {
@@ -147,8 +153,8 @@ export function PayInvoice({ w, initial }: { w: W; initial?: string }) {
                     {(way === "stocks" || credit) && (
                       <div className="nk-stockpick" role="radiogroup" aria-label="Stock">
                         {w.acct.stocks.map((s) => (
-                          <button key={s.sym} type="button" role="radio" aria-checked={s.sym === sym} data-empty={s.balance === 0n} disabled={busy} onClick={() => setSym(s.sym)}>
-                            <Mark id={s.sym} size={22} /><span><b>t{s.sym}</b><small>{sh(s.balance)} · ${p8(s.price8)}</small></span>
+                          <button key={s.sym} type="button" role="radio" aria-checked={s.sym === sym} data-empty={s.balance === 0n && !(credit && lockedOf(s.sym) > 0n)} disabled={busy} onClick={() => setSym(s.sym)}>
+                            <Mark id={s.sym} size={22} /><span><b>t{s.sym}</b><small>{credit && lockedOf(s.sym) > 0n ? `${sh(lockedOf(s.sym))} locked` : sh(s.balance)} · ${p8(s.price8)}</small></span>
                           </button>
                         ))}
                       </div>

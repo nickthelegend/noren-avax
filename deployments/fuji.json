@@ -605,5 +605,42 @@
     "shopId": 5,
     "storeId": "st_7kkaj4h363",
     "owner": "0xeef4317D588BC1965Af9DDbE2b5482961f5DD7aD"
-  }
+  },
+  "live": [
+    {
+      "t": "Paid with stocks, privately",
+      "d": "Aubelle, 158.00 tUSDC \u00b7 eERC payment to the hub",
+      "hash": "0x530eea90b2acc742f2c79a057d495e0922699ed4940474a46b01180a91d2dbee",
+      "marks": [
+        "NVDA",
+        "AVAX"
+      ]
+    },
+    {
+      "t": "Pay in 3 against stocks",
+      "d": "Aubelle, 36.00 tUSDC \u00b7 eERC payment to the hub",
+      "hash": "0x519693466436a67bfcc723d658cf1d80939ea3c55134e16abb4242394a46bf33",
+      "marks": [
+        "TSLA",
+        "AVAX"
+      ]
+    },
+    {
+      "t": "Hub settles a batch",
+      "d": "batch #15 \u00b7 3 shops paid, amounts encrypted",
+      "hash": "0x213aa76b55093455537d4814afe56063b5ec89cc55a7d375a7b5e405bd8d6eb0",
+      "marks": [
+        "AVAX"
+      ]
+    },
+    {
+      "t": "Signed stock prices",
+      "d": "NVDA, TSLA, AAPL, MSFT, SPY \u00b7 Yahoo Finance",
+      "hash": "0x69236726b97a6f214059c6026182ff394eccd0f2a9c56a2de2cf3525db0259de",
+      "marks": [
+        "NVDA",
+        "AVAX"
+      ]
+    }
+  ]
 }

@@ -43,7 +43,7 @@ export function useAcct() {
       setErr(null);
     } catch (e) { setErr(readable(e)); }
   }, [who?.address, ver]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); const t = setInterval(load, 15_000); const on = () => { setTimeout(load, 600); setTimeout(load, 4000); }; addEventListener("noren:tx", on); return () => { clearInterval(t); removeEventListener("noren:tx", on); }; }, [load]);
+  useEffect(() => { load(); const t = setInterval(load, 15_000); const on = () => { setTimeout(load, 600); setTimeout(load, 3000); setTimeout(load, 7000); }; addEventListener("noren:tx", on); return () => { clearInterval(t); removeEventListener("noren:tx", on); }; }, [load]);
   return { who, acct, err, reload: () => { setTick(tick + 1); load(); } };
 }
 

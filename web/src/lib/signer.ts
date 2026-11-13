@@ -128,7 +128,7 @@ export function openTestWallet(slot: Slot = 'customer') {
   current = { address: account.address, label: `Test wallet ${account.address.slice(2, 6)}`, kind: 'guest' };
   priv = null;
   try {
-    sessionStorage.setItem('noren:who', slot === 'merchant' ? 'guest-merchant' : 'guest');
+    localStorage.setItem(slot === 'merchant' ? 'noren:who-merchant' : 'noren:who', '1');
   } catch {
     /* ignore */
   }
@@ -147,9 +147,8 @@ export function hasTestWallet(slot: Slot = 'customer') {
 export function restoreTestWallet(slot: Slot = 'customer') {
   if (QA || current) return;
   try {
-    const w = sessionStorage.getItem('noren:who');
-    if (slot === 'customer' && w === 'guest' && hasTestWallet()) openTestWallet();
-    if (slot === 'merchant' && w === 'guest-merchant' && hasTestWallet('merchant')) openTestWallet('merchant');
+    if (slot === 'customer' && localStorage.getItem('noren:who') && hasTestWallet()) openTestWallet();
+    if (slot === 'merchant' && localStorage.getItem('noren:who-merchant') && hasTestWallet('merchant')) openTestWallet('merchant');
   } catch {
     /* ignore */
   }
@@ -163,7 +162,7 @@ export function signerClient(): WalletClient {
 
 export function disconnect() {
   try {
-    sessionStorage.removeItem('noren:who');
+    localStorage.removeItem(slotNow === 'merchant' ? 'noren:who-merchant' : 'noren:who');
   } catch {
     /* ignore */
   }

@@ -459,7 +459,7 @@ function PayTable({ rows, loading }: { rows: Row[]; loading?: boolean }) {
 function PaymentPage({ id, rows, store, token, tick }: { id: string; rows: Row[] | null; store: Store; token: string; tick: number }) {
   const r = rows?.find((x) => x.id === id);
   const [events, setEvents] = useState<NorenEvent[] | null>(null);
-  useEffect(() => { merchant.events(token, store.id).then((l) => setEvents(l.filter((e) => String(e.data?.id ?? e.data?.invoiceId ?? "") === id))).catch(() => setEvents([])); }, [token, store.id, id, tick]);
+  useEffect(() => { merchant.events(token, store.id).then((l) => setEvents(l.filter((e) => e.data?.invoice === id || (Array.isArray(e.data?.invoices) && (e.data.invoices as string[]).includes(id))))).catch(() => setEvents([])); }, [token, store.id, id, tick]);
   if (!rows) return <div className="sd-loading"><span className="spin" /> Loading payment…</div>;
   if (!r) return <><a className="sd-back" href="#/dashboard/payments"><Icon.back /> Payments</a><Empty title="Payment not found" text={`No payment ${id} in this store's records.`} /></>;
   const pub_ = r.method === "usdc";
@@ -469,7 +469,7 @@ function PaymentPage({ id, rows, store, token, tick }: { id: string; rows: Row[]
   ] : [
     ["Payment link created", r.createdAt, r.description ? `“${r.description}”` : null, true],
     [`Paid privately to Noren’s hub${r.method === "stocks" ? ", with stocks" : r.method === "payin3" ? ", in 3" : r.method === "paylater" ? ", later" : ""}`, r.paidAt, r.paymentTx ? <><TxLink hash={r.paymentTx} n={8} /> · eERC transfer, amount encrypted; the hub read the order from its encrypted note</> : null, settled(r)],
-    ["Paid out to you in a batch", r.payoutTx ? r.paidAt : undefined, r.payoutTx ? <>batch #{r.batch} · <TxLink hash={r.payoutTx} n={8} /> · with zero-value covers to other shops</> : null, !!r.payoutTx],
+    ["Paid out to you in a batch", r.payoutTx ? (r.settledAt ?? r.paidAt) : undefined, r.payoutTx ? <>batch #{r.batch} · <TxLink hash={r.payoutTx} n={8} /> · with zero-value covers to other shops</> : null, !!r.payoutTx],
   ];
   return (
     <>
@@ -653,7 +653,7 @@ function Events({ store, token, tick }: { store: Store; token: string; tick: num
       {err ? <div className="sd-callout bad"><span>{err}</span></div> : !list ? <div className="sd-skel-rows"><i /><i /></div> : list.length === 0 ? <Empty title="No events yet" text="invoice.created, invoice.paid and payout.settled show up here." /> : (
         <table className="sd-table static">
           <thead><tr><th>Event</th><th className="hide-s">Payment</th><th>Date</th></tr></thead>
-          <tbody>{list.map((e) => <tr key={e.id}><td><code>{e.type}</code></td><td className="hide-s mono">{String(e.data?.id ?? e.data?.invoiceId ?? "–")}</td><td className="sd-muted">{dt(e.created)}</td></tr>)}</tbody>
+          <tbody>{list.map((e) => <tr key={e.id}><td><code>{e.type}</code></td><td className="hide-s mono">{String(e.data?.invoice ?? (Array.isArray(e.data?.invoices) ? (e.data.invoices as string[]).join(", ") : "–"))}</td><td className="sd-muted">{dt(e.created)}</td></tr>)}</tbody>
         </table>
       )}
     </div>

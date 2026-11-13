@@ -1,56 +1,77 @@
 # Noren on Avalanche
 
-**Merchants let customers pay privately, with stablecoins or credit against their coins.**
+**Stablecoins, stocks or credit — privately.** Noren lets merchants accept stablecoins, stocks or credit, and the shop
+never learns who paid. Customers **pay with their stocks** (sold at checkout at a signed market price) or **get credit
+against their stocks** without selling them (pay in 3, pay later), and the shop is paid in tUSDC through Ava Labs'
+EncryptedERC (eERC) on Avalanche: amounts are ciphertexts and payments reach the shop from Noren's settlement hub, in
+batches, never from the customer's wallet.
 
-Noren is a checkout for shops. A customer pays in test USDC from a private balance, or borrows against their BTC or
-AVAX and pays in the same flow. The payment is an [eERC](https://github.com/ava-labs/EncryptedERC) transfer on
-Avalanche, so its amount is a ciphertext on chain. And it goes to Noren's **settlement hub**, not to the shop: the hub
-pays shops in batches, several shops per batch, some of them zero. Snowtrace shows "this customer paid Noren" and
-"Noren paid these shops", never who paid whom or how much. The shop decrypts its payouts and itemised statements with
-its own key, its accountant gets a copy encrypted to the accountant's key, and the eERC auditor can check every batch.
+**Why Avalanche.** The NYSE plans to settle tokenized stocks on Avalanche, for its planned 24/7 tokenized securities
+venue (announced Nov 9 2026, subject to regulatory approval:
+[The Block](https://www.theblock.co/news/business/2026-11-09-nyse-settle-tokenized-stocks-avalanche-planned-24-7-market-436208),
+[CoinDesk](https://www.coindesk.com/business/2026/11/09/nyse-picks-avalanche-to-settle-tokenized-stocks-amid-wall-street-s-blockchain-race)).
+Noren is where those shares meet a checkout. This build runs on Avalanche Fuji with five test stocks.
 
-**Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
+This is the **Avalanche edition of the Noren submitted at ETHGlobal** ([showcase](https://ethglobal.com/showcase/noren-bh8wb)):
+the same product and the same UI, rebuilt on one chain. See [Prior work](#prior-work-disclosure).
 
-**Demo film (2:33):** recorded live in one take on the hosted app and Fuji: a fresh test wallet pays Harbor & Loom
-privately, then on credit, the hub settles the batch, the customer repays, Snowtrace shows each step (and the wallet's
-public token moves: round 50s only), and the shop, its accountant and the eERC auditor read the same batch. File: `videos/noren-avax/noren-avax-film.mp4` in the hackathon workspace (upload link in SUBMISSION).
+| Surface | Hosted (Fuji, test tokens only) |
+|---|---|
+| Landing + Noren app (Home · Pay · Earn · Credit · Borrow · Swap) | https://noren-avax.vercel.app · app at `#/app` |
+| Noren Merchant + hosted checkout | https://noren-avax-merchant.vercel.app · checkout at `#/pay/<invoice>` |
+| Aubelle, a demo shop that takes Noren | https://noren-avax-shop.vercel.app (code in `shop/`) |
+| Noren API (hub, gas relay, merchant API, price relayer, assistant) | https://noren-avax-api.201-18-198-162.sslip.io/api/health |
 
-Every screen and state, scored at 1440 and 375: [`docs/SCREEN-AUDIT.md`](docs/SCREEN-AUDIT.md).
-
-The app wears Noren on NEAR's approved UI (same system, same components, see [Prior work](#prior-work-disclosure)):
-Credit · Pay anyone · Debt-free for customers, Merchant · Accountant · Auditor for shops and their books.
-
-| Pay anyone: a shop, privately or on credit | Merchant: orders decrypted, payouts checked ✓, assistant | Auditor: every batch checked ✓ |
-|---|---|---|
-| ![Pay anyone](docs/img/pay-1440.jpg) | ![Merchant](docs/img/merchant-1440.jpg) | ![Auditor](docs/img/auditor-1440.jpg) |
-
-| Credit: limit, health bar, collateral at Chainlink prices | Debt-free: repay and release | Accountant: statements checked against the chain |
-|---|---|---|
-| ![Credit](docs/img/credit-1440.jpg) | ![Debt-free](docs/img/debt-free-1440.jpg) | ![Accountant](docs/img/accountant-1440.jpg) |
-
-- **Noren Merchant**: open a shop, list items, read private revenue decrypted in your browser, check each payout,
-  name an accountant, ask the assistant about your sales, withdraw.
-- **Noren app**: Pay anyone (a shop's checkout, paid from a private tUSDC balance or on credit), the credit line
-  and Debt-free (repay, release collateral).
-- **Noren hub** (`hub/`): the settlement hub, the gas-station relay and the assistant's Claude proxy, on a VPS.
-- **Noren SDK** (`sdk/`): the eERC private-payment rail, notes and statements, the hub records and the credit reads.
+- **Noren Merchant**: sign in with your wallet (SIWE), open your store on Avalanche (`NorenMerchants`, an eERC key
+  registered in the browser), payment links, API keys, events, private payouts and itemised statements decrypted in
+  your browser and checked against `NorenSettlement`, an accountant, and an assistant (Claude) over your decrypted books.
+- **Hosted checkout, four ways to pay, stocks first**: pay with stocks · pay in 3 / pay later against your stocks ·
+  pay privately · pay with tUSDC. The first three end in an eERC payment to Noren's hub; only the last is public.
+- **Noren app**: Home (balance, paste a link, activity), Pay, Earn (lock stock for credit; fund the credit pool),
+  Credit (limit, plans, repay, the limit rising with on-time repayments), Borrow (tWBTC / AVAX at Chainlink prices),
+  Swap (stocks ⇄ tUSDC at the desk).
 
 ## Try it in a minute, with no wallet and no AVAX
 
-1. Open https://noren-avax.vercel.app/shop/harbor-loom (the **Pay anyone** tab), press **Connect wallet** (the pill
-   top right) → **Test wallet** (a fresh Fuji key kept in your browser).
-2. Press **Pay 24.00 tUSDC**. The first step is NorenGasStation's starter pack: one relayed transaction sends the new
-   wallet gas, 100 tUSDC and 0.01 tWBTC. Then the page registers your eERC key, tops up and pays the hub privately. The
-   receipt shows the hub's signature and, after the next batch (every 3 minutes, on the clock), "Settled".
-3. **Merchant → Open shop** (filled in for you), then **Accountant → Use this wallet**, pay your own shop from Pay
-   anyone, and after the batch read the revenue, the payout check (✓) and the statement in **Merchant**. Ask the
-   assistant "How much did I make this week?".
-4. **Accountant → Read my statements**: the accountant's view of the same payouts.
-5. **Debt-free → Repay**: after paying on credit, repay in full and withdraw the collateral.
+1. Open https://noren-avax-shop.vercel.app, pick a dress, **Checkout with Noren**.
+2. On the hosted checkout press **Use a test wallet** (a fresh Fuji key kept in your browser), then **Pay with tNVDA**.
+   The steps run on Fuji: NorenGasStation's starter pack (gas, 100 tUSDC, 0.01 tWBTC), your eERC key (a Groth16 proof
+   made in the browser), the stock starter pack (2 tNVDA, 1 tTSLA, 2 tAAPL, 1 tMSFT, 1 tSPY), a fresh signed price if
+   the on-chain one is over an hour old, the sale at `NorenStockDesk` (a round lot of 50), the top-up into eERC, and the
+   eERC payment to the hub. About 35 seconds; Aubelle's order page turns paid once the hub reads it.
+3. Open https://noren-avax.vercel.app/#/app, **Use a test wallet**, paste a payment link (make one in Noren Merchant,
+   or check out at Aubelle again) and choose **Pay in 3 / Pay later**: your stock is locked, a plan opens, the shop is
+   paid privately. In **Credit**, repay an installment: your LTV goes from 60% to 65%.
+4. Open https://noren-avax-merchant.vercel.app, **Use a test wallet**, open a store, make a link, pay it from the app,
+   and read the payment in **Payments** ("Customer: Private", method Stocks / Pay in 3) and **Balances** after the
+   next batch (every 3 minutes).
 
-**Pay with → Credit** works the same way from the same wallet (it borrows against the tWBTC from the starter pack). The
-global eERC auditor view needs the auditor key; its screenshot is above (`docs/img/auditor-1440.jpg`). Judge-run
-screenshots from the earlier UI: `docs/img/hub-judge-*.jpg`.
+### Stocks on Fuji
+
+Chainlink has no equity feeds on Fuji (checked against Chainlink's Fuji feed list on Nov 13), so Noren signs real
+quotes itself: the relayer on the VPS reads Yahoo Finance's public chart API every 10 minutes, signs a report with its
+own key (`NOREN_PRICER_KEY`, holds no AVAX) and submits it. `NorenStockOracle` accepts a report only with that signature,
+for this chain and this contract, newer than the last report and not from the future, and every read refuses a report
+older than one hour. The quote's own time (`marketTime`, e.g. Thursday's close) is shown in the app. Anyone can submit
+the latest signed report (the checkout does, if the on-chain price went stale). The stocks are **test tokens**
+(tNVDA, tTSLA, tAAPL, tMSFT, tSPY), not tokenized shares.
+
+| Stock contract | Address | What it does |
+|---|---|---|
+| NorenStockOracle | [`0x1f2555…4ECA0A`](https://testnet.snowtrace.io/address/0x1f2555025A94D8C8B3cB4238a205611C2d4ECA0A#code) | Signed prices (8 decimals), signature/chain/order/age checks |
+| NorenStockDesk | [`0x5D606E…De838`](https://testnet.snowtrace.io/address/0x5D606E92e8909Bfda857A8F850716644ac2De838#code) | Pay with stocks and Swap: buys at the price −0.5%, sells at +0.5% |
+| NorenStockCredit | [`0xEf236B…F2417`](https://testnet.snowtrace.io/address/0xEf236B4Dfebf07a163EdbE0Faf60FFb2806F2417#code) | Credit against stocks: lock, limit = value × LTV (60% +5 per on-time installment, max 75%), pay in 3 / pay later plans (1% fee, no interest), liquidation at 85% (5% bonus), Earn pool |
+| NorenStockStarter | [`0x4C4ED5…E1dBBe`](https://testnet.snowtrace.io/address/0x4C4ED5C6F3374317EEe4170d3d1111776e2f816a#code) | One test stock pack per wallet |
+| tNVDA · tTSLA · tAAPL · tMSFT · tSPY | [`0x280E22…916B`](https://testnet.snowtrace.io/address/0x280E22513Ac8a4a214fCa3593080501AD455916B#code) · [`0xF255d8…A016`](https://testnet.snowtrace.io/address/0xF255d832b186cEE8632aFe1cEA25b7B2f70FA016#code) · [`0x9883d0…5ECf`](https://testnet.snowtrace.io/address/0x9883d0a801a281769Bca3E3D89A3bE941E005ECf#code) · [`0x773f0d…5628`](https://testnet.snowtrace.io/address/0x773f0d46CB1e3361CBEeB256ACa3cf7DFA585628#code) · [`0x695254…1dBBe`](https://testnet.snowtrace.io/address/0x6952540325545650D36e7aa83FEBda5F54E1dBBe#code) | Test stock tokens (18 decimals) |
+
+Live runs through the hosted UI on Nov 13 (each an eERC payment to the hub; amounts encrypted on Snowtrace):
+
+| What | Transaction |
+|---|---|
+| Aubelle order paid with stocks, privately (158.00 tUSDC) | [`0x530eea90…`](https://testnet.snowtrace.io/tx/0x530eea90b2acc742f2c79a057d495e0922699ed4940474a46b01180a91d2dbee) |
+| Aubelle order paid in 3 against stocks (36.00 tUSDC) | [`0x51969346…`](https://testnet.snowtrace.io/tx/0x519693466436a67bfcc723d658cf1d80939ea3c55134e16abb4242394a46bf33) |
+| The hub settles batch #15 (three shops paid, two of them zero covers) | [`0x213aa76b…`](https://testnet.snowtrace.io/tx/0x213aa76b55093455537d4814afe56063b5ec89cc55a7d375a7b5e405bd8d6eb0) |
+| A signed stock price report submitted by the relayer | [`0x69236726…`](https://testnet.snowtrace.io/tx/0x69236726b97a6f214059c6026182ff394eccd0f2a9c56a2de2cf3525db0259de) |
 
 ## Live on Avalanche Fuji
 
@@ -264,6 +285,10 @@ registered with the eERC Registrar, so every shop can be paid privately.
 
 ## Avalanche parts, and what's not here
 
+- **One chain: Avalanche Fuji.** The ETHGlobal edition's Arc, Robinhood Chain, Circle CCTP, Chainlink CCIP and CRE,
+  1inch Aqua, Uniswap, World ID, Reclaim and 0G pieces don't run on Fuji and are **not in this edition**; nothing here
+  claims them. Earn is a tUSDC pool that funds stock credit (not Aqua liquidity); Swap is Noren's stock desk.
+
 - **eERC: used for the core flow.** Ava Labs' contracts vendored unmodified at upstream
   [`8dc98cd`](https://github.com/ava-labs/EncryptedERC/tree/8dc98cd4d63ad3aa6d86b70b8f4bbcd70f1e8be1) (checked file by
   file), circuits fetched from the same commit, proofs and decryption with the official `@avalabs/eerc-sdk` 1.0.2.
@@ -281,7 +306,12 @@ registered with the eERC Registrar, so every shop can be paid privately.
   not as eERC auditors.
 - Deposits and withdrawals are public, and eERC deposit ciphertexts use fixed randomness (an upstream design note).
 - Payments made before the hub (the first live demo below) went straight to the shop and show the customer's address.
-- The pool is seeded by the deployer; there is no lender interface in this build.
+- The crypto credit pool (NorenCredit) is seeded by the deployer; the stock credit pool has a lender interface (Earn).
+- Stock prices come from one relayer key reading one public source (Yahoo Finance, delayed quotes). The contract checks
+  the signature and age, not the quote's truth; a production version would use an equity feed (none on Fuji today).
+- Selling stock, a credit plan and a top-up are public ERC-20 moves in round lots of 50 tUSDC; who you paid is not.
+- On-time installments raise the LTV by count, so a borrower can raise it by opening and repaying small plans (each
+  costs the 1% fee). A production version would weight by amount and time.
 - Payout statements are padded to one size (fixed Nov 13, after the film's independent judge found real payouts carried
   more data than covers). Gas still varies a little per payout with the receiving account's eERC state, not with
   whether the payout is real: in batch #9 the real Harbor & Loom payout used 940,736 gas, a cover 940,712 and another
@@ -310,7 +340,9 @@ contracts/   Foundry: NorenCredit, NorenMerchants, NorenSettlement, NorenGasStat
 sdk/         @noren-avax/sdk: eERC rail (NorenPrivate), notes and statements, hub records, credit and shop reads
 hub/         Noren's API: settlement hub, gas relay, assistant proxy
 deploy/      Dockerfile and compose for the API on the VPS
-web/         Vite + React app: landing, checkout, merchant, auditor, credit
+web/         Vite + React app (the ETHGlobal UI): landing, Noren Merchant, hosted checkout, Noren app, settlement page
+shop/        Aubelle, the demo shop (Vite + a Vercel function that creates invoices with its secret key)
+legacy/      the NEAR-UI edition of the web app (Nov 13 morning), kept for reference
 scripts/     Fuji deploy/setup, Anvil end-to-end test, Playwright QA and demo
 deployments/ fuji.json: addresses, setup and demo transactions
 docs/        SLIDES.md, ART-3D.md, screenshots
@@ -321,7 +353,13 @@ Tests: [TESTING.md](TESTING.md) (77 Foundry tests, 4 Fuji-fork tests, 22 Anvil e
 ## Prior work (disclosure)
 
 Noren existed before this hackathon. What came from earlier Noren work:
-- **UI from Noren on NEAR** (repo `noren-near`, branch `near`, `packages/web`, Nov 6 to 12 2026). Since Nov 13 the web
+- **The product, UI and film come from Noren at ETHGlobal** (Nov 2026, [showcase](https://ethglobal.com/showcase/noren-bh8wb),
+  repo `noren`, branch `release3`, `packages/web` and `examples/shop`; it ran on Arc). Since Nov 13 this edition uses
+  that UI as is: its landing, Noren Merchant, hosted checkout and Noren app components, stylesheets (`styles.css`,
+  `app/app.css`, `landing.css`, `onboard.css`), art, logos and fonts, and the Aubelle demo shop. Every data path was
+  rewritten for Avalanche (eERC + Noren's hub instead of Kohaku privacy pools; Noren's stock oracle, desk and credit
+  instead of Robinhood Chain Stock Tokens, Aqua and CRE). New additions in the same language are marked in the CSS.
+- **Earlier on Nov 13, UI from Noren on NEAR** (repo `noren-near`, branch `near`, `packages/web`, Nov 6 to 12 2026). Since Nov 13 the web
   app uses the NEAR edition's approved UI as is: its stylesheets (`styles.css`, `app-base.css`, `near.css`,
   `landing.css`, copied verbatim into `web/src/ui/nk/`), its brand, ambient, 3D-object and logo components, its navy
   lacquer 3D art and mark, its fonts, and its layout (centred pill tabs, the credit hero and health bar, The contract
@@ -334,7 +372,7 @@ Noren existed before this hackathon. What came from earlier Noren work:
 - **Earlier EVM versions** of Noren (branches `wif`, Arc, Robinhood Chain) had a Solidity credit line
   (`NorenCreditLine`) on a different design. It informed the shape of `NorenCredit`, but no Solidity was copied.
 
-Written for this build (Nov 12 2026): `NorenCredit`, `NorenMerchants`, `NorenSettlement`, the eERC integration and
+Written for this build (Nov 12 and 13 2026): `NorenStockOracle`, `NorenStockDesk`, `NorenStockCredit`, `NorenStockStarter`, the price relayer and merchant API (`hub/src/prices.ts`, `hub/src/merchant.ts`), the web app's Avalanche data layer (`web/src/lib`), `NorenCredit`, `NorenMerchants`, `NorenSettlement`, the eERC integration and
 SDK, the hub, every test, the web app's screens and chain layer, the Fuji deployment and demo. `NorenGasStation` follows the design of
 `KumiGasStation` from the author's Kumi entry in the same event, with a token pack added. The eERC contracts and circuits are Ava Labs' (unmodified).
 

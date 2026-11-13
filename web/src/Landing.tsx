@@ -93,7 +93,6 @@ const BUILT: { name: string; logos: string[]; use: string; s: Status; note?: str
 const tx = (k: string) => (D.txs?.[k]?.hash ?? "") as string;
 const LIVE_STRIP: { t: string; d: string; href: string; marks: string[] }[] = [
   ...(D.live ?? []).map((x) => ({ t: x.t, d: x.d, href: txUrl(x.hash), marks: x.marks })),
-  { t: "Signed stock prices", d: "NorenStockOracle · 5 quotes", href: addrUrl(D.stockOracle), marks: ["NVDA", "AVAX"] },
   { t: "Aubelle opens on Noren", d: "eERC key, then NorenMerchants", href: txUrl(tx("open_aubelle")), marks: ["AVAX"] },
   { t: "Hub batches", d: "NorenSettlement, every batch", href: addrUrl(D.norenSettlement!), marks: ["AVAX"] },
 ].filter((x) => !/\/tx\/$/.test(x.href));
@@ -192,19 +191,19 @@ export function Landing() {
           <span className="lx-pill mono"><i />Live on Avalanche Fuji · eERC</span>
           <h1>Take Stocks as Payment.{" "}<em>Never See</em><br /><em>Who</em> Paid You</h1>
           <p>Noren lets merchants accept stablecoins, stocks or credit — privately. Customers pay with their stocks, or get credit against them without selling, and the shop is paid in tUSDC through Ava Labs’ encrypted ERC on Avalanche.</p>
-          <p className="lx-nyse mono">Why Avalanche: {NYSE.line}. <a href={NYSE.sources[0][1]} target="_blank" rel="noreferrer">The Block</a> · <a href={NYSE.sources[1][1]} target="_blank" rel="noreferrer">CoinDesk</a></p>
           <div className="lx-ctas">
             <a className="lx-btn light" href="#/dashboard">Open dashboard</a>
-            <a className="lx-btn dark" href="#developers">Read the API</a>
+            <a className="lx-btn dark" href="#/app">Open the app</a>
           </div>
+          <p className="lx-nyse mono">Why Avalanche: {NYSE.line}. <a href={NYSE.sources[0][1]} target="_blank" rel="noreferrer">The Block</a> · <a href={NYSE.sources[1][1]} target="_blank" rel="noreferrer">CoinDesk</a></p>
         </div>
         <div className="lx-horizon" aria-hidden />
       </section>
 
       {/* ---------------------------------------------------------------- live on public testnets */}
-      <section className="nx-live" aria-label="Live on public testnets">
+      <section className="nx-live" aria-label="Live on Avalanche Fuji">
         <div className="nx-live-in">
-          <span className="nx-live-h mono"><i aria-hidden />Live on public testnets</span>
+          <span className="nx-live-h mono"><i aria-hidden />Live on Avalanche Fuji</span>
           <ul>
             {LIVE_STRIP.map((x) => (
               <li key={x.href}><a href={x.href} target="_blank" rel="noreferrer"><span className="nx-live-m" aria-hidden>{x.marks.map((m) => <Mark key={m} id={m} size={18} />)}</span><span><b>{x.t}</b><small>{x.d}</small></span><Icon.ext /></a></li>

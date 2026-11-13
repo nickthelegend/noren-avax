@@ -468,7 +468,7 @@ function PaymentPage({ id, rows, store, token, tick }: { id: string; rows: Row[]
     ["Paid with tUSDC from a public wallet", r.paidAt, r.paymentTx ? <><TxLink hash={r.paymentTx} n={8} /> · checked on chain by Noren’s API</> : null, settled(r)],
   ] : [
     ["Payment link created", r.createdAt, r.description ? `“${r.description}”` : null, true],
-    [`Paid privately to Noren’s hub${r.method === "stocks" ? ", with stocks" : r.method === "payin3" ? ", in 3" : r.method === "paylater" ? ", later" : ""}`, r.paidAt, r.paymentTx ? <><TxLink hash={r.paymentTx} n={8} /> · eERC transfer, amount encrypted; the hub read the order from its encrypted note</> : null, settled(r)],
+    [`Paid privately to Noren’s hub${r.method === "stocks" ? ", with stocks" : r.method === "payin3" ? ", in 3" : r.method === "paylater" ? ", later" : ""}`, r.paidAt, <>An eERC transfer to Noren’s hub, amount encrypted. The hub read your order from its encrypted note; the customer’s transaction is never shown to you.</>, settled(r)],
     ["Paid out to you in a batch", r.payoutTx ? (r.settledAt ?? r.paidAt) : undefined, r.payoutTx ? <>batch #{r.batch} · <TxLink hash={r.payoutTx} n={8} /> · with zero-value covers to other shops</> : null, !!r.payoutTx],
   ];
   return (

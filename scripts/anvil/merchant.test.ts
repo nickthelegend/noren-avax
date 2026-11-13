@@ -218,11 +218,14 @@ test('a private payment naming the invoice marks it paid; the method comes from 
   await hub.scan();
   const paid = (await api(`/api/invoices/${invoice.id}`)).body;
   assert.equal(paid.status, 'paid');
-  assert.equal(paid.paymentTx, tx);
+  // The customer's own tx (customer → hub) names their wallet: neither the public view nor the shop gets it.
+  assert.equal(paid.paymentTx, undefined);
+  assert.ok(!JSON.stringify(paid).toLowerCase().includes(tx.slice(2).toLowerCase()));
   assert.equal(paid.method, 'stocks');
   assert.ok(!readFileSync(join(tmp, 'merchant.json'), 'utf8').toLowerCase().includes(addr('customer').slice(2).toLowerCase()));
   const ev = (await api(`/api/stores/${store.id}/events`, { token: secret })).body;
   assert.equal(ev[0].type, 'invoice.paid');
+  assert.ok(!JSON.stringify(ev).toLowerCase().includes(tx.slice(2).toLowerCase()));
   assert.equal(methodOf('payin3:Dress'), 'payin3');
   assert.equal(methodOf('weird:Dress'), 'private');
   assert.equal(methodOf('Dress'), 'private');

@@ -263,8 +263,13 @@ export class Merchant {
     this.hits.set(key, list);
   }
 
+  /** What anyone outside the hub sees of an invoice. A private payment's own transaction (customer → hub) names the
+   *  customer's wallet, so it is never handed out: the shop learns only the batch and its payout. A public tUSDC
+   *  payment keeps its transaction (it is the customer's public transfer to the shop). */
   private view(inv: Invoice): Invoice {
-    return inv.status === 'open' && inv.expiresAt < now() ? { ...inv, status: 'expired' } : inv;
+    const v = inv.status === 'open' && inv.expiresAt < now() ? { ...inv, status: 'expired' as const } : { ...inv };
+    if (v.method && v.method !== 'usdc') delete v.paymentTx;
+    return v;
   }
 
   publicInvoice(id: string) {
@@ -332,7 +337,11 @@ export class Merchant {
 
   events(auth: string | undefined, storeId: string) {
     this.ownStore(auth, storeId, true);
-    return this.data.events.filter((e) => e.storeId === storeId).reverse();
+    // Events recorded before Nov 13 08:40 UTC carried a private payment's own tx; it is stripped here too.
+    return this.data.events
+      .filter((e) => e.storeId === storeId)
+      .map((e) => (e.type === 'invoice.paid' && e.data.method !== 'usdc' && 'paymentTx' in e.data ? { ...e, data: Object.fromEntries(Object.entries(e.data).filter(([k]) => k !== 'paymentTx')) } : e))
+      .reverse();
   }
 
   // ---------------------------------------------------------------- public payments and shops
@@ -397,7 +406,7 @@ export class Merchant {
     inv.paidAt = now();
     inv.paymentTx = p.tx;
     inv.method = methodOf(p.item);
-    this.event(inv.storeId, 'invoice.paid', { invoice: inv.id, amountCents: inv.amountCents, method: inv.method, paymentTx: p.tx });
+    this.event(inv.storeId, 'invoice.paid', { invoice: inv.id, amountCents: inv.amountCents, method: inv.method });
     this.save();
     return inv;
   }

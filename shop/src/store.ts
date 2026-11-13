@@ -33,7 +33,7 @@ export const useDrawer = () => useSyncExternalStore(cb => { drawerListeners.add(
 
 // ---- backend ----
 const ORDERS = 'aubelle.orders.v1';
-export type Config = { ready: boolean; missing: string[]; webhookError: string | null; server: string | null; merchant: string | null; checkoutBase: string };
+export type Config = { ready: boolean; missing: string[]; webhookError: string | null; server: string | null; merchant: string | null; checkoutBase: string; appBase: string };
 export type Fx = { eurPerUsd: number; feed: string; updatedAt: string };
 async function getJson<T>(path: string): Promise<T> { const r = await fetch(path); const body = await r.json().catch(() => ({})); if (!r.ok) throw new Error(body.error ?? `HTTP ${r.status}`); return body as T; }
 export const api = {
@@ -55,7 +55,7 @@ export const api = {
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error ?? `Checkout failed (HTTP ${r.status})`);
     try { const m = JSON.parse(localStorage.getItem(ORDERS) ?? '{}'); m[body.orderId] = { invoiceId: body.invoiceId, lines: body.lines }; localStorage.setItem(ORDERS, JSON.stringify(m)); } catch { /* private mode */ }
-    return body as { orderId: string; invoiceId: string; checkoutUrl: string };
+    return body as { orderId: string; invoiceId: string; totalCents: number; checkoutUrl: string; popupUrl: string };
   },
 };
 
@@ -72,3 +72,25 @@ export function useConfig() {
   return { config, error };
 }
 export const eur = (cents: number, fx: Fx | null) => fx ? `€${(cents / 100 * fx.eurPerUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
+
+// ---- the Noren pop-up checkout (like Stripe / PayPal): one at a time, shown over the shop while it is open ----
+export type Pending = { orderId: string; invoiceId: string; totalCents: number; popupUrl: string; checkoutUrl: string; win: Window | null };
+let pending: Pending | null = null;
+const pendingListeners = new Set<() => void>();
+export const setPending = (p: Pending | null) => { pending = p; pendingListeners.forEach(l => l()); };
+export const usePending = () => useSyncExternalStore(cb => { pendingListeners.add(cb); return () => pendingListeners.delete(cb); }, () => pending);
+/** A small centred window, opened synchronously inside the click so pop-up blockers allow it. */
+export function openNorenWindow(url = ''): Window | null {
+  const w = 440, h = 720;
+  const left = Math.max(0, Math.round((window.screenX ?? 0) + (window.outerWidth - w) / 2));
+  const top = Math.max(0, Math.round((window.screenY ?? 0) + (window.outerHeight - h) / 2));
+  const win = window.open(url, 'noren-checkout', `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
+  if (win && !url) {
+    try {
+      win.document.title = 'Noren checkout';
+      win.document.body.style.cssText = 'margin:0;height:100vh;display:grid;place-items:center;background:#f4efe4;color:#575c72;font:500 15px system-ui,sans-serif';
+      win.document.body.textContent = 'Opening Noren checkout…';
+    } catch { /* not ours to write */ }
+  }
+  return win;
+}

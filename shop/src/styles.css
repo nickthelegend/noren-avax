@@ -285,3 +285,28 @@ h1 em, h2 em { font-style: italic; color: var(--rose-deep); }
 .tx-link { display: inline-flex; align-items: center; gap: 5px; color: inherit; text-decoration: underline; text-decoration-color: rgba(0, 0, 0, .25); text-underline-offset: 3px; white-space: nowrap; }
 .tx-link:hover { text-decoration-color: currentColor; }
 .tx-link svg { opacity: .65; }
+
+/* ---- Noren pop-up checkout: the shop dims while Noren's window is open (like Stripe / PayPal) */
+.nw { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: var(--gutter); }
+.nw-scrim { position: absolute; inset: 0; background: rgba(16, 20, 43, .55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: nw-in .3s var(--ease) both; }
+.nw-card { position: relative; width: min(420px, 100%); padding: 30px 30px 24px; border-radius: 22px; background: var(--cream); box-shadow: 0 40px 90px -30px rgba(16, 20, 43, .6); text-align: center; display: grid; justify-items: center; gap: 4px; animation: nw-up .35s var(--ease) both; }
+.nw-card h2 { margin: 0 0 6px; font: 400 34px/1.08 var(--serif); letter-spacing: -.01em; }
+.nw-card h2 em { font-style: italic; color: var(--rose-deep); }
+.nw-card > p:not(.eyebrow) { margin: 0 0 12px; color: var(--ink-2); font-size: 14px; max-width: 34ch; }
+.nw-card .eyebrow { margin: 6px 0 4px; }
+.nw-mark { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--noren); color: #fff; }
+.nw-mark .noren-mark { width: 24px; height: 24px; margin: 0; }
+.nw-actions { display: grid; gap: 8px; width: 100%; }
+.nw-actions .btn { width: 100%; }
+.btn-line { border-color: var(--line); background: transparent; color: var(--ink-2); }
+.btn-line:hover { border-color: var(--ink-2); }
+.nw-tab { margin-top: 12px; }
+.nw-paid h2 { font-size: 46px; color: var(--ok); }
+.nw-check { width: 72px; height: 72px; }
+.nw-check svg { width: 100%; height: 100%; fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.nw-check circle { stroke-dasharray: 151; stroke-dashoffset: 151; animation: nw-draw .6s var(--ease) forwards; }
+.nw-check path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: nw-draw .4s .45s var(--ease) forwards; }
+@keyframes nw-draw { to { stroke-dashoffset: 0; } }
+@keyframes nw-in { from { opacity: 0; } }
+@keyframes nw-up { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .nw-scrim, .nw-card, .nw-check circle, .nw-check path { animation: none; stroke-dashoffset: 0; } }

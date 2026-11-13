@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { bySlug, PRODUCTS, usd, type Length, type Product, type Shade } from './catalog.ts';
-import { api, bagActions, bagCount, bagTotal, eur, go, setDrawer, useBag, useConfig, useDrawer, useFx, useRoute, type Config } from './store.ts';
+import { api, bagActions, bagCount, bagTotal, eur, go, openNorenWindow, setDrawer, setPending, useBag, useConfig, useDrawer, useFx, usePending, useRoute, type Config } from './store.ts';
 import integrationSource from '../server/noren.ts?raw';
 
 const img = (slug: string) => `/products/${slug}.webp`;
@@ -25,6 +25,7 @@ export function App() {
       <main id="main" tabIndex={-1}>{page}</main>
       <Footer />
       <Drawer />
+      <NorenWindow />
     </>
   );
 }
@@ -248,19 +249,30 @@ function CheckoutButton() {
   const { config, error } = useConfig();
   const [busy, setBusy] = useState(false);
   const [fail, setFail] = useState<string | null>(null);
+  // Like Stripe or PayPal: Noren's checkout opens in a small window over the shop. It must open inside the click
+  // (before any await) or the browser blocks it; it shows "Opening…" until the invoice exists. Blocked pop-ups fall
+  // back to Noren's hosted checkout in this tab.
   const start = async () => {
     setBusy(true); setFail(null);
-    try { const { orderId, checkoutUrl } = await api.checkout(lines); try { sessionStorage.setItem('aubelle.lastOrder', orderId); } catch { /* ignore */ } location.href = checkoutUrl; }
-    catch (e: any) { setFail(e.message); setBusy(false); }
+    const win = openNorenWindow();
+    try {
+      const o = await api.checkout(lines);
+      try { sessionStorage.setItem('aubelle.lastOrder', o.orderId); } catch { /* ignore */ }
+      if (!win || win.closed) { location.href = o.checkoutUrl; return; }
+      win.location.href = o.popupUrl;
+      setPending({ orderId: o.orderId, invoiceId: o.invoiceId, totalCents: o.totalCents, popupUrl: o.popupUrl, checkoutUrl: o.checkoutUrl, win });
+      setDrawer(false); setBusy(false);
+    }
+    catch (e: any) { win?.close(); setFail(e.message); setBusy(false); }
   };
   if (error) return <SetupNote title="The shop backend is not reachable" body={error} />;
   if (config && !config.ready) return <SetupRequired config={config} />;
   return (
     <>
       <button className="btn btn-noren btn-wide" onClick={start} disabled={busy || !config || lines.length === 0} aria-busy={busy}>
-        {busy ? 'Opening Noren…' : <>Checkout with <NorenMark /> <span className="noren-word">Noren</span></>}
+        {busy ? 'Opening Noren…' : <>Pay with <NorenMark /> <span className="noren-word">Noren</span></>}
       </button>
-      <p className="noren-note">Four ways at Noren's checkout: pay with stocks, Pay in 3 / pay later against your stocks, pay privately, or pay with test USDC. The first three end in a private payment on Avalanche, so Aubelle never sees your wallet.</p>
+      <p className="noren-note">Noren's checkout opens in a small window: pay with stocks, Pay in 3 / pay later against your stocks, pay privately, or pay with test USDC. The first three end in a private payment on Avalanche, so Aubelle never sees your wallet.</p>
       {fail && <p className="error" role="alert">{fail}</p>}
     </>
   );
@@ -277,6 +289,82 @@ function SetupNote({ title, body }: { title: string; body: ReactNode }) {
 function NorenMark() {
   // A noren: the split curtain hung at a shop's entrance.
   return <svg className="noren-mark" width="16" height="16" viewBox="0 0 16 16" aria-hidden><rect x="1" y="2" width="14" height="1.6" rx=".8" fill="currentColor" /><path d="M2 4.5h3.4v8.2L3.7 14 2 12.7Z M6.3 4.5h3.4v8.2L8 14l-1.7-1.3Z M10.6 4.5H14v8.2L12.3 14l-1.7-1.3Z" fill="currentColor" /></svg>;
+}
+
+/** Shown over the shop while Noren's checkout window is open. The window's message is only a hint: the order is
+ *  "Paid" when this shop's server has read the invoice back from Noren's API. */
+function NorenWindow() {
+  const p = usePending();
+  const { config } = useConfig();
+  const [state, setState] = useState<'open' | 'closed' | 'paid'>('open');
+  const [method, setMethod] = useState<string | null>(null);
+  useEffect(() => { setState('open'); setMethod(null); }, [p?.invoiceId]);
+  useEffect(() => {
+    if (!p) return;
+    let stop = false, timer: number | undefined;
+    const check = async () => {
+      try { const o = await api.order(p.orderId); if (stop) return; if (o.status === 'paid') { setMethod(o.method); setState('paid'); bagActions.clear(); return true; } } catch { /* keep waiting */ }
+      return false;
+    };
+    const tick = async () => { if (stop) return; if (await check()) return; if (p.win?.closed) setState(s => s === 'paid' ? s : 'closed'); timer = window.setTimeout(tick, 2000); };
+    const onMsg = (e: MessageEvent) => {
+      const appOrigin = (() => { try { return new URL(config?.appBase ?? p.popupUrl).origin; } catch { return null; } })();
+      if (e.origin !== appOrigin || e.data?.source !== 'noren' || e.data?.invoiceId !== p.invoiceId) return;
+      if (e.data.status === 'cancelled') { setState('closed'); return; }
+      if (e.data.status === 'paid') check();   // confirm with Noren before saying so
+    };
+    addEventListener('message', onMsg);
+    tick();
+    return () => { stop = true; clearTimeout(timer); removeEventListener('message', onMsg); };
+  }, [p, config?.appBase]);
+  // Hold "Paid" until Noren's window has closed itself (it counts down after confirming), then show the order.
+  useEffect(() => {
+    if (state !== 'paid' || !p) return;
+    const t0 = Date.now(); let closedAt = 0, timer = 0;
+    const step = () => {
+      if (!closedAt && (!p.win || p.win.closed || Date.now() - t0 > 8000)) closedAt = Date.now();
+      if (closedAt && Date.now() - closedAt > 2200 && Date.now() - t0 > 2600) { setPending(null); go(`#/order/${p.orderId}`); return; }
+      timer = window.setTimeout(step, 200);
+    };
+    step();
+    return () => clearTimeout(timer);
+  }, [state, p]);
+  useEffect(() => { if (!p) return; document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, [p]);
+  if (!p) return null;
+  const reopen = () => {
+    if (p.win && !p.win.closed) { p.win.focus(); return; }
+    const win = openNorenWindow(p.popupUrl);
+    if (!win) { location.href = p.checkoutUrl; return; }
+    setPending({ ...p, win }); setState('open');
+  };
+  const cancel = () => { try { p.win?.close(); } catch { /* ignore */ } setPending(null); };
+  return (
+    <div className="nw" role="dialog" aria-modal="true" aria-label="Paying with Noren">
+      <div className="nw-scrim" />
+      <div className={`nw-card nw-${state}`}>
+        {state === 'paid' ? (
+          <>
+            <div className="nw-check" aria-hidden><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" /><path d="m15 27 7.5 7.5L38 19" /></svg></div>
+            <p className="eyebrow">Order {p.orderId}</p>
+            <h2>Paid</h2>
+            <p>{usd(p.totalCents)} · {METHOD[method ?? ''] ?? 'Noren'}. Confirmed with Noren; your order is next.</p>
+          </>
+        ) : (
+          <>
+            <span className="nw-mark"><NorenMark /></span>
+            <p className="eyebrow">Order {p.orderId} · {usd(p.totalCents)}</p>
+            <h2>{state === 'closed' ? <>The Noren window <em>closed</em></> : <>Finish paying in the <em>Noren</em> window</>}</h2>
+            <p>{state === 'closed' ? 'Nothing was charged unless you paid there. Reopen it to finish, or keep shopping.' : "Noren's checkout opened in a small window. Pay there; this page updates the moment Noren confirms it."}</p>
+            <div className="nw-actions">
+              <button className="btn btn-noren" onClick={reopen}>{state === 'closed' ? 'Reopen Noren checkout' : 'Show the Noren window'}</button>
+              <button className="btn btn-line" onClick={cancel}>Cancel</button>
+            </div>
+            <a className="link nw-tab" href={p.checkoutUrl}>Pay in this tab instead</a>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function Drawer() {
@@ -409,10 +497,10 @@ function IntegrationPanel() {
       <div className="integration-copy">
         <p className="eyebrow">For developers</p>
         <h2>How this shop <em>added Noren</em></h2>
-        <p>Aubelle's whole payment integration is one file of {lines} lines on the shop's backend: create a Noren invoice for the bag, send the shopper to Noren's hosted checkout, and mark the order paid only when Noren says so.</p>
+        <p>Aubelle's whole payment integration is one file of {lines} lines on the shop's backend: create a Noren invoice for the bag, open Noren's checkout for it in a pop-up, and mark the order paid only when Noren says so.</p>
         <ol className="steps">
           <li><b>Invoice</b> for the bag total, with the order ID in metadata.</li>
-          <li><b>Redirect</b> to Noren's hosted checkout: pay with stocks, Pay in 3 / pay later against stocks, privately, or with test USDC.</li>
+          <li><b>Pop-up</b>: Noren's checkout opens in a small window (or Noren's hosted page if pop-ups are blocked): pay with stocks, Pay in 3 / pay later against stocks, privately, or with test USDC. The window closes and hands the result back.</li>
           <li><b>Confirm</b> by reading the invoice back from Noren; it is paid once Noren's hub has decrypted the private payment on Avalanche.</li>
         </ol>
         <p className="muted small">The secret key stays on the server. Prices are recomputed there, never taken from the browser.</p>

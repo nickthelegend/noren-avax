@@ -7,6 +7,8 @@ import { bySlug, priceCart } from '../src/catalog.js';
 import { createCheckout, readInvoice } from '../server/noren.js';
 
 const CHECKOUT_BASE = (process.env.NOREN_CHECKOUT_URL ?? 'https://noren-avax-merchant.vercel.app').replace(/\/$/, '');
+// The Noren app's pop-up checkout (the customer's wallet lives on the app's origin).
+const APP_BASE = (process.env.NOREN_APP_URL ?? 'https://noren-avax.vercel.app').replace(/\/$/, '');
 const NOREN = process.env.NOREN_API ?? 'https://noren-avax-api.201-18-198-162.sslip.io';
 // Chainlink EUR/USD on Avalanche Fuji (8 decimals), read with eth_call.
 const EUR_USD = '0x9F5c46674d14ec1ba3877f3eE3e7D93D138221f0';
@@ -58,7 +60,7 @@ export default async function handler(req: Req, res: ServerResponse) {
   const route = String(req.query?.p ?? url.searchParams.get('p') ?? '').replace(/^\/+/, '');
   try {
     if (route === 'config' && req.method === 'GET') {
-      return send(res, 200, { ready: missing().length === 0, missing: missing(), webhookError: null, server: NOREN, merchant: null, checkoutBase: CHECKOUT_BASE });
+      return send(res, 200, { ready: missing().length === 0, missing: missing(), webhookError: null, server: NOREN, merchant: null, checkoutBase: CHECKOUT_BASE, appBase: APP_BASE });
     }
     if (route === 'fx' && req.method === 'GET') return send(res, 200, await eurRate());
     if (route === 'checkout' && req.method === 'POST') {
@@ -70,7 +72,7 @@ export default async function handler(req: Req, res: ServerResponse) {
       const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? 'noren-avax-shop.vercel.app');
       const shopUrl = `${host.startsWith('127.0.0.1') || host.startsWith('localhost') ? 'http' : 'https'}://${host}`;
       const { invoiceId, url: hosted } = await createCheckout({ id, totalCents: total, summary }, shopUrl, pack(lines));
-      return send(res, 201, { orderId: id, invoiceId, lines, totalCents: total, checkoutUrl: hosted || `${CHECKOUT_BASE}/#/pay/${invoiceId}` });
+      return send(res, 201, { orderId: id, invoiceId, lines, totalCents: total, checkoutUrl: hosted || `${CHECKOUT_BASE}/#/pay/${invoiceId}`, popupUrl: `${APP_BASE}/#/checkout/${invoiceId}` });
     }
     const m = /^orders\/([A-Za-z0-9]{6,32})$/.exec(route);
     if (m && req.method === 'GET') {
@@ -79,7 +81,7 @@ export default async function handler(req: Req, res: ServerResponse) {
       return send(res, 200, {
         id: inv.metadata?.order ?? inv.id, invoiceId: inv.id, status: STATUS[inv.status] ?? inv.status, lines, totalCents: inv.amountCents,
         paymentTx: inv.paymentTx ?? null, paidAt: inv.paidAt ?? null, method: inv.method ?? null, batch: inv.batch ?? null, payoutTx: inv.payoutTx ?? null,
-        checkoutUrl: inv.url ?? `${CHECKOUT_BASE}/#/pay/${inv.id}`,
+        checkoutUrl: inv.url ?? `${CHECKOUT_BASE}/#/pay/${inv.id}`, popupUrl: `${APP_BASE}/#/checkout/${inv.id}`,
       });
     }
     return send(res, 404, { error: 'Not found' });

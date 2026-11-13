@@ -9,7 +9,8 @@ async function noren(path: string, init?: RequestInit) {
   return body;
 }
 
-// 1. "Checkout with Noren": invoice the bag, redirect to hosted checkout.
+// 1. "Pay with Noren": invoice the bag; the browser opens Noren's checkout for it in a pop-up
+//    (https://noren-avax.vercel.app/#/checkout/<invoice id>), or the hosted checkout page if pop-ups are blocked.
 type Order = { id: string; totalCents: number; summary: string };
 export async function createCheckout(order: Order, shopUrl: string, lines: string) {
   const invoice = await noren('/invoices', { method: 'POST', body: JSON.stringify({

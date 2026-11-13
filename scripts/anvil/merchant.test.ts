@@ -242,6 +242,64 @@ test('when the hub settles the batch the invoice gets its batch and the shop’s
   assert.deepEqual(ev[0].data.invoices, [invoice.id]);
 });
 
+// ------------------------------------------------------------------ public tUSDC payments and shops
+
+test('pay with tUSDC (public): underpaying, the wrong recipient, an older tx and a replay are refused; the right transfer pays', async () => {
+  const mint = [{ type: 'function', name: 'mint', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [], stateMutability: 'nonpayable' }] as const;
+  const transfer = async (to: Address, amount: bigint) => {
+    const hash = await W.customer!.writeContract({ address: d.tUSDC, abi: [{ type: 'function', name: 'transfer', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }], stateMutability: 'nonpayable' }], functionName: 'transfer', args: [to, amount], account: W.customer!.account!, chain: A.chain });
+    assert.equal((await A.pub.waitForTransactionReceipt({ hash })).status, 'success');
+    return hash;
+  };
+  await send(W.deployer!, d.tUSDC, mint, 'mint', [addr('customer'), 200_000_000n]);
+  // Juhu Chai House (shop 1, owner "other") gets a store; its fresh key keeps this test clear of Aubelle's rate limit.
+  const tok = (await signIn('other')).body.token;
+  const st = await api('/api/stores', { token: tok, body: { shopId: 1, name: 'Juhu Chai House' } });
+  assert.equal(st.status, 201);
+  const sk = st.body.secretKey as string;
+  const early = await transfer(addr('other'), 24_000_000n); // before the invoice exists
+  await new Promise((r) => setTimeout(r, 1100));
+  await A.pub.request({ method: 'evm_mine' as never, params: [] as never });
+  const inv = (await api('/api/invoices', { token: sk, body: { amountCents: 2_400, description: 'Chai and samosas' } })).body;
+  const inv2 = (await api('/api/invoices', { token: sk, body: { amountCents: 2_400, description: 'Second order' } })).body;
+  await new Promise((r) => setTimeout(r, 1100));
+  const pay = (id: string, tx: string) => api(`/api/invoices/${id}/public`, { body: { tx } });
+
+  let r = await pay(inv.id, early);
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /older than the invoice/);
+  r = await pay(inv.id, await transfer(addr('other'), 23_990_000n));
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /sends 23.99 tUSDC/);
+  r = await pay(inv.id, await transfer(addr('owner'), 24_000_000n));
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /no tUSDC to Juhu Chai House/);
+  assert.equal((await pay(inv.id, '0x1234')).status, 400);
+  const good = await transfer(addr('other'), 24_000_000n);
+  r = await pay(inv.id, good);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.status, 'paid');
+  assert.equal(r.body.method, 'usdc');
+  assert.equal(r.body.paymentTx, good);
+  // The same transaction cannot pay a second invoice, and a paid invoice cannot be paid again.
+  r = await pay(inv2.id, good);
+  assert.equal(r.status, 409);
+  assert.match(r.body.error, new RegExp(inv.id));
+  assert.equal((await pay(inv.id, await transfer(addr('other'), 24_000_000n))).status, 409);
+  assert.equal((await api(`/api/invoices/${inv2.id}`)).body.status, 'open');
+  const ev = (await api(`/api/stores/${st.body.store.id}/events`, { token: sk })).body;
+  assert.equal(ev[0].type, 'invoice.paid');
+  assert.equal(ev[0].data.method, 'usdc');
+  assert.ok(!readFileSync(join(tmp, 'merchant.json'), 'utf8').toLowerCase().includes(addr('customer').slice(2).toLowerCase()), 'no customer address stored');
+});
+
+test('a shop’s public card: its on-chain name and its store, if it has one', async () => {
+  const a = (await api('/api/shops/0')).body;
+  assert.deepEqual(a, { shopId: 0, name: 'Aubelle', storeId: store.id });
+  const none = await api('/api/shops/42');
+  assert.equal(none.status, 404);
+});
+
 // ------------------------------------------------------------------ stock prices
 
 test('the price relayer signs live Yahoo Finance quotes and NorenStockOracle accepts them; a stale report is skipped', async () => {

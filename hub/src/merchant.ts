@@ -11,6 +11,8 @@
 //   GET   /api/stores/:id/events         (session or the store's secret key) -> Event[]
 //   POST  /api/invoices                  (secret key, or session + storeId) { amountCents, description, ... } -> Invoice
 //   GET   /api/invoices/:id              (public) -> Invoice without metadata
+//   POST  /api/invoices/:id/public       { tx } -> Invoice: a public tUSDC payment, verified on chain
+//   GET   /api/shops/:shopId             (public) -> { shopId, name, storeId | null }
 //
 // The hub marks an invoice paid when it decrypts a payment note naming that invoice as its order (markPaid), and
 // records the batch and payout when it settles (markSettled). Invoices never hold a customer address.
@@ -19,7 +21,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { getAddress, type Address, type Hex, type PublicClient } from 'viem';
+import { erc20Abi, getAddress, parseEventLogs, type Address, type Hex, type PublicClient } from 'viem';
 import { parseSiweMessage, verifySiweMessage } from 'viem/siwe';
 import { norenMerchantsAbi, type Deployment } from '@noren-avax/sdk';
 
@@ -52,7 +54,8 @@ export interface Invoice {
   expiresAt: number;
   paidAt?: number;
   paymentTx?: Hex;
-  method?: Method;
+  /** private paths come from the hub note; "usdc" is a public tUSDC transfer to the shop owner */
+  method?: Method | 'usdc';
   batch?: number;
   payoutTx?: Hex;
   settledAt?: number;
@@ -74,6 +77,8 @@ interface Data {
   stores: Store[];
   invoices: Invoice[];
   events: NorenEvent[];
+  /** tx hashes that already paid an invoice publicly (one invoice per tx) */
+  usedTx?: Record<string, string>;
 }
 
 export class HttpError extends Error {
@@ -330,6 +335,56 @@ export class Merchant {
     return this.data.events.filter((e) => e.storeId === storeId).reverse();
   }
 
+  // ---------------------------------------------------------------- public payments and shops
+
+  /** "Pay with tUSDC (public)": checks on chain that `tx` succeeded and moved at least the invoice amount of tUSDC to
+   *  the shop's owner, after the invoice was created, and that no other invoice used it. */
+  async payPublic(id: string, b: Record<string, unknown>): Promise<Invoice> {
+    const tx = String(b.tx ?? '').toLowerCase();
+    if (!/^0x[0-9a-f]{64}$/.test(tx)) throw new HttpError(400, 'tx must be a transaction hash');
+    const inv = this.data.invoices.find((i) => i.id === id);
+    if (!inv) throw new HttpError(404, 'no such invoice');
+    if (inv.status === 'paid') throw new HttpError(409, 'this invoice is already paid');
+    const used = this.data.usedTx?.[tx];
+    if (used) throw new HttpError(409, `that transaction already paid invoice ${used}`);
+    let rc;
+    try {
+      rc = await this.o.pub.getTransactionReceipt({ hash: tx as Hex });
+    } catch {
+      throw new HttpError(404, 'transaction not found on Fuji yet; try again in a few seconds');
+    }
+    if (rc.status !== 'success') throw new HttpError(400, 'that transaction reverted');
+    const block = await this.o.pub.getBlock({ blockNumber: rc.blockNumber });
+    if (Number(block.timestamp) < inv.createdAt) throw new HttpError(400, 'that transaction is older than the invoice');
+    const owner = ((await this.o.pub.readContract({ address: this.o.d.norenMerchants, abi: norenMerchantsAbi, functionName: 'shop', args: [BigInt(inv.shopId)] })) as { owner: Address }).owner;
+    const want = BigInt(inv.amountCents) * 10_000n;
+    const paid = parseEventLogs({ abi: erc20Abi, logs: rc.logs, eventName: 'Transfer' })
+      .filter((l) => l.address.toLowerCase() === this.o.d.tUSDC.toLowerCase() && l.args.to.toLowerCase() === owner.toLowerCase())
+      .reduce((a, l) => a + l.args.value, 0n);
+    if (paid === 0n) throw new HttpError(400, `that transaction sends no tUSDC to ${inv.merchantName}`);
+    if (paid < want) throw new HttpError(400, `that transaction sends ${Number(paid) / 1e6} tUSDC; the invoice is ${inv.amountCents / 100}`);
+    if (this.data.invoices.find((i) => i.id === id)!.status === 'paid' || this.data.usedTx?.[tx]) throw new HttpError(409, 'already used');
+    this.data.usedTx = { ...(this.data.usedTx ?? {}), [tx]: id };
+    inv.status = 'paid';
+    inv.paidAt = now();
+    inv.paymentTx = tx as Hex;
+    inv.method = 'usdc';
+    this.event(inv.storeId, 'invoice.paid', { invoice: inv.id, amountCents: inv.amountCents, method: 'usdc', paymentTx: tx });
+    this.save();
+    return this.publicInvoice(id) as Invoice;
+  }
+
+  async shop(shopId: number) {
+    if (!Number.isInteger(shopId) || shopId < 0) throw new HttpError(400, 'bad shop id');
+    let name: string;
+    try {
+      name = ((await this.o.pub.readContract({ address: this.o.d.norenMerchants, abi: norenMerchantsAbi, functionName: 'shop', args: [BigInt(shopId)] })) as { name: string }).name;
+    } catch {
+      throw new HttpError(404, `shop ${shopId} is not open on NorenMerchants`);
+    }
+    return { shopId, name, storeId: this.data.stores.find((s) => s.shopId === shopId)?.id ?? null };
+  }
+
   // ---------------------------------------------------------------- from the hub
 
   /** A payment the hub decrypted: marks the invoice it names paid. Idempotent. Returns the invoice if it matched. */
@@ -389,7 +444,11 @@ export class Merchant {
     if (p === '/api/invoices' && m === 'POST') return send(201, this.createInvoice(auth, await body(), ip)), true;
     r = /^\/api\/invoices\/(in[a-z0-9]{10})$/.exec(p);
     if (r && m === 'GET') return send(200, this.publicInvoice(r[1]!)), true;
-    if (p.startsWith('/api/auth') || p.startsWith('/api/stores') || p.startsWith('/api/invoices')) throw new HttpError(404, 'not found');
+    r = /^\/api\/invoices\/(in[a-z0-9]{10})\/public$/.exec(p);
+    if (r && m === 'POST') return send(200, await this.payPublic(r[1]!, await body())), true;
+    r = /^\/api\/shops\/(\d{1,6})$/.exec(p);
+    if (r && m === 'GET') return send(200, await this.shop(Number(r[1]))), true;
+    if (['/api/auth', '/api/stores', '/api/invoices', '/api/shops'].some((x) => p.startsWith(x))) throw new HttpError(404, 'not found');
     return false;
   }
 }

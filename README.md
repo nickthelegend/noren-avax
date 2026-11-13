@@ -73,20 +73,35 @@ Live runs through the hosted UI on Nov 13 (each an eERC payment to the hub; amou
 | The hub settles batch #15 (three shops paid, two of them zero covers) | [`0x213aa76b…`](https://testnet.snowtrace.io/tx/0x213aa76b55093455537d4814afe56063b5ec89cc55a7d375a7b5e405bd8d6eb0) |
 | A signed stock price report submitted by the relayer | [`0x69236726…`](https://testnet.snowtrace.io/tx/0x69236726b97a6f214059c6026182ff394eccd0f2a9c56a2de2cf3525db0259de) |
 
-### The demo film's run (Nov 13, 07:22–07:28 UTC, the hosted UI, fresh test wallets)
+### The demo film's run (Avalanche Fuji, takes of Nov 13 2026, 09:11–09:18 UTC, v18 onward)
 
-Riya (`0x79c1…17ed`, a browser test wallet) pays Juhu Chai House (shop #10, opened on camera) with stocks, then pays
-Aubelle in 3 against a locked tTSLA and repays an installment on time.
+Wallets: Riya `0xf0a643de127c5d8e54d674877b48959d16271ec1` (browser test wallet), Juhu Chai House shop #12 on NorenMerchants (payout wallet `0x036Ec409bB38a14B079F68fE27cd5BF12e871D52`, store opened in `0xf9b642…09d9`), Noren's hub `0x58e374A4c704f1806BAbD04726FB60e86e76A6A7`. Café link `indlflm7bq2a`, Aubelle invoice `inytes4l6ui8` (order AUB-718B5B). Both settled in batch #26.
+Since API d472720 the shops never receive the customer's payment transaction: Aubelle's order page and the café's payment page show the method, the batch and the payout only.
 
 | What | Transaction |
 |---|---|
-| Riya pays Juhu Chai House 24.00 with stocks: eERC transfer to Noren's hub (amount encrypted) | [`0xb8d21752…a712`](https://testnet.snowtrace.io/tx/0xb8d21752bd27fd39091cb7bfd5a69b42a6c09bba5698909f3698a974a841a712) |
-| The public stock sale before it: 0.302372 tNVDA → 50.00 tUSDC at NorenStockDesk (round lot) | [`0xdeeeef4c…1f8a`](https://testnet.snowtrace.io/tx/0xdeeeef4c68e284519ea7511e4b6bf1fdb4e8e5147156a23766ea0549cd9c1f8a) |
-| Riya locks 1 tTSLA in NorenStockCredit (limit $238.47 at 60%) | [`0xa63629cc…f887`](https://testnet.snowtrace.io/tx/0xa63629ccb44a1e4a6cc67bf500353323b2d4e57c46ec17c80b2f75343741f887) |
-| Pay in 3: the plan draws a round lot of 150.00 tUSDC from the Earn pool | [`0xb46dd6df…0f03`](https://testnet.snowtrace.io/tx/0xb46dd6dfcb6317fbb24bc33eafc393a2f0f65185c4a2a0806ae9752ed35c0f03) |
-| Pay in 3: the private payment of 148.00 to Aubelle via the hub | [`0xf49e607c…6158`](https://testnet.snowtrace.io/tx/0xf49e607cd62545b738580fe2435696f6aa273d1799e50db26cedc3824f9a6158) |
-| Riya repays the first installment, 50.50 tUSDC, on time (LTV 60% → 65%) | [`0x377a87b5…2ea5`](https://testnet.snowtrace.io/tx/0x377a87b5a60b25e6d7bb1f6263e6d8185083c520e217667c71650d7d169f2ea5) |
-| Noren's hub pays Juhu Chai House in batch #22 (eERC transfer, amount encrypted) | [`0x3473e2ea…7eaa`](https://testnet.snowtrace.io/tx/0x3473e2eafcb06c737ae2ce3a575811ae13942b86d9e8234437a5ce568ce87eaa) |
+| The public stock sale: 0.302372 tNVDA → 50.00 tUSDC at NorenStockDesk (round lot) | [`0x39b9d8bd…2504`](https://testnet.snowtrace.io/tx/0x39b9d8bdf479b0df8311d22eed9c70a94f61316af5005935a37b414ea7a22504) |
+| The public top-up: 50.00 tUSDC into Riya's eERC balance | [`0x56519aff…5ba8`](https://testnet.snowtrace.io/tx/0x56519aff04786ecb460732f4cce69efaa909ee7e30eb38053d31cbc7524a5ba8) |
+| Riya pays Juhu Chai House 24.00 with stocks: eERC transfer to Noren's hub (amount encrypted, 0 token transfers) | [`0x682d45c0…9f6c`](https://testnet.snowtrace.io/tx/0x682d45c08c1855999b6a5090652709cfd5c228c7c81f37b0e67a20dc32a49f6c) |
+| Riya locks 1 tTSLA (limit $238.47 at 60%) | [`0x62fb75ea…a54c`](https://testnet.snowtrace.io/tx/0x62fb75ea67b40a502b376f846d6a73dc22d5d63ac1114524ffa2a0e8d8d0a54c) |
+| Pay in 3: the plan draws a round lot of 150.00 tUSDC (3 × 50.50, plan #5) | [`0x1530b27c…ab95`](https://testnet.snowtrace.io/tx/0x1530b27c43ac21d7eaca3fc9b4c32a66e6e1f3cc75c2ae55fa80363210ddab95) |
+| Pay in 3: the public top-up of the round lot, 150.00 tUSDC, into her eERC balance | [`0xcc604088…1864`](https://testnet.snowtrace.io/tx/0xcc604088e0d20d75a3a844538b9600c352af7904e5f62a81febdf8fe57201864) |
+| Pay in 3: the private payment of 148.00 to Aubelle via the hub (0 token transfers) | [`0xcec68b62…6156`](https://testnet.snowtrace.io/tx/0xcec68b62ecc175cc2240420dca7d4273f10de119e3e37d1c55dea5eb0d426156) |
+| Riya repays the first installment, 50.50 tUSDC, on time (LTV 60% → 65%) | [`0xddf4074e…fb5b`](https://testnet.snowtrace.io/tx/0xddf4074e68d58621a29019c8b178bf44f1d6724225121e5489731abcc0f2fb5b) |
+| Noren's hub pays Juhu Chai House in batch #26 (eERC PrivateTransfer to `0x036E…1D52`, amount encrypted) | [`0x9ea70736…fd7e`](https://testnet.snowtrace.io/tx/0x9ea707364aed26308a7c8a6eaeb0fc34d2f38e1778bde39cb88b55337331fd7e) |
+| Noren's hub pays Aubelle in batch #26 (eERC, amount encrypted) | [`0x689c418a…291e`](https://testnet.snowtrace.io/tx/0x689c418af84fed1bdacc36c21bbb55adc8992d7082021670a888388b3092291e) |
+
+On the explorer the eERC event reads `PrivateTransfer(sender, <receiver>, (ciphertext…), <auditor>)`: in the payment the receiver is the hub `0x58e3…a6a7`, in the payout it is the café `0x036E…1D52`. The film's captions quote that literally.
+(Earlier runs: v17 used 08:41–08:53 UTC, Riya `0x04a0…ad7d`, shop #11, batches #24/#25; v12–v16 used 07:22–07:28 UTC, Riya `0x79c1…17ed`, shop #10, batches #22/#23.)
+
+### v17–v18 wording checks
+| Line | Proof |
+|---|---|
+| "Selling the stock and the top-up are public, in round lots of fifty; the amount, and which shop it paid, are not." | v18: sale 0x39b9d8bd… (50.00 tUSDC out), eERC deposits 0x56519aff… (50,000,000 = 50.00 tUSDC) and 0xcc604088… (150,000,000 = 150.00); the payment 0x682d45c0… shows 0 transfers and goes to Noren's hub, the shop is not on chain |
+| "Aubelle never learns who paid" / caption "no customer named" | API d472720: invoices and events no longer carry paymentTx for private methods; Aubelle's order page (take 09:15 UTC) shows method, Noren payment id, batch #26 only, no customer field |
+| "Her plan: 150.00 tUSDC, a round lot · 3 × 50.50 · 1% fee" | Credit tab plan #5 on screen (v18): "Pay in 3 · 150.00 tUSDC · 151.50 left · 50.50 ×3" |
+| "Then the books decrypt in the browser, and the payout is checked against the chain." (v18) | Played only from the frame where Balances shows 24.00 tUSDC, the batch #26 payout row `0x9ea7…fd7e` and its "Checked ✓" badge (merchview take 09:17 UTC; decryption about 1.5 s in real time since product 9f9a47e) |
+| "Her pay-in-three payment is the same private call" (v18) | 0xcec68b62… from Riya: `transfer` on eERC `0x35f9…7153`, 0 transfers, 2 events |
 
 ## Live on Avalanche Fuji
 

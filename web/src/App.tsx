@@ -3,6 +3,7 @@ import { Landing } from "./Landing";
 import { Dashboard } from "./Dashboard";
 import { Checkout } from "./Checkout";
 import { NorenApp } from "./app/NorenApp";
+import { PopupCheckout } from "./app/PopupCheckout";
 import { Auditor } from "./Auditor";
 import { Icon, Logo, useRoute } from "./ui";
 
@@ -14,6 +15,8 @@ export function App() {
   if (route.page === "dashboard") return <Dashboard tab={route.tab} sub={route.sub} />;
   // Keyed by the whole hash so an app handoff (#/pay/<id>?m=stocks) always starts on the chosen method.
   if (route.page === "pay") return <Checkout key={location.hash} id={route.id} />;
+  // The pop-up a shop opens (window.open): the Noren app's checkout for one invoice, which hands the result back.
+  if (route.page === "checkout") return <PopupCheckout key={route.id} id={route.id} />;
   if (route.page === "app") return <NorenApp />;
   if (route.page === "auditor") return <Auditor />;
   if (MERCHANT_HOST) return <Dashboard tab="home" />;

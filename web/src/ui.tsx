@@ -10,11 +10,14 @@ export type Route =
   | { page: "home" }
   | { page: "dashboard"; tab: "home" | "balances" | "payments" | "links" | "developers" | "settings" | "onboard"; sub?: string }
   | { page: "pay"; id: string }
+  | { page: "checkout"; id: string }
   | { page: "app"; tab?: string }
   | { page: "auditor" };
 export function useRoute(): Route {
   const [hash, setHash] = useState(() => location.hash);
   useEffect(() => { const on = () => { setHash(location.hash); window.scrollTo(0, 0); }; addEventListener("hashchange", on); return () => removeEventListener("hashchange", on); }, []);
+  const c = /^#\/checkout\/([A-Za-z0-9]{4,16})/.exec(hash);
+  if (c) return { page: "checkout", id: c[1] };
   const m = /^#\/pay\/([A-Za-z0-9]{4,16})/.exec(hash);
   if (m) return { page: "pay", id: m[1] };
   const a = /^#\/(app|credit)(?:\/(\w+))?/.exec(hash);

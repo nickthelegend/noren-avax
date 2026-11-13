@@ -645,3 +645,53 @@ button.nk-way:hover:not(:disabled) { border-color: var(--nk-hair-2); background:
 .nk-unlock:hover:not(:disabled) { background: rgba(255, 255, 255, .2); }
 .nk-start { margin-top: 14px; }
 .nk-start .nk-btn { margin-top: 10px; }
+
+/* ---------------------------------------------------------------- pop-up checkout (#/checkout/<id>, opened by a shop) */
+.nk-pop { min-height: 100vh; display: flex; flex-direction: column; background: var(--nk-bg); }
+.nk-pop-h { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 58px; padding: 0 16px; background: rgba(244, 239, 228, .9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--nk-hair); }
+.nk-pop-h .nk-brand { font-size: 20px; gap: 8px; }
+.nk-chip.sm { min-height: 36px; padding: 0 12px 0 4px; font-size: 12px; cursor: default; }
+.nk-chip.sm .nk-ava { width: 26px; height: 26px; }
+.nk-pop-main { flex: 1; display: grid; align-content: start; gap: 12px; padding: 14px 16px 10px; }
+.nk-pop-sum { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px; border-radius: 20px; background: var(--nk-card); border: 1px solid var(--nk-hair); }
+.nk-pop-sum small { display: block; font: 500 12.5px/1.35 var(--nk-sans); color: var(--nk-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nk-pop-sum b { display: block; margin: 1px 0; font: 700 28px/1.05 var(--nk-sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.nk-pop-sum b em { font-style: normal; font-size: 14px; color: var(--nk-faint); font-weight: 600; }
+.nk-pop-sum .nk-inv-mark { width: 44px; height: 44px; border-radius: 14px; font-size: 19px; }
+.nk-pop-step { display: block; font: 700 11px/1 var(--nk-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--nk-kaki-ink); }
+.nk-pop-connect, .nk-pop-pay, .nk-pop-done { display: grid; gap: 10px; padding: 16px; border-radius: 22px; background: var(--nk-card); border: 1px solid var(--nk-hair); box-shadow: 0 30px 60px -48px rgba(23, 32, 63, .5); }
+.nk-pop-connect > b { font: 700 20px/1.2 var(--nk-sans); letter-spacing: -.01em; }
+.nk-pop-connect > p { margin: 0 0 4px; font: 500 14px/1.45 var(--nk-sans); color: var(--nk-dim); }
+.nk-pop-connect > small { font: 500 12px/1.4 var(--nk-sans); color: var(--nk-faint); }
+.nk-pop-connect .nk-cta { margin-top: 0; min-height: 52px; font-size: 16px; }
+.nk-pop-ways { gap: 6px; }
+.nk-pop-ways .nk-way { padding: 9px 12px; border-radius: 14px; }
+.nk-pop-ways .nk-way b { font-size: 14.5px; }
+.nk-pop-ways .nk-way small { font-size: 12px; }
+.nk-pop-stocks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 2px 0 0; }
+.nk-pop-stocks button { min-height: 44px; padding: 5px 8px 5px 5px; gap: 6px; border-radius: 12px; min-width: 0; }
+.nk-pop-stocks button span { min-width: 0; }
+.nk-pop-stocks button small { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nk-pop-quote { margin: 0; padding: 2px 14px; }
+.nk-pop-quote dt, .nk-pop-quote dd { padding: 8px 0; font-size: 13px; }
+.nk-pop-quote dd b { font-weight: 700; }
+.nk-pop-steps { padding: 4px 2px; }
+.nk-pop-pay .nk-cta { margin-top: 2px; min-height: 54px; font-size: 17px; }
+.nk-pop-done { justify-items: center; text-align: center; padding: 20px 16px; }
+.nk-pop-done > b { font: 700 22px/1.2 var(--nk-sans); color: var(--nk-ok); letter-spacing: -.01em; }
+.nk-pop-done > p { margin: 0; font: 500 14px/1.45 var(--nk-sans); color: var(--nk-dim); }
+.nk-pop-done .nk-rows { width: 100%; text-align: left; margin-top: 4px; }
+.nk-pop-done .nk-rows dt, .nk-pop-done .nk-rows dd { font-size: 13px; padding: 8px 0; }
+.nk-pop-done .nk-rows dd .nk-spin { width: 12px; height: 12px; vertical-align: -1px; }
+.nk-pop-check { width: 62px; height: 62px; }
+.nk-pop-check svg { width: 100%; height: 100%; fill: none; stroke: var(--nk-ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.nk-pop-check circle { stroke-dasharray: 151; stroke-dashoffset: 151; animation: nk-pop-draw .6s var(--nk-ease) forwards; }
+.nk-pop-check path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: nk-pop-draw .4s .45s var(--nk-ease) forwards; }
+@keyframes nk-pop-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .nk-pop-check circle, .nk-pop-check path { animation: none; stroke-dashoffset: 0; } }
+.nk-pop-back { margin: 2px 0 0; font: 600 14px/1 var(--nk-sans); color: var(--nk-ai); }
+.nk-pop-f { display: grid; gap: 8px; justify-items: center; padding: 8px 16px 16px; font: 400 10.5px/1.4 var(--nk-mono); color: var(--nk-faint); text-align: center; }
+.nk-pop-cancel { appearance: none; border: 0; background: none; padding: 6px; font: 600 13px/1 var(--nk-sans); color: var(--nk-dim); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--nk-hair-2); cursor: pointer; }
+.nk-pop-cancel:disabled { opacity: .4; cursor: default; }
+.nk-pop-quote, .nk-pop-done .nk-rows { column-gap: 0; }
+.nk-pop-quote dd, .nk-pop-done .nk-rows dd { padding-left: 14px; }

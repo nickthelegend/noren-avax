@@ -984,3 +984,15 @@ h1, h2, h3, .kpi b, .drawer-amt b, .co-amt, .lp-co-amt, .money.big input, .co-ba
 .sd-ask form { margin-top: 8px; }
 .aud .sd-body { margin-left: 0 !important; }
 @media (max-width: 760px) { .sd-net { display: none; } }
+
+/* ---- auditor: decrypt the auditor ciphertext in the browser */
+.aud-ledger { margin: 0 0 28px; padding: 18px 20px; border-radius: 12px; border: 1px solid var(--sd-line-2); background: #fff; }
+.aud-ledger-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.aud-ledger-h h2 { margin: 0; font: 600 18px/1.3 var(--sans); }
+.aud-ledger-h p { margin: 6px 0 0; max-width: 640px; font: 400 14px/1.5 var(--sans); color: var(--sd-text, #5f6477); }
+.aud-ledger-act { display: flex; align-items: center; min-height: 32px; }
+.aud-ledger-t { margin-top: 6px; }
+@media (max-width: 720px) { .aud-ledger { padding: 14px; overflow-x: auto; } }
+/* the settlement record has no sidebar: one column, centred */
+.sd.aud { display: block; background: var(--sd-bg); }
+.sd.aud .sd-main { margin: 0 auto; }

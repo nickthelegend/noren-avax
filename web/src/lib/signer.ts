@@ -135,6 +135,26 @@ export function openTestWallet(slot: Slot = 'customer') {
   emit();
 }
 
+/** The eERC auditor's key, if this browser holds one (the auditor's own machine). Never created here: an auditor key
+ *  only works if it is the key the eERC contract names, so a fresh one would decrypt nothing. */
+const AUDITOR = 'noren:auditor-wallet';
+export function hasAuditorKey() {
+  try {
+    return /^0x[0-9a-f]{64}$/.test(localStorage.getItem(AUDITOR) ?? '');
+  } catch {
+    return false;
+  }
+}
+export function openAuditorKey() {
+  const key = localStorage.getItem(AUDITOR) as Hex | null;
+  if (!key || !/^0x[0-9a-f]{64}$/.test(key)) throw Error('This browser holds no auditor key.');
+  const account = privateKeyToAccount(key, { nonceManager });
+  client = createWalletClient({ account, chain: fuji, transport: fujiTransport() });
+  current = { address: account.address, label: `Auditor ${account.address.slice(2, 6)}`, kind: 'guest' };
+  priv = null;
+  emit();
+}
+
 export function hasTestWallet(slot: Slot = 'customer') {
   try {
     return !!localStorage.getItem(slotKey(slot));

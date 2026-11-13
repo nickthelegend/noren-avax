@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { erc20Abi, verifyMessage, type Abi, type Hex } from 'viem';
 import { hasHub, hubNote, norenCreditAbi, norenTokenAbi, readPosition, readShops, readWallet, receiptText, settledIn, type Shop } from '@noren-avax/sdk';
 import { api, getStarterPack, saveClaim, type HubStatus, type Receipt } from '../lib/api';
@@ -296,7 +296,7 @@ export function PayTab({ slug, market }: { slug: string; market: Market }) {
                   <Icon.shield />
                   {VIA_HUB ? (
                     <span>
-                      <b>Snowtrace sees you paid Noren. Not which shop, not how much.</b> {shop?.name ?? 'The shop'} is paid from Noren’s hub in the next batch, alongside other shops.
+                      <b>Snowtrace sees you paid Noren. Not which shop, not how much.</b> {shop?.name ?? 'The shop'} is paid from Noren’s hub in the next batch, one of at least three payouts ($0 covers fill the rest).
                     </span>
                   ) : (
                     <span>
@@ -379,6 +379,10 @@ function HubReceipt({ r }: { r: Paid }) {
   const settled = batch.data != null;
   const next = hub.data?.nextSettleAt;
   const left = next ? Math.max(0, Math.round(next - now / 1000)) : null;
+  // Once the batch time passes, keep "paying now" until the batch number arrives (the hub's next time moves on first).
+  const payingSince = useRef<number | null>(null);
+  if (!settled && left === 0 && payingSince.current == null) payingSince.current = now;
+  const paying = !settled && payingSince.current != null && now - payingSince.current < 120_000;
   return (
     <div className="nc-receipt" role="status" aria-live="polite">
       <div className="nc-receipt-h">
@@ -399,7 +403,9 @@ function HubReceipt({ r }: { r: Paid }) {
           <dt>Shop payout</dt>
           <dd>
             {settled ? (
-              <>In batch #{batch.data}{rec.data?.payoutTx ? ', with other shops' : ''}</>
+              <>In batch #{batch.data}, one of 3+ payouts <small>· $0 covers fill the rest</small></>
+            ) : paying ? (
+              'The hub is paying this batch now'
             ) : next ? (
               left === 0 ? (
                 'The hub is paying this batch now'

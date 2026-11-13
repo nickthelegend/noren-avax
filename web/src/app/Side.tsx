@@ -1,8 +1,9 @@
+import { useEffect, useState } from 'react';
 import { formatEther, parseAbiItem, type Hex } from 'viem';
 import { AVAX, addressUrl, depositEvent, privateTransferEvent, readShops, scanLogs } from '@noren-avax/sdk';
 import { D, nameOf, pub, setName } from '../lib/chain';
 import { ago, useLoad, useNow } from '../lib/hooks';
-import { useSignerVersion, useWho } from '../lib/signer';
+import { sentTxs, useSignerVersion, useWho } from '../lib/signer';
 import { Icon } from '../ui/nk/brand';
 import { Card, Empty, Pill, Row, TxRef, cap, short, u6, u8, usd } from './common';
 import type { Market } from './market';
@@ -105,6 +106,9 @@ export function ContractCard({ market }: { market: Market }) {
 }
 
 type Act = { hash: Hex; title: string; sub: string; at: number; kind?: string };
+/** The last chain reading per wallet, so a tab switch shows it at once instead of a loading row. */
+const chainCache = new Map<string, Act[]>();
+const sentKind = (what: string) => (/private payment/.test(what) ? 'private-pay' : /top up|credit into/.test(what) ? 'shield' : undefined);
 
 export function Activity() {
   const who = useWho();
@@ -142,8 +146,25 @@ export function Activity() {
       .sort((a, b) => b.at - a.at);
   }), [who?.address, ver], 0, [2500, 9000]);
 
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const on = () => bump((n) => n + 1);
+    addEventListener('noren:tx', on);
+    return () => removeEventListener('noren:tx', on);
+  }, []);
+  const addr = who?.address.toLowerCase() ?? '';
+  if (who && acts.data) chainCache.set(addr, acts.data);
+  const chain = who ? acts.data ?? chainCache.get(addr) ?? null : null;
+  // Sent from this tab and confirmed, but not in the chain reading yet: shown now, replaced when the log scan has them.
+  const seen = new Set((chain ?? []).map((a) => a.hash.toLowerCase()));
+  const pending: Act[] = who
+    ? sentTxs(who.address)
+        .filter((t) => !seen.has(t.hash.toLowerCase()))
+        .map((t) => ({ hash: t.hash, title: cap(t.what), sub: 'confirmed, sent from this tab', at: t.at, kind: sentKind(t.what) }))
+    : [];
+  const mine = chain || pending.length ? [...pending, ...(chain ?? [])].sort((a, b) => b.at - a.at) : null;
   const recorded: Act[] = DEMO.flatMap((d) => d.txs.map((tx) => ({ hash: tx.hash, title: cap(tx.what), sub: d.title, at: Date.parse(d.at) / 1000 }))).reverse();
-  const list = who ? acts.data : recorded;
+  const list = who ? mine : recorded;
   return (
     <Card
       title="Activity"
@@ -153,7 +174,7 @@ export function Activity() {
       {who && acts.error && (
         <p className="nc-fine">Fuji’s public RPC refused the log read just now ({acts.error.slice(0, 80)}). It retries after your next transaction; the list below may be behind.</p>
       )}
-      {who && !acts.data && !acts.error && (
+      {who && !list && !acts.error && (
         <ul className="nk-acts nc-acts">
           <Row state="run" title="Reading Fuji logs…" sub="NorenCredit and eERC events for this wallet" />
         </ul>
@@ -165,7 +186,7 @@ export function Activity() {
           ))}
         </ul>
       )}
-      {who && list && list.length === 0 && (
+      {who && list && list.length === 0 && acts.data && (
         <Empty
           title="Nothing on Fuji for this wallet yet"
           action={

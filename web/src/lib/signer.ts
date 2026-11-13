@@ -184,7 +184,30 @@ export async function unlock() {
   return p;
 }
 
+/** Transactions this tab sent and saw confirmed, per wallet (session only). Activity shows them at once and then
+ * swaps each for the chain's own reading when the (slower, rate-limited) public log scan catches up. */
+export type SentTx = { hash: Hex; what: string; at: number };
+const SENT_KEY = 'noren:sent-txs';
+export function sentTxs(address: string): SentTx[] {
+  try {
+    return (JSON.parse(sessionStorage.getItem(SENT_KEY) || '{}') as Record<string, SentTx[]>)[address.toLowerCase()] ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export function announceTx(hash: Hex, what: string) {
+  if (current) {
+    try {
+      const all = JSON.parse(sessionStorage.getItem(SENT_KEY) || '{}') as Record<string, SentTx[]>;
+      const k = current.address.toLowerCase();
+      const list = (all[k] ?? []).filter((t) => t.hash !== hash);
+      all[k] = [{ hash, what, at: Math.floor(Date.now() / 1000) }, ...list].slice(0, 40);
+      sessionStorage.setItem(SENT_KEY, JSON.stringify(all));
+    } catch {
+      /* storage blocked: the chain scan still fills Activity */
+    }
+  }
   window.dispatchEvent(new CustomEvent('noren:tx', { detail: { hash, what } }));
 }
 

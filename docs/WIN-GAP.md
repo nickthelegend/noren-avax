@@ -45,7 +45,7 @@ disclosed under Prior work).
 | Idea & originality | 25 | 8.2 | A private checkout that hides amounts and the customer-shop link, with credit against BTC/AVAX in the same click. The hub is a known pattern (a processor/mixer-style batcher) applied cleanly to eERC. |
 | Technical depth | 20 | 8.6 | eERC converter mode with the production verifiers, notes in eERC's metadata format, statement digests on chain, an auditor batch check that holds every line against ciphertexts, zero-value cover transfers, 77 Foundry + 22 Anvil tests with real proofs. |
 | Avalanche fit | 15 | 8.0 | eERC is the core of the product; Chainlink Fuji feeds; native AVAX collateral and gas. No ICM/ICTT, no own L1, not mainnet. |
-| Demo & communication | 10 | 8.0 | A 2:56 film recorded live in one take on the hosted site and Fuji (starter pack, private payment, payment on credit, the hub's batch, repay; Snowtrace for the payment and the hub; merchant, accountant and auditor views), on the approved Noren UI. Independent film judge: 7.5 film / 8 for this criterion; what blocks more is mostly the product's privacy limits below. |
+| Demo & communication | 10 | 8.0 | A 2:48 film (v6) recorded live in one take on the hosted site and Fuji (starter pack, private payment, payment on credit, the hub's batch, repay; Snowtrace for the payment, the batch, a payout and the repay; music bed; merchant, accountant and auditor views), on the approved Noren UI. Independent film judge (v2–v6): 7.5 film / 8 for this criterion; v6's claims all verified on chain, what blocks more is presentation (captions over rows, small text, covers not pointed at). |
 | **Weighted** | | **≈ 8.44** | 2.67 + 2.05 + 1.72 + 1.20 + 0.80 |
 
 ## What still separates it from a 9
@@ -57,10 +57,9 @@ disclosed under Prior work).
    accountant, the auditor and customers can each detect misbehaviour; nothing forces liveness.
 4. **Deposits and withdrawals stay public** (eERC converter mode). The checkout tops up in round 50s to blur prices.
 5. **No ICM/ICTT** (accepting USDC from another L1) and no mainnet.
-6. **Payout statements are not padded** (found by the film judge, Nov 13): a real payout carries more data than a
-   zero-value cover, so on a quiet batch the paid shop can be picked out. Fix: pad statements to one size in the hub.
-7. **The credit path tops up exactly what it borrowed**, so a credit payment's price is readable from the public
-   borrow and top-up. Fix: borrow and top up in round lots, as the private-balance path already does.
+6. ~~Payout statements not padded~~ and ~~credit tops up the exact price~~: both fixed Nov 13 (hub redeployed with
+   padded statements; credit in round lots of 50), verified on Fuji in batch #9 (three payouts of 3,428 bytes each;
+   borrow 50.00 and top-up 50.00 for a 36.00 apron).
 
 ## Only Nick can do
 

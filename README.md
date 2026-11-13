@@ -11,7 +11,7 @@ its own key, its accountant gets a copy encrypted to the accountant's key, and t
 
 **Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
 
-**Demo film (2:56):** recorded live in one take on the hosted app and Fuji: a fresh test wallet pays Harbor & Loom
+**Demo film (2:48):** recorded live in one take on the hosted app and Fuji: a fresh test wallet pays Harbor & Loom
 privately, then on credit, the hub settles the batch, the shop, its accountant and the eERC auditor read it, and the
 customer repays. File: `videos/noren-avax/noren-avax-film.mp4` in the hackathon workspace (upload link in SUBMISSION).
 
@@ -282,11 +282,12 @@ registered with the eERC Registrar, so every shop can be paid privately.
 - Deposits and withdrawals are public, and eERC deposit ciphertexts use fixed randomness (an upstream design note).
 - Payments made before the hub (the first live demo below) went straight to the shop and show the customer's address.
 - The pool is seeded by the deployer; there is no lender interface in this build.
-- **Payout statements are not padded yet.** A payout's amount is encrypted, but its statement (encrypted to the shop
-  and the accountant) grows with the number of orders. So on Snowtrace a zero-value cover payout carries less data
-  and a slightly lower fee than a real one, and a payout's size hints at how many orders it settles (found by the
-  film's independent judge, Nov 13: batch #7's real payout is 2181 bytes against 1989 for its covers). The fix is to
-  pad every statement to one fixed size in the hub; until then covers hide amounts, not which payouts are real.
+- Payout statements are padded to one size (fixed Nov 13, after the film's independent judge found real payouts carried
+  more data than covers). Gas still varies a little per payout with the receiving account's eERC state, not with
+  whether the payout is real: in batch #9 the real Harbor & Loom payout used 940,736 gas, a cover 940,712 and another
+  cover 1,027,226; all three sent 3,428 bytes.
+- Credit is borrowed and moved into eERC in round lots of 50 tUSDC (fixed Nov 13), so the public borrow and top-up
+  show 50, not the price; the remainder stays in the private balance. A wallet's public loan size is still public.
 
 ## Run it
 

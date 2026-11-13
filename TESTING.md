@@ -11,8 +11,12 @@ Fuji, and the live demo sends real Fuji transactions from the web app.
 | `NorenCreditForkTest` | Foundry, fork of Avalanche Fuji (real Chainlink feeds) | 4 | `NOREN_FORK=1 forge test --root contracts --match-contract Fork` |
 | `NorenSettlementTest` | Foundry, Ava Labs Registrar + prod registration verifier, SDK-made registrations | 16 (1 fuzz) | `pnpm test:contracts` |
 | `NorenGasStationTest` | Foundry, in-memory EVM | 24 (1 fuzz) | `pnpm test:contracts` |
+| `NorenStocksTest` | Foundry, in-memory EVM | 30 | `pnpm test:contracts` |
 | `privacy.test.ts` | Local Anvil (not a fork), full deployment, `@avalabs/eerc-sdk` proofs | 10 | `pnpm test:anvil` |
 | `hub.test.ts` | Local Anvil, Deploy + DeployHub, real proofs, the hub service's own code (`hub/src`) | 12 | `node --test --test-force-exit scripts/anvil/hub.test.ts` |
+| `merchant.test.ts` | Local Anvil, real eERC payments, the API's merchant and price-relayer code | 9 | `node --test --test-force-exit scripts/anvil/merchant.test.ts` |
+| Hosted runs (Nov 13) | Avalanche Fuji, the hosted UI, fresh test wallets: pay with stocks (Aubelle → hosted checkout), pay in 3 against stocks (Noren app), repay an installment, merchant store + link + payment | 4 flows | by hand in a browser; `scripts/qa/eth-shots.mjs` for screenshots |
+| Screens | Every route of the ETHGlobal UI at 1440 and 375, overflow and console errors | 12 routes × 2 | `node scripts/qa/eth-shots.mjs` |
 | Judge path | Avalanche Fuji, the hosted production site, a fresh browser and test wallet (no QA signer, no local keys) | 1 run, every step | `node scripts/qa/judge.mjs` |
 | Live demo | Avalanche Fuji, through the web app with the QA signer | 5 steps | `node scripts/qa/demo.mjs` |
 | Screen states | Production build (or the hosted site with `NOREN_URL`), no keys: every route signed out, a fresh test wallet, wallet menu, unknown shop, 404 | 11 states × 2 widths | `node scripts/qa/states.mjs` |
@@ -37,7 +41,23 @@ chain that isn't at block 0, so a run can no longer talk to a previous run's Anv
 | 4 | 10 / 10 | 12 / 12 |
 | 5 | 10 / 10 | 12 / 12 |
 
+Nov 13 (stocks round): `forge test` 107 passed (4 fork tests skip without `NOREN_FORK=1`), `merchant.test.ts` 9 of 9,
+`hub.test.ts` 12 of 12. Screens: every route at 1440 and 375 with 0 px horizontal overflow and 0 console errors
+(`orchestration/shots/avax-noren/eth-ui/report.json`).
+
 ## What each suite proves
+
+**Stocks (`contracts/test/NorenStocks.t.sol`)**
+- Oracle: a signed report is stored; refused with a wrong signer, a tampered price, a replayed or older report, a report
+  from the future, a report signed for another oracle, an unlisted token; reads refuse a report over an hour old.
+- Desk: sells at the price minus 0.5%, `quoteSellIn` covers an exact amount, slippage and stale prices are refused,
+  buys at the price plus 0.5%.
+- Credit: the limit is 60% of the stock's value; pay in 3 with on-time installments raises the LTV 5 points each up to
+  75%; a late installment counts as late and doesn't raise it; over-limit, stale-price and bad-plan draws are refused;
+  pay later is one payment in 30 days; collateral can't leave while it backs debt and can when there is none;
+  liquidation only below 85% of value, with the 5% bonus and the 50% close factor.
+- Earn pool: repaid fees raise the share value; a second supplier gets fair shares; withdrawals wait for cash that
+  isn't lent out. Starter pack: once per address.
 
 **Credit (`contracts/test/NorenCredit.t.sol`)**
 - Borrow within the limit, borrow straight to a shop (`borrow(amount, shop)`), borrow over the limit, without

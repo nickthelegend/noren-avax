@@ -1,6 +1,24 @@
-# Noren on Avalanche: win gap (honest, after the Nov 13 NEAR-UI round)
+# Noren on Avalanche: win gap (honest, after the Nov 13 ETHGlobal-edition round)
 
 Rubric: works 30, idea 25, depth 20, Avalanche fit 15, demo 10.
+
+## ETHGlobal-edition round (Nov 13, latest)
+
+Nick: Noren on Avalanche must be the Noren submitted at ETHGlobal, same product, UI and film, stocks first. Done:
+- The ETHGlobal UI as is (landing, Noren Merchant, hosted checkout, Noren app, Aubelle), every data path on Fuji.
+- Stocks: NorenStockOracle (signed Yahoo Finance quotes; Chainlink has no equity feeds on Fuji), NorenStockDesk (pay
+  with stocks, swap), NorenStockCredit (credit against stocks, pay in 3 / pay later, LTV that rises with on-time
+  installments, Earn pool, liquidation), NorenStockStarter; 30 new Foundry tests; deployed and verified.
+- Merchant API (SIWE, stores bound to on-chain shops, hashed keys, invoices marked paid by the hub from its decrypted
+  notes) and the price relayer, live on the VPS; 9 Anvil tests.
+- Hosted runs: Aubelle paid with stocks through the hosted checkout; pay in 3 from the app; repay → LTV 60 → 65%.
+
+Honest re-score (before the film): works 8.8 (four hosted flows run from a fresh wallet; the hub adds up to ~45 s before
+a payment shows as paid), idea 8.5 (stocks as payment and as collateral on the chain the NYSE plans to settle on),
+depth 8.5 (eERC + hub + signed oracle + credit with a ladder and a pool), Avalanche fit 9.0 (eERC at the core; NYSE
+link), demo pending the new film. What still blocks a 9: test stocks priced by one signer (no equity feed on Fuji),
+the trusted hub, and the film.
+
 
 ## What closed this round
 

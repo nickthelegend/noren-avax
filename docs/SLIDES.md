@@ -1,36 +1,26 @@
-# Noren on Avalanche: slide outline (10 slides)
+# Noren on Avalanche: slide outline
 
-1. **Title.** Noren. "Merchants let customers pay privately, with stablecoins or credit against their coins." Live on
-   Avalanche Fuji. Stall object on the dark hero.
-2. **The problem.** Pay a shop on a public chain and you publish its revenue: every competitor can total a store's
-   sales from the explorer, and every customer's spend is on the record. So shops don't take crypto, and people holding
-   BTC sell it to shop.
-3. **What Noren does.** One checkout, two ways to pay: tUSDC from a private balance, or credit against BTC / AVAX. The
-   shop reads its revenue; its accountant reads it with the auditor key; Snowtrace reads ciphertext. Screenshot: the
-   checkout.
-4. **Why Avalanche (eERC).** Ava Labs' EncryptedERC in converter mode over test USDC: balances and transfer amounts are
-   ElGamal ciphertexts on BabyJubJub; every transfer is a Groth16 proof made in the browser and checked by the
-   production verifiers; every transfer also carries a ciphertext for the auditor key. Diagram: customer → proof →
-   eERC → shop key / auditor key.
-5. **Credit against coins.** NorenCredit: lock tWBTC or AVAX, borrow tUSDC at Chainlink BTC / USD and AVAX / USD on
-   Fuji (60% / 50% limits, liquidation below health 1 with a 5% / 8% bonus, 6% APR), refuse any price older than 25 h.
-   Borrow → shield → private pay is one click in the checkout. Screenshot: the credit card and health bar.
-6. **Who paid whom stays private: the settlement hub.** Customers pay Noren's hub (order note encrypted to the hub);
-   every 3 minutes the hub pays each shop it owes in one private transfer carrying its statement, plus zero-value
-   cover payouts so at least 3 shops are paid; `NorenSettlement` records the batch (payments settled once, statement
-   digests, accountant and auditor copies). Diagram: customers → hub → shops, Snowtrace sees only "paid Noren" and
-   "Noren paid 3 shops". One line on trust: the hub sees everything and holds money for one batch; shops, accountants
-   and the auditor can each check it.
-7. **The same payment, three views.** Left: the Snowtrace event (from, to, ciphertext). Right: the merchant dashboard
-   showing the decrypted amount and order note. Then the auditor ledger.
-8. **Live on Fuji, zero setup.** A judge opens the site, picks Test wallet, and one tap of NorenGasStation funds it
-   (gas, tUSDC, tWBTC). Pay → batch → merchant ✓ → accountant statements → "How much did I make this week?" answered
-   by Claude from tools that run in the browser. Transactions: README "Judge path".
-9. **Built, not scaffolded.** 77 Foundry tests (settlement record, gas station, credit, privacy replay), 22 Anvil
-   end-to-end tests with real proofs (hub batch with cover and refund, crash recovery, no double settle), each run
-   five times green. Earlier: 37 Foundry tests (credit, liquidation, stale oracle, reentrancy, fuzz; eERC proofs from
-   the official SDK replayed against the prod verifiers with on-chain ElGamal decryption checks), 4 Fuji-fork tests on
-   the real Chainlink feeds, 10 Anvil end-to-end tests with real proofs. All contracts verified on Snowtrace.
-10. **What's next.** A larger anonymity set (more shops and longer windows), several independent hubs, per-group eERC
-   deployments for cryptographic per-shop auditors, credit repaid from the private balance, ICTT to accept USDC from other Avalanche L1s (not built yet), mainnet once eERC audits allow. Tagline as
-   the end card.
+1. **Noren.** Stablecoins, stocks or credit — privately. Pay a shop with your stocks, or get credit against them, and
+   the shop never learns who paid. (Noren's curtain mark; Avalanche Fuji.)
+2. **The problem.** Pay a shop in crypto and it sees your whole wallet. And if your money is in stocks, you have to sell
+   them before you can spend them.
+3. **Why Avalanche, why now.** The NYSE plans to settle tokenized stocks on Avalanche, for its planned 24/7 tokenized
+   securities venue (Nov 9 2026, subject to regulatory approval; The Block, CoinDesk). Shares on Avalanche need a
+   checkout. Ava Labs' eERC makes that checkout private.
+4. **Pay with stocks.** At the checkout, tNVDA is sold to NorenStockDesk at a signed market price into your encrypted
+   balance and paid on privately. One tap from a fresh wallet: ≈35 s on Fuji. (Screenshot: hosted checkout, four ways.)
+5. **Credit against stocks.** Lock shares, keep them. Limit = value × 60%, +5 points per on-time installment, up to 75%.
+   Pay in 3 or pay later; 1% fee, no interest; the shop is paid in full. The Earn pool funds it and earns the fees.
+6. **Private by default.** Every way but tUSDC ends in an eERC transfer to Noren's hub: amount encrypted, Groth16 proof
+   made in the browser. The hub pays shops in batches with zero-value covers and records each batch on
+   NorenSettlement. The shop sees "Customer: Private".
+7. **The merchant's view.** Noren Merchant: store on Avalanche, payment links, API keys; payouts and statements
+   decrypted in the browser and checked against the chain; an accountant; a Claude assistant over the books. Aubelle
+   added Noren with one server file.
+8. **Prices without a feed.** Chainlink has no equity feeds on Fuji. NorenStockOracle takes Yahoo Finance quotes signed
+   by Noren's relayer; signature, chain, order and age are checked on chain; anyone can submit the latest report.
+9. **Built and tested.** 107 Foundry tests (oracle attacks, liquidation, LTV ladder, Earn pool), Anvil suites with real
+   eERC proofs, hosted runs with tx links. Live: noren-avax.vercel.app · noren-avax-merchant.vercel.app ·
+   noren-avax-shop.vercel.app.
+10. **Honest limits and next.** Test stocks, one price signer, a trusted hub for liveness; next: a real equity feed,
+    tokenized shares as they arrive on Avalanche, mainnet.

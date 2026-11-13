@@ -25,7 +25,7 @@ Merchant = `Dashboard.tsx`, hosted checkout = `Checkout.tsx`, Noren app = `app/*
 `NorenStockOracle`, `NorenStockDesk`, `NorenStockCredit`, `NorenStockStarter`; deploy `script/DeployStocks.s.sol`
 via `scripts/fuji/deploy-stocks.ts` (merges addresses into `deployments/fuji.json`: stockOracle, stockDesk,
 stockCredit, stockStarter, pricer, tNVDA..tSPY). SDK: `sdk/src/stocks.ts` (STOCKS, fetchQuote, signReport,
-reportDigest, readPrices, readCredit, quoteSellIn).
+reportDigest, readStockPrices, readCredit, quoteSellIn).
 
 Signed report: `NorenStockOracle.submit(tokens, prices8, marketTimes, signedAt, sig)`, sig = personal_sign by
 NOREN_PRICER_KEY over `keccak256(abi.encode("Noren stock price v1", chainid, oracle, tokens, prices8, marketTimes,

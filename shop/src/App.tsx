@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { bySlug, PRODUCTS, usd, type Length, type Product, type Shade } from './catalog.ts';
-import { api, bagActions, bagCount, bagTotal, eur, go, openNorenWindow, setDrawer, setPending, useBag, useConfig, useDrawer, useFx, usePending, useRoute, type Config } from './store.ts';
+import { api, bagActions, bagCount, bagTotal, eur, go, openNorenWindow, orderCache, setDrawer, setPending, useBag, useConfig, useDrawer, useFx, usePending, useRoute, type Config } from './store.ts';
 import integrationSource from '../server/noren.ts?raw';
 
 const img = (slug: string) => `/products/${slug}.webp`;
@@ -303,7 +303,7 @@ function NorenWindow() {
     if (!p) return;
     let stop = false, timer: number | undefined;
     const check = async () => {
-      try { const o = await api.order(p.orderId); if (stop) return; if (o.status === 'paid') { setMethod(o.method); setState('paid'); bagActions.clear(); return true; } } catch { /* keep waiting */ }
+      try { const o = await api.order(p.orderId); if (stop) return; if (o.status === 'paid') { orderCache.set(p.orderId, o); setMethod(o.method); setState('paid'); bagActions.clear(); return true; } } catch { /* keep waiting */ }
       return false;
     };
     const tick = async () => { if (stop) return; if (await check()) return; if (p.win?.closed) setState(s => s === 'paid' ? s : 'closed'); timer = window.setTimeout(tick, 2000); };
@@ -323,7 +323,7 @@ function NorenWindow() {
     const t0 = Date.now(); let closedAt = 0, timer = 0;
     const step = () => {
       if (!closedAt && (!p.win || p.win.closed || Date.now() - t0 > 8000)) closedAt = Date.now();
-      if (closedAt && Date.now() - closedAt > 2200 && Date.now() - t0 > 2600) { setPending(null); go(`#/order/${p.orderId}`); return; }
+      if (closedAt && Date.now() - closedAt > 3000 && Date.now() - t0 > 3000) { setPending(null); go(`#/order/${p.orderId}`); return; }
       timer = window.setTimeout(step, 200);
     };
     step();
@@ -433,7 +433,7 @@ function TxLink({ hash }: { hash: string; method?: string | null; config?: Confi
 }
 function OrderPage({ id }: { id: string }) {
   const { config } = useConfig();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<any>(() => orderCache.get(id) ?? null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let stop = false, timer: number | undefined;

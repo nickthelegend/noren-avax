@@ -94,3 +94,6 @@ export function openNorenWindow(url = ''): Window | null {
   }
   return win;
 }
+
+/** The last reading of each order in this tab, so the order page opens on it instead of a loading line. */
+export const orderCache = new Map<string, any>();

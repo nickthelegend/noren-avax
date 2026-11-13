@@ -190,6 +190,11 @@
       "hash": "0x579130072d447ce0d518b83b51a85c053d0545a143a5ec4e97b0ab6b99012aba",
       "by": "0xeef4317D588BC1965Af9DDbE2b5482961f5DD7aD",
       "what": "Aubelle opens on Noren Merchant"
+    },
+    "station_per_tag": {
+      "hash": "0xa511883e5757aadbc0c1fbc0965a7609b60b0049023e32d759440ad557bd8f3b",
+      "by": "0x4D5162D9B6Ed72b19cFc3190680334479A0c4943",
+      "what": "NorenGasStation: 12 starter packs per requester per day (film and judge runs)"
     }
   },
   "auditor": "0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61",

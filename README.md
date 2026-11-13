@@ -325,6 +325,9 @@ registered with the eERC Registrar, so every shop can be paid privately.
 - Stock prices come from one relayer key reading one public source (Yahoo Finance, delayed quotes). The contract checks
   the signature and age, not the quote's truth; a production version would use an equity feed (none on Fuji today).
 - Selling stock, a credit plan and a top-up are public ERC-20 moves in round lots of 50 tUSDC; who you paid is not.
+- Shops never get the customer's own payment transaction (customer → hub, which names the wallet): not from Noren's
+  API (fixed Nov 13 after the film's independent judge caught it) and not in their statements, whose lines carry a
+  salted reference the eERC auditor resolves against the batch. Statements from before that fix list the raw tx.
 - On-time installments raise the LTV by count, so a borrower can raise it by opening and repaying small plans (each
   costs the 1% fee). A production version would weight by amount and time.
 - Payout statements are padded to one size (fixed Nov 13, after the film's independent judge found real payouts carried

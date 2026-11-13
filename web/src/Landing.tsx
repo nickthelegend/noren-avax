@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Icon } from "./ui";
 import { Mark } from "./logos";
 import { D, addrUrl, txUrl } from "./lib/chain";
@@ -112,6 +112,13 @@ const NUMBERS: { v: string; u?: string; l: string }[] = [
   { v: "1", l: "chain: Avalanche Fuji" },
 ];
 
+/** Why Avalanche fits Noren: three reasons, each with what this build measured on Fuji. */
+const WHY = [
+  { k: "Privacy built in", d: "Ava Labs’ EncryptedERC (eERC) keeps balances and transfer amounts encrypted on chain, with a zero-knowledge proof for every move and an auditor key for compliance. Noren didn’t have to invent a privacy layer.", proof: "eERC, vendored unmodified · Groth16 proofs made in the browser" },
+  { k: "Final in about a second", d: "A Fuji block lands about every second and is final once accepted: no confirmations to wait out, so a shop can hand over the dress when Noren says paid.", proof: "Fuji: ~1 s between blocks, measured Nov 14 2026" },
+  { k: "Fees too small to notice", d: "A private payment, its proof checked on chain, uses about 1.1 million gas. At Fuji’s base fee today that is under a millionth of an AVAX.", proof: "1,099,001 gas × 160 wei = 0.00000000018 AVAX (Fuji)" },
+];
+
 function useReveal() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -210,6 +217,30 @@ export function Landing() {
             ))}
           </ul>
           <p className="mono">Every link opens Snowtrace on Avalanche Fuji. Stocks are test tokens priced from real quotes; see the README's "Honest limits".</p>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- why Avalanche: the news, then the reasons */}
+      <section className="nx-why" id="why-avalanche" aria-labelledby="nx-why-h">
+        <div className="nx-why-in">
+          <div data-reveal><Tag dark>Why Avalanche</Tag></div>
+          <div className="nx-news" data-reveal>
+            <p className="nx-news-k mono"><i aria-hidden />News · Nov 9 2026</p>
+            <h2 id="nx-why-h" className="nx-news-h">{NYSE.line.split(" ").map((w, i) => <Fragment key={i}>{i > 0 && " "}<span style={{ transitionDelay: `${120 + i * 55}ms` }}>{w}</span></Fragment>)}</h2>
+            <p className="nx-news-d">For its planned 24/7 tokenized securities venue. Plans, subject to regulatory approval.</p>
+            <div className="nx-news-src">{NYSE.sources.map(([n, u]) => <a key={n} className="mono" href={u} target="_blank" rel="noreferrer">{n} · Nov 9 2026 <Icon.ext /></a>)}</div>
+          </div>
+          <p className="nx-why-lead" data-reveal>If shares settle on Avalanche, people will want to spend them there. Noren is built for that, and Avalanche fits it for three reasons.</p>
+          <ol className="nx-why-grid">
+            {WHY.map((w, i) => (
+              <li key={w.k} data-reveal style={{ transitionDelay: `${i * 90}ms` }}>
+                <span className="nx-why-n mono">0{i + 1}</span>
+                <b>{w.k}</b>
+                <p>{w.d}</p>
+                <small className="mono">{w.proof}</small>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 

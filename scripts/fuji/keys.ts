@@ -18,6 +18,8 @@ const roles = [
   'NOREN_MERCHANT2_KEY',
   'NOREN_MERCHANT3_KEY',
   'NOREN_ACCOUNTANT_KEY',
+  // stocks round (Nov 13): the stock price relayer's signing key (signs reports only; holds no AVAX)
+  'NOREN_PRICER_KEY',
 ];
 let add = '';
 for (const r of roles) if (!have[r]) add += `${r}=${generatePrivateKey()}\n`;

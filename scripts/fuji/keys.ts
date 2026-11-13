@@ -20,6 +20,8 @@ const roles = [
   'NOREN_ACCOUNTANT_KEY',
   // stocks round (Nov 13): the stock price relayer's signing key (signs reports only; holds no AVAX)
   'NOREN_PRICER_KEY',
+  // Aubelle, the demo shop (its owner registers an eERC key and opens the shop; its server holds NOREN_AUBELLE_SECRET)
+  'NOREN_AUBELLE_KEY',
 ];
 let add = '';
 for (const r of roles) if (!have[r]) add += `${r}=${generatePrivateKey()}\n`;

@@ -12,7 +12,7 @@ export const circuits = circuitURLs(join(ROOT, 'web/public/circuits'));
 export type Rec = Record<string, unknown> & Deployment & { txs?: Record<string, { hash: Hex; by: Address; what: string }> };
 export const load = (): Rec => JSON.parse(readFileSync(FILE, 'utf8'));
 
-export type Role = 'DEPLOYER' | 'CUSTOMER' | 'MERCHANT' | 'AUDITOR' | 'HUB' | 'RELAYER' | 'MERCHANT2' | 'MERCHANT3' | 'ACCOUNTANT';
+export type Role = 'DEPLOYER' | 'CUSTOMER' | 'MERCHANT' | 'AUDITOR' | 'HUB' | 'RELAYER' | 'MERCHANT2' | 'MERCHANT3' | 'ACCOUNTANT' | 'AUBELLE';
 
 export function wallet(role: Role): WalletClient {
   return createWalletClient({ account: privateKeyToAccount(hexKey(need(`NOREN_${role}_KEY`)), { nonceManager }), chain: fuji, transport: fujiTransport() });

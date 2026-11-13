@@ -40,6 +40,13 @@ await withChromeLock(async () => {
         console.log('checkout landed on', page.url());
         await page.waitForTimeout(2500);
         await page.screenshot({ path: join(out, `${prefix}-checkout-${w}.png`) });
+        const inv = /#\/pay\/([A-Za-z0-9]+)/.exec(page.url())?.[1];
+        if (inv) {
+          const r = await fetch(`https://noren-avax-api.201-18-198-162.sslip.io/api/invoices/${inv}`);
+          console.log('invoice', r.status, JSON.stringify(await r.json()));
+          await page.goto(`${base}/#/order/${inv}`, { waitUntil: 'networkidle' });
+          await shot('order');
+        } else problems.push('checkout did not land on a Noren invoice URL');
       }
       await ctx.close();
     }

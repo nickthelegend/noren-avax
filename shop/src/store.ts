@@ -41,16 +41,20 @@ export const api = {
   fx: () => getJson<Fx>('/api/fx'),
   /** An order is its Noren invoice. AUB- order ids map to invoice ids in this browser (the shop keeps no database). */
   order: (id: string) => {
-    let inv: string | null = id;
-    if (/^AUB-/.test(id)) { try { inv = (JSON.parse(localStorage.getItem(ORDERS) ?? '{}') as Record<string, string>)[id] ?? null; } catch { inv = null; } }
+    // Noren's public invoice view carries no order metadata, so the bag lines come from this browser's own record.
+    let mine: Record<string, { invoiceId: string; lines: unknown[] } | string> = {};
+    try { mine = JSON.parse(localStorage.getItem(ORDERS) ?? '{}'); } catch { /* private mode */ }
+    const entry = /^AUB-/.test(id) ? mine[id] : Object.entries(mine).find(([, v]) => typeof v === 'object' && v.invoiceId === id)?.[1];
+    const inv = typeof entry === 'object' ? entry.invoiceId : typeof entry === 'string' ? entry : /^AUB-/.test(id) ? null : id;
     if (!inv) return Promise.reject(new Error(`Order ${id} was placed in another browser. Its Noren payment page has the status.`));
-    return getJson<any>(`/api/orders/${inv}`);
+    const orderId = /^AUB-/.test(id) ? id : Object.entries(mine).find(([, v]) => typeof v === 'object' && v.invoiceId === id)?.[0];
+    return getJson<any>(`/api/orders/${inv}`).then((o) => ({ ...o, id: orderId ?? o.id, lines: o.lines?.length ? o.lines : typeof entry === 'object' ? entry.lines : [] }));
   },
   async checkout(lines: CartLine[]) {
     const r = await fetch('/api/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lines }) });
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error ?? `Checkout failed (HTTP ${r.status})`);
-    try { const m = JSON.parse(localStorage.getItem(ORDERS) ?? '{}'); m[body.orderId] = body.invoiceId; localStorage.setItem(ORDERS, JSON.stringify(m)); } catch { /* private mode */ }
+    try { const m = JSON.parse(localStorage.getItem(ORDERS) ?? '{}'); m[body.orderId] = { invoiceId: body.invoiceId, lines: body.lines }; localStorage.setItem(ORDERS, JSON.stringify(m)); } catch { /* private mode */ }
     return body as { orderId: string; invoiceId: string; checkoutUrl: string };
   },
 };

@@ -70,7 +70,7 @@ export default async function handler(req: Req, res: ServerResponse) {
       const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? 'noren-avax-shop.vercel.app');
       const shopUrl = `${host.startsWith('127.0.0.1') || host.startsWith('localhost') ? 'http' : 'https'}://${host}`;
       const { invoiceId, url: hosted } = await createCheckout({ id, totalCents: total, summary }, shopUrl, pack(lines));
-      return send(res, 201, { orderId: id, invoiceId, checkoutUrl: hosted || `${CHECKOUT_BASE}/#/pay/${invoiceId}` });
+      return send(res, 201, { orderId: id, invoiceId, lines, totalCents: total, checkoutUrl: hosted || `${CHECKOUT_BASE}/#/pay/${invoiceId}` });
     }
     const m = /^orders\/([A-Za-z0-9]{6,32})$/.exec(route);
     if (m && req.method === 'GET') {

@@ -1,21 +1,17 @@
 import { BaseError, ContractFunctionRevertedError, type Address, type Hex } from 'viem';
-import { circuitURLs, fuji, publicClientFor, type Deployment } from '@noren-avax/sdk';
+import { circuitURLs, fuji, publicClientFor, SNOWTRACE, type Deployment, type HubDeployment, type StockDeployment } from '@noren-avax/sdk';
 import deployment from '../../../deployments/fuji.json';
 
 export type Tx = { hash: Hex; by: Address; what: string };
-export const D = deployment as unknown as Deployment & { auditor?: Address; txs?: Record<string, Tx> };
+export type FullDeployment = Deployment & HubDeployment & StockDeployment & { auditor?: Address; txs?: Record<string, Tx>; aubelle?: { shopId: number; storeId: string; owner: Address }; live?: { t: string; d: string; hash: Hex; marks: string[] }[] };
+export const D = deployment as unknown as FullDeployment;
 export const pub = publicClientFor(fuji);
 export const circuits = circuitURLs(`${location.origin}/circuits`);
-
-const NAMES: Record<string, string> = {};
-if (D.hub) NAMES[D.hub.toLowerCase()] = 'Noren hub';
-export function nameOf(a?: string | null): string {
-  if (!a) return '';
-  return NAMES[a.toLowerCase()] ?? `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
-export function setName(a: string, n: string) {
-  NAMES[a.toLowerCase()] = n;
-}
+export const EXPLORER = SNOWTRACE;
+export const txUrl = (h: string) => `${SNOWTRACE}/tx/${h}`;
+export const addrUrl = (a: string) => `${SNOWTRACE}/address/${a}`;
+/** The merchant surface (hosted checkout links point here). */
+export const MERCHANT_ORIGIN = 'https://noren-avax-merchant.vercel.app';
 
 /** A readable message from any viem / RPC / SDK error. */
 export function readable(e: unknown): string {
@@ -26,5 +22,5 @@ export function readable(e: unknown): string {
   }
   const m = e instanceof Error ? e.message : String(e);
   if (/User rejected|denied/i.test(m)) return 'You cancelled the request in your wallet.';
-  return m.replace(/^Error:\s*/, '').slice(0, 400);
+  return m.replace(/^Error:\s*/, '').split(/Request Arguments:|Contract Call:|\n\n/)[0]!.trim().slice(0, 300);
 }

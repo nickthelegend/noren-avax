@@ -101,19 +101,24 @@ export async function connectWallet() {
 }
 
 const GUEST = 'noren:test-wallet';
+/** Noren Merchant keeps its own test wallet, so a shop owner and a customer in one browser are two wallets. */
+export type Slot = 'customer' | 'merchant';
+const slotKey = (slot: Slot) => (slot === 'merchant' ? 'noren:merchant-wallet' : GUEST);
+let slotNow: Slot = 'customer';
 
 /** Uses (or creates) the test wallet kept in this browser. Fuji test funds only; the key never leaves the browser. */
-export function openTestWallet() {
+export function openTestWallet(slot: Slot = 'customer') {
+  slotNow = slot;
   let key: Hex | null = null;
   try {
-    key = localStorage.getItem(GUEST) as Hex | null;
+    key = localStorage.getItem(slotKey(slot)) as Hex | null;
   } catch {
     /* storage blocked: the key lives for this tab only */
   }
   if (!key || !/^0x[0-9a-f]{64}$/.test(key)) {
     key = generatePrivateKey();
     try {
-      localStorage.setItem(GUEST, key);
+      localStorage.setItem(slotKey(slot), key);
     } catch {
       /* ignore */
     }
@@ -123,26 +128,28 @@ export function openTestWallet() {
   current = { address: account.address, label: `Test wallet ${account.address.slice(2, 6)}`, kind: 'guest' };
   priv = null;
   try {
-    sessionStorage.setItem('noren:who', 'guest');
+    sessionStorage.setItem('noren:who', slot === 'merchant' ? 'guest-merchant' : 'guest');
   } catch {
     /* ignore */
   }
   emit();
 }
 
-export function hasTestWallet() {
+export function hasTestWallet(slot: Slot = 'customer') {
   try {
-    return !!localStorage.getItem(GUEST);
+    return !!localStorage.getItem(slotKey(slot));
   } catch {
     return false;
   }
 }
 
 /** Brings the test wallet back after a reload, if this tab was using it. */
-export function restoreTestWallet() {
-  if (QA) return;
+export function restoreTestWallet(slot: Slot = 'customer') {
+  if (QA || current) return;
   try {
-    if (sessionStorage.getItem('noren:who') === 'guest' && hasTestWallet()) openTestWallet();
+    const w = sessionStorage.getItem('noren:who');
+    if (slot === 'customer' && w === 'guest' && hasTestWallet()) openTestWallet();
+    if (slot === 'merchant' && w === 'guest-merchant' && hasTestWallet('merchant')) openTestWallet('merchant');
   } catch {
     /* ignore */
   }
@@ -227,3 +234,6 @@ export async function write(address: Address, abi: Abi, functionName: string, ar
     throw Error(readable(e));
   }
 }
+
+/** The connected wallet right now (outside React). */
+export const currentWho = () => current;

@@ -1,214 +1,127 @@
-import { useState } from 'react';
-import { formatEther, type Address, type Hex } from 'viem';
-import { addressUrl, readPosition, type CreditPosition } from '@noren-avax/sdk';
-import { D, pub } from '../lib/chain';
-import { ago, useLoad, useNow } from '../lib/hooks';
-import { go } from '../lib/router';
-import { useWho } from '../lib/signer';
-import { Icon } from '../ui/nk/brand';
-import { Art3d } from '../ui/nk/Art3d';
-import { Mark } from '../ui/nk/marks';
-import { Card, Pill, short, u6, u8, usd } from './common';
-import { CreditSheet, StarterCard, type CreditAct } from './CreditSheet';
-import { CustomerSide } from './Side';
-import { readAssetCfg, useAccount, type Market } from './market';
+/**
+ * Credit against stocks: your limit (NorenStockCredit on Avalanche Fuji), how it is made (lock stock → limit at your
+ * LTV → pay in 3 or pay later at a checkout → repay on time → the LTV rises), your plans with their installments, and
+ * your repayment record. Every number is read from the contract.
+ */
+import { useState } from "react";
+import { erc20Abi, maxUint256, type Abi } from "viem";
+import { LTV_LADDER, norenStockCreditAbi, type StockSym } from "@noren-avax/sdk";
+import { D, pub } from "../lib/chain";
+import { write } from "../lib/signer";
+import { msgOf } from "../ui";
+import { TxLink } from "../tx";
+import { Mark } from "../logos";
+import { Card, Empty, Spin } from "./kit";
+import type { W, Tab } from "./NorenApp";
+import { p8, sh, u6, type Acct } from "./acct";
 
-type Demo = { txs: { hash: Hex; what: string }[] };
-/** The recorded demo customer (the wallet that borrowed in the judge run), read live while no wallet is connected. */
-export function useDemoCustomer() {
-  return useLoad(async () => {
-    const demo = (D as unknown as { demo?: Record<string, Demo> }).demo ?? {};
-    const tx = Object.values(demo).flatMap((d) => d.txs).find((t) => t.what.startsWith('borrow'));
-    if (!tx) return null;
-    const from = (await pub.getTransaction({ hash: tx.hash })).from as Address;
-    return { address: from, pos: await readPosition(pub as never, D, from) };
-  }, []);
-}
+const day = (t: number) => new Date(t * 1000).toLocaleDateString([], { month: "short", day: "numeric" });
 
-const fmt2 = (n: number | null) => usd(n);
-export const healthLabel = (p: CreditPosition) => (p.debt === 0n ? 'No debt' : `${(Number(p.health) / 1e18).toFixed(2)}×`);
-
-export function CreditTab({ market }: { market: Market }) {
-  const who = useWho();
-  const now = useNow(15_000);
-  const acct = useAccount();
-  const demo = useDemoCustomer();
-  const cfg = useLoad(readAssetCfg, []);
-  const [sheet, setSheet] = useState<CreditAct | null>(null);
-  const mine = acct.data?.pos ?? null;
-  const p = who ? mine : demo.data?.pos ?? null;
-  const owner = who ? who.label : demo.data ? `demo customer ${short(demo.data.address)}` : 'the demo customer';
-  const pr = market.prices.data;
-  const err = who ? acct.data?.posError ?? acct.error : demo.error;
-  const coll = u6(p?.collateralValue) ?? 0;
-  const held = p ? [p.btc > 0n ? `${Number(p.btc) / 1e8} tWBTC` : '', p.avax > 0n ? `${Number(formatEther(p.avax)).toFixed(4)} AVAX` : ''].filter(Boolean).join(' + ') : '';
-
+export function CreditTab({ w, go }: { w: W; go: (t: Tab) => void }) {
+  const a = w.acct, c = a.credit;
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<{ t: string; bad?: boolean } | null>(null);
+  const run = async (k: string, f: () => Promise<unknown>, ok: string) => { setBusy(k); setNote(null); try { await f(); setNote({ t: ok }); w.reload(); } catch (e) { setNote({ t: msgOf(e), bad: true }); } finally { setBusy(null); } };
+  const locked = c?.collateral.filter((x) => x.amount > 0n) ?? [];
+  const open = c?.plans.filter((p) => !p.closed) ?? [];
+  const done = c?.plans.filter((p) => p.closed) ?? [];
+  const value = c?.value ?? null;
+  const steps: { t: string; d: string; on: boolean; act?: [string, () => void] }[] = [
+    { t: "Lock stock as collateral", d: locked.length ? `${locked.map((x) => `${sh(x.amount)} t${x.sym}`).join(", ")} · ${u6(value)} tUSDC of value` : "Your shares stay yours in NorenStockCredit", on: locked.length > 0, act: ["Lock", () => go("earn")] },
+    { t: `Credit limit: ${u6(c?.limit)} tUSDC (${(c?.ltvBps ?? 6000) / 100}%)`, d: "Value at NorenStockOracle prices × your LTV; a stale price stops new credit", on: (c?.limit ?? 0n) > 0n },
+    { t: "Pay in 3 or pay later at a checkout", d: "A round lot is drawn from the Earn pool into your private balance; the shop is paid privately", on: (c?.plans.length ?? 0) > 0, act: ["Pay", () => go("pay")] },
+    { t: "Repay on time, your limit grows", d: "Every on-time installment adds 5 points of LTV, up to 75%", on: (c?.onTime ?? 0) > 0 },
+  ];
   return (
-    <>
-      <div className="nk-home-main">
-        <section className="nk-hero nc-hero" aria-live="polite">
-          <small>Credit limit · NorenCredit on Avalanche Fuji</small>
-          <b>
-            <i>$</i>
-            {p ? (u6(p.borrowLimit) ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : err ? '—' : '…'}
-          </b>
-          <p>
-            {err
-              ? `Could not read ${owner}: ${err}`
-              : !p
-                ? who
-                  ? 'Reading your position…'
-                  : 'Reading the demo customer’s position…'
-                : held
-                  ? `${held} × Chainlink price × ${cfg.data ? [p.btc > 0n ? `${cfg.data.btc.ltvBps / 100}%` : '', p.avax > 0n ? `${cfg.data.avax.ltvBps / 100}%` : ''].filter(Boolean).join(' / ') + ' LTV' : 'its LTV'}${who ? '' : `. This is ${owner}; connect to see yours.`}`
-                  : who
-                    ? 'No collateral yet. Lock tWBTC or AVAX to open your line.'
-                    : `No collateral on ${owner}. Connect to open your own line.`}
-          </p>
-          <div className="nc-tiles">
-            <span>
-              <em>Collateral</em>
-              {p ? fmt2(u6(p.collateralValue)) : '—'}
-            </span>
-            <span>
-              <em>Owed</em>
-              {p ? fmt2(u6(p.debt)) : '—'}
-            </span>
-            <span>
-              <em>Available</em>
-              {p ? fmt2(u6(p.available)) : '—'}
-            </span>
-            <span>
-              <em>Health</em>
-              {p ? healthLabel(p) : '—'}
-            </span>
-          </div>
-        </section>
+    <div className="nk-col">
+      <div className="nk-hero" aria-label="Your credit limit">
+        <small>Credit limit · NorenStockCredit on Avalanche Fuji</small>
+        <b>{c?.limit != null ? <><i>$</i>{u6(c.limit)}</> : "–"}</b>
+        <p>{!c ? "Reading your position…" : c.limit == null ? "A stock price is over an hour old. Paying refreshes it from the signed relayer report." : locked.length === 0 ? "No stock locked yet. Your limit is your locked stock’s value at your LTV, starting at 60%." : `LTV ${c.ltvBps / 100}% · ${u6(c.available)} tUSDC available · ${u6(c.owed)} owed`}</p>
+      </div>
 
-        {who && acct.data && acct.data.wallet.avax === 0n && <StarterCard address={who.address} />}
-
-        {p && coll > 0 && <Meter p={p} stale={!!pr?.stale} />}
-
-        <div className="nk-actions nc-actions">
-          <button className="primary" onClick={() => go('/shop/harbor-loom')}>
-            <i>
-              <Icon.arrow />
-            </i>
-            <b>Pay anyone</b>
-            <small>Privately, or on credit</small>
-            <Art3d k="card" size={56} alt="" />
-          </button>
-          <button onClick={() => setSheet('deposit')}>
-            <i>
-              <Icon.layers />
-            </i>
-            <b>Add collateral</b>
-            <small>tWBTC or AVAX</small>
-            <Art3d k="btc-coin" size={56} alt="" />
-          </button>
-          <button onClick={() => go('/debt-free')}>
-            <i>
-              <Icon.chart />
-            </i>
-            <b>Debt-free</b>
-            <small>Repay and release</small>
-            <Art3d k="calendar" size={56} alt="" />
-          </button>
-          <a href={addressUrl(who?.address ?? demo.data?.address ?? D.norenCredit)} target="_blank" rel="noreferrer">
-            <i>
-              <Icon.ext />
-            </i>
-            <b>Snowtrace</b>
-            <small>{who ? who.label : demo.data ? short(demo.data.address) : 'NorenCredit'}</small>
-            <Art3d k="receipt" size={56} alt="" />
-          </a>
+      <Card title="Stock → credit, in four steps" sub="Borrow against your shares without selling them">
+        <div className="nk-pad">
+          <ul className="nk-items">{steps.map((s, i) => <li key={s.t} data-done={s.on}><span className="nk-check">{s.on ? "✓" : i + 1}</span><div><b>{s.t}</b><small>{s.d}</small></div>{s.act && <button className="nk-btn xs r" onClick={s.act[1]}>{s.act[0]}</button>}</li>)}</ul>
         </div>
+      </Card>
 
-        <Card title="Your collateral" sub={`Chainlink-priced on Fuji. Borrow up to ${cfg.data ? `${cfg.data.btc.ltvBps / 100}% of tWBTC and ${cfg.data.avax.ltvBps / 100}% of AVAX` : 'each asset’s LTV'}.`} pill={<Pill tone={pr?.stale ? 'warn' : 'live'}>{pr?.stale ? 'Price stale' : 'Chainlink'}</Pill>} id="coins">
-          <ul className="nc-coins">
-            {(
-              [
-                { k: 'btc', sym: 'tWBTC', name: 'Test WBTC', mark: 'BTC', price: pr ? u8(pr.btc) : null, at: pr?.btcUpdatedAt, amt: p ? Number(p.btc) / 1e8 : 0, c: cfg.data?.btc, pair: 'BTC / USD' },
-                { k: 'avax', sym: 'AVAX', name: 'Avalanche', mark: 'AVAX', price: pr ? u8(pr.avax) : null, at: pr?.avaxUpdatedAt, amt: p ? Number(formatEther(p.avax)) : 0, c: cfg.data?.avax, pair: 'AVAX / USD' },
-              ] as const
-            ).map((c) => (
-              <li key={c.k} className={c.amt > 0 ? 'here' : ''}>
-                <Mark id={c.mark} size={36} />
-                <span>
-                  <b>
-                    {c.name} <small className="nk-pill">{c.k === 'btc' ? 'testnet stand-in' : 'Fuji native'}</small>
-                  </b>
-                  <small>{c.price != null ? `${usd(c.price)} · ${c.pair} · ${c.at ? ago(c.at, now) : ''}` : market.prices.error ?? 'Reading Chainlink…'}</small>
-                  <small>{c.c ? `${c.c.ltvBps / 100}% LTV · ${c.c.liqBps / 100}% liquidation` : 'Reading the listing…'}</small>
-                </span>
-                <span className="r">
-                  <b>{c.amt > 0 ? (c.k === 'btc' ? c.amt : c.amt.toFixed(4)) : '0'}</b>
-                  <small>{c.amt > 0 && c.price != null ? `${usd(c.amt * c.price)} locked` : 'nothing locked'}</small>
-                </span>
-              </li>
-            ))}
-            <li>
-              <Mark id="USDC" size={36} />
-              <span>
-                <b>Test USDC</b>
-                <small className="mono">{short(D.tUSDC)}</small>
-                <small>What you borrow and pay with</small>
-              </span>
-              <span className="r">
-                <b>{market.pool.data ? usd(u6(market.pool.data.liquidity), 0) : '—'}</b>
-                <small>in the pool</small>
-              </span>
-            </li>
+      <Card title="Raise your limit" sub="On-time installments are recorded by NorenStockCredit; each one adds 5 points of LTV" pill={<span className="nk-pill">{c?.onTime ?? 0} on time</span>}>
+        <div className="nk-pad">
+          <ul className="nk-items" aria-label="Credit limit by repayment record">
+            {LTV_LADDER.map((ltv, i) => {
+              const reached = (c?.ltvBps ?? 6000) >= ltv;
+              const cap = value != null ? (value * BigInt(ltv)) / 10_000n : null;
+              return (
+                <li key={ltv} data-done={reached}>
+                  <span className="nk-check">{reached ? "✓" : i + 1}</span>
+                  <div><b>{i === 0 ? "Any locked stock" : `${i} on-time installment${i === 1 ? "" : "s"}`}</b><small>{ltv / 100}% LTV{(c?.ltvBps ?? 6000) === ltv ? " · you are here" : ""}</small></div>
+                  <span className="r"><b>${cap != null ? u6(cap) : "–"}</b><small>{i > 0 && cap != null && value ? `+${(((ltv - 6000) / 6000) * 100).toFixed(1)}%` : "tUSDC"}</small></span>
+                </li>
+              );
+            })}
           </ul>
-          <div className="na-btns na-btns-pad">
-            <button className="nk-btn" onClick={() => setSheet('deposit')}>
-              Add collateral
-            </button>
-            <button className="nk-btn" onClick={() => setSheet('borrow')}>
-              Borrow tUSDC
-            </button>
-            <button className="nk-btn" onClick={() => setSheet('withdraw')}>
-              Withdraw
-            </button>
+          <div className="nk-stats" aria-label="Repayment record">
+            <div className="nk-stat"><small>On-time installments</small><b className={c?.onTime ? "ok" : ""}>{c?.onTime ?? 0}</b></div>
+            <div className="nk-stat"><small>Late installments</small><b className={c?.late ? "warn" : ""}>{c?.late ?? 0}</b></div>
+            <div className="nk-stat"><small>Plans completed</small><b>{done.length}</b></div>
+            <div className="nk-stat"><small>Owed</small><b>{u6(c?.owed)}</b></div>
           </div>
-          <p className="nc-setup">
-            <Icon.lock /> Locking collateral and borrowing are public on Fuji. Paying a shop with the credit is not: the amount moves through eERC, encrypted.
-          </p>
-        </Card>
-      </div>
-      <CustomerSide market={market} />
-      {sheet && <CreditSheet action={sheet} close={() => setSheet(null)} connect={market.connect} />}
-    </>
+        </div>
+      </Card>
+
+      <Card title="Your plans" sub="Pay in 3: three installments two weeks apart. Pay later: one payment in 30 days. 1% fee, no interest.">
+        <div className="nk-pad">
+          {!c?.plans.length ? <Empty title="No plans yet" text="Choose “Pay in 3 / Pay later” at a Noren checkout." /> : (
+            <ul className="nk-plans">
+              {[...open, ...done].map((p) => {
+                const part = p.total / BigInt(p.parts);
+                return (
+                  <li key={String(p.id)} data-closed={p.closed}>
+                    <div className="nk-plan-h"><b>{p.parts === 3 ? "Pay in 3" : "Pay later"} · {u6(p.principal)} tUSDC</b><small>plan #{String(p.id)} · opened {day(p.start)} · {p.closed ? "repaid" : `${u6(p.total - p.repaid)} left`}</small></div>
+                    <ol className="nk-inst">
+                      {Array.from({ length: p.parts }, (_, i) => {
+                        const paid = i < p.paid;
+                        const due = p.start + p.interval * (i + 1);
+                        return <li key={i} data-paid={paid}><b>{u6(i === p.parts - 1 ? p.total - part * BigInt(p.parts - 1) : part)}</b><small>{paid ? "Paid" : `Due ${day(due)}`}</small></li>;
+                      })}
+                    </ol>
+                    {!p.closed && <button className="nk-cta" disabled={!!busy || a.usdc < p.next} onClick={() => run(`pay${p.id}`, async () => {
+                      const allowance = (await pub.readContract({ address: D.tUSDC, abi: erc20Abi, functionName: "allowance", args: [a.address, D.stockCredit] })) as bigint;
+                      if (allowance < p.next) await write(D.tUSDC, erc20Abi as Abi, "approve", [D.stockCredit, maxUint256], "approve tUSDC for NorenStockCredit");
+                      return write(D.stockCredit, norenStockCreditAbi as Abi, "payInstallment", [p.id], `repay installment ${p.paid + 1} of plan #${p.id}: ${u6(p.next)} tUSDC`);
+                    }, "Installment repaid on time. Your LTV went up 5 points.")}>{busy === `pay${p.id}` ? <><Spin /> Repaying…</> : a.usdc < p.next ? `Needs ${u6(p.next)} tUSDC in your wallet` : `Repay ${u6(p.next)} tUSDC now`}</button>}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {note && <div className={note.bad ? "nk-err" : "nk-note"} role="status">{note.t}</div>}
+          <p className="nk-fine">Repayments are public tUSDC transfers to NorenStockCredit. A position whose debt passes 85% of its collateral value can be liquidated (5% bonus). The tUSDC lent comes from the Earn pool.</p>
+        </div>
+      </Card>
+
+      <Collateral a={a} reload={w.reload} />
+    </div>
   );
 }
 
-export function Meter({ p, stale }: { p: CreditPosition; stale: boolean }) {
-  const coll = Number(p.collateralValue) || 1;
-  const pct = (x: bigint) => `${Math.min(100, (Number(x) / coll) * 100).toFixed(2)}%`;
+function Collateral({ a, reload }: { a: Acct; reload: () => void }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const locked = a.credit?.collateral.filter((x) => x.amount > 0n) ?? [];
+  if (!locked.length) return null;
+  const unlock = async (sym: StockSym, amount: bigint) => { setBusy(sym); setErr(null); try { await write(D.stockCredit, norenStockCreditAbi as Abi, "unlock", [a.stocks.find((s) => s.sym === sym)!.token, amount], `unlock ${sh(amount)} t${sym}`); reload(); } catch (e) { setErr(msgOf(e)); } finally { setBusy(null); } };
   return (
-    <section className="nk-card nc-meter">
-      <div className="nk-card-h">
-        <div className="nc-h3d">
-          <Art3d k="gauge" size={56} />
-          <div>
-            <b>How much of your coin is spoken for</b>
-            <p>
-              {usd(u6(p.debt))} owed of {usd(u6(p.borrowLimit))} limit. Liquidation starts if the debt passes {usd(u6(p.liquidationValue))}, {((Number(p.liquidationValue) / coll) * 100).toFixed(0)}% of collateral value.
-            </p>
-          </div>
-        </div>
-        <Pill tone={stale ? 'warn' : 'live'}>{stale ? 'Price stale' : 'Price fresh'}</Pill>
+    <Card title="Locked collateral" sub="Still your shares. Unlock any time your debt stays under your limit.">
+      <div className="nk-pad">
+        <ul className="nk-items">{locked.map((x) => { const s = a.stocks.find((y) => y.sym === x.sym)!; return (
+          <li key={x.sym} data-done><span className="nk-check"><Mark id={x.sym} size={18} /></span><div><b>{sh(x.amount)} t{x.sym}</b><small>${p8(s.price8)} · {u6((x.amount * s.price8) / 10n ** 20n)} tUSDC</small></div><button className="nk-btn xs r" disabled={!!busy} onClick={() => unlock(x.sym, x.amount)}>{busy === x.sym ? "…" : "Unlock all"}</button></li>
+        ); })}</ul>
+        {err && <div className="nk-err">{err}</div>}
       </div>
-      <div className="nc-bar" role="img" aria-label={`Debt is ${((Number(p.debt) / coll) * 100).toFixed(1)}% of collateral value`}>
-        <span className="fill" style={{ width: pct(p.debt) }} />
-        <span className="mark ltv" style={{ left: pct(p.borrowLimit) }}>
-          <em>Limit</em>
-        </span>
-        <span className="mark liq" style={{ left: pct(p.liquidationValue) }}>
-          <em>Liquidation</em>
-        </span>
-      </div>
-      {stale && <p className="nc-fine">A Chainlink feed is older than the 25-hour limit, so new borrowing is paused until it updates. Repaying always works.</p>}
-    </section>
+    </Card>
   );
 }
+
+export { TxLink };

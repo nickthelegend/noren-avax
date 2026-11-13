@@ -98,7 +98,7 @@ On the explorer the eERC event reads `PrivateTransfer(sender, <receiver>, (ciphe
 | Line | Proof |
 |---|---|
 | "Selling the stock and the top-up are public, in round lots of fifty; the amount, and which shop it paid, are not." | v18: sale 0x39b9d8bd… (50.00 tUSDC out), eERC deposits 0x56519aff… (50,000,000 = 50.00 tUSDC) and 0xcc604088… (150,000,000 = 150.00); the payment 0x682d45c0… shows 0 transfers and goes to Noren's hub, the shop is not on chain |
-| "Aubelle never learns who paid" / caption "no customer named" | API d472720: invoices and events no longer carry paymentTx for private methods; Aubelle's order page (take 09:15 UTC) shows method, Noren payment id, batch #26 only, no customer field |
+| "with the three private ones, Aubelle never learns which wallet paid" / caption "Paid · settled in Noren batch #26" | API d472720: invoices and events no longer carry paymentTx for private methods; Aubelle's order page (take 09:15 UTC) shows method, Noren payment id, batch #26 only, no customer field |
 | "Her plan: 150.00 tUSDC, a round lot · 3 × 50.50 · 1% fee" | Credit tab plan #5 on screen (v18): "Pay in 3 · 150.00 tUSDC · 151.50 left · 50.50 ×3" |
 | "Then the books decrypt in the browser, and the payout is checked against the chain." (v18) | Played only from the frame where Balances shows 24.00 tUSDC, the batch #26 payout row `0x9ea7…fd7e` and its "Checked ✓" badge (merchview take 09:17 UTC; decryption about 1.5 s in real time since product 9f9a47e) |
 | "Her pay-in-three payment is the same private call" (v18) | 0xcec68b62… from Riya: `transfer` on eERC `0x35f9…7153`, 0 transfers, 2 events |

@@ -63,8 +63,9 @@ Robinhood Chain, Circle CCTP, Chainlink CCIP / CRE, 1inch Aqua, Uniswap, World I
 - Aubelle (demo shop): https://noren-avax-shop.vercel.app
 - Noren API: https://noren-avax-api.201-18-198-162.sslip.io/api/health
 - Repo: (to be pushed by Nick)
-- Demo video: `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and `noren-avax-film-share.mp4`; versions in
-  `videos/noren-avax/versions/` (v12 onwards = this edition; v1–v11 = the earlier NEAR-UI cuts). Upload link: (to be
+- Demo video (2:43.8, v20, independent judge 9.1/10; recorded live on the hosted sites and Fuji): 
+  `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and `noren-avax-film-share.mp4` (9.2 MB); versions in
+  `videos/noren-avax/versions/` (v12–v20 = this edition; v1–v11 = the earlier NEAR-UI cuts). Upload link: (to be
   added by Nick)
 - Slides: `docs/SLIDES.md`
 - Contracts and live transactions: README ("Stocks on Fuji", "Live on Avalanche Fuji") and `deployments/fuji.json`.

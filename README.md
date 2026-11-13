@@ -11,7 +11,7 @@ its own key, its accountant gets a copy encrypted to the accountant's key, and t
 
 **Live app:** https://noren-avax.vercel.app (Fuji testnet; test tokens only)
 
-**Demo film (2:32):** recorded live in one take on the hosted app and Fuji: a fresh test wallet pays Harbor & Loom
+**Demo film (2:33):** recorded live in one take on the hosted app and Fuji: a fresh test wallet pays Harbor & Loom
 privately, then on credit, the hub settles the batch, the customer repays, Snowtrace shows each step (and the wallet's
 public token moves: round 50s only), and the shop, its accountant and the eERC auditor read the same batch. File: `videos/noren-avax/noren-avax-film.mp4` in the hackathon workspace (upload link in SUBMISSION).
 

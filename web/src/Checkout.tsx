@@ -208,7 +208,7 @@ export function Checkout({ id }: { id: string }) {
                   {steps.map((s, i) => (
                     <li key={s.key} data-state={s.state === "done" || s.state === "skip" ? "done" : s.state === "run" ? "now" : s.state === "fail" ? "fail" : "todo"}>
                       <i>{s.state === "done" || s.state === "skip" ? <Icon.check /> : s.state === "run" ? <span className="spin xs" /> : s.state === "fail" ? <Icon.x /> : i + 1}</i>
-                      <div><b>{s.title}{s.state === "skip" ? <span className="faint"> · already done</span> : null}</b><span>{s.error ? <span className="err">{s.error}</span> : s.hash ? <a className="tx-link" href={txUrl(s.hash)} target="_blank" rel="noreferrer">{short(s.hash, 8)} <Icon.ext /></a> : s.detail}</span></div>
+                      <div><b>{s.title}{s.state === "skip" ? <span className="faint"> · not needed</span> : null}</b><span>{s.error ? <span className="err">{s.error}</span> : s.hash ? <a className="tx-link" href={txUrl(s.hash)} target="_blank" rel="noreferrer">{short(s.hash, 8)} <Icon.ext /></a> : s.detail}</span></div>
                     </li>
                   ))}
                 </ol>

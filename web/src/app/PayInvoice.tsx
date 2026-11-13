@@ -79,7 +79,10 @@ export function PayInvoice({ w, initial }: { w: W; initial?: string }) {
   useEffect(() => {
     const usable = (x: { sym: StockSym; balance: bigint }) => x.balance > 0n || ((way === "payin3" || way === "paylater") && lockedOf(x.sym) > 0n);
     const ok = w.acct.stocks.filter(usable);
-    if (ok.length && !ok.find((x) => x.sym === sym)) setSym(ok[0]!.sym);
+    // Credit: prefer a stock that is already locked as collateral.
+    const locked = (way === "payin3" || way === "paylater") ? w.acct.stocks.find((x) => lockedOf(x.sym) > 0n) : undefined;
+    if (locked && lockedOf(sym) === 0n) setSym(locked.sym);
+    else if (ok.length && !ok.find((x) => x.sym === sym)) setSym(ok[0]!.sym);
   }, [w.acct.stocks, way]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shop = inv?.merchantName || "this shop";
@@ -161,7 +164,7 @@ export function PayInvoice({ w, initial }: { w: W; initial?: string }) {
                     )}
                     {steps && (
                       <ol className="nk-steps" aria-label="Payment steps">
-                        {steps.map((s, i) => <li key={s.key} data-state={s.state === "done" || s.state === "skip" ? "done" : s.state === "run" ? "now" : "todo"}><i>{s.state === "done" || s.state === "skip" ? "✓" : s.state === "fail" ? "!" : i + 1}</i><span>{s.title}{s.hash ? <> · <a href={txUrl(s.hash)} target="_blank" rel="noreferrer">tx</a></> : s.state === "skip" ? " · already done" : ""}{s.error ? <em className="nk-err-t"> {s.error}</em> : null}</span></li>)}
+                        {steps.map((s, i) => <li key={s.key} data-state={s.state === "done" || s.state === "skip" ? "done" : s.state === "run" ? "now" : "todo"}><i>{s.state === "done" || s.state === "skip" ? "✓" : s.state === "fail" ? "!" : i + 1}</i><span>{s.title}{s.hash ? <> · <a href={txUrl(s.hash)} target="_blank" rel="noreferrer">tx</a></> : s.state === "skip" ? " · not needed" : ""}{s.error ? <em className="nk-err-t"> {s.error}</em> : null}</span></li>)}
                       </ol>
                     )}
                     <button className="nk-cta" disabled={busy} onClick={pay}>

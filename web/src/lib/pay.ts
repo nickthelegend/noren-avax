@@ -200,7 +200,7 @@ export function planFor(opts: { who: Address; inv: Invoice; method: Method; sym:
     stockPack,
     { key: 'price', title: `Fresh ${sym} price`, detail: 'Your limit is priced by NorenStockOracle; submits the relayer’s latest signed report if it is over an hour old', needed: async () => true, run: () => freshPrice(sym) },
     {
-      key: 'lock', title: `Lock t${sym} as collateral`, detail: 'Your shares stay yours in NorenStockCredit; the limit is their value × your LTV',
+      key: 'lock', title: `Collateral: t${sym}`, detail: 'Locks more only if your locked stock doesn’t cover this plan; your shares stay yours in NorenStockCredit',
       needed: async () => {
         // Credit always funds this payment (a round lot), even if the private balance could cover it.
         topUp = lotOf(price);

@@ -19,3 +19,4 @@ web/public/circuits/
 deployments/fuji-hub.json
 web/.vercel/
 deployments/fuji-stocks.json
+web/.vercel-merchant/

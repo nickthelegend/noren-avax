@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://noren-avax-api.201-18-198-162.sslip.io/api/:path*" },
-    { "source": "/((?!assets/|art/|circuits/|api/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|art/|logos/|circuits/|api/).*)", "destination": "/index.html" }
   ]
 }

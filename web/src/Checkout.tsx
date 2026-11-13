@@ -77,7 +77,7 @@ export function Checkout({ id }: { id: string }) {
       if (isUnlocked()) setPriv((await privateSession().balance()).cents);
     } catch (e) { setNote(msgOf(e)); }
   }, [who?.address]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { loadWallet(); }, [loadWallet]);
+  useEffect(() => { loadWallet(); const on = () => setTimeout(loadWallet, 800); addEventListener("noren:tx", on); return () => removeEventListener("noren:tx", on); }, [loadWallet]);
   useEffect(() => { if (hold && !hold.find((h) => h.sym === sym && h.balance > 0n)) { const f = hold.find((h) => h.balance > 0n); if (f) setSym(f.sym); } }, [hold]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // After paying: the hub's signed receipt (queued → settled in batch #n) and the invoice turning paid.

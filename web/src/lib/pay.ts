@@ -171,9 +171,8 @@ export function planFor(opts: { who: Address; inv: Invoice; method: Method; sym:
       {
         key: 'sell', title: `Sell ${sym} for tUSDC`, detail: 'NorenStockDesk buys it at the oracle price minus 0.5%, in a round lot of 50 tUSDC',
         needed: async () => {
-          const s = await short();
-          if (s === 0n) return false;
-          topUp = lotOf(s);
+          // Paying with stocks always sells for this payment (a round lot), even if the private balance could cover it.
+          topUp = lotOf(price);
           const [inAmt, price8] = (await pub.readContract({ address: D.stockDesk, abi: norenStockDeskAbi, functionName: 'quoteSellIn', args: [stockToken(D, sym), usdcOf(topUp)] })) as readonly [bigint, bigint];
           const have = await stockBalance(who, sym);
           if (have < inAmt) throw Error(`You hold ${s6(have)} t${sym}; this needs ${s6(inAmt)}. Pick another stock.`);
@@ -203,9 +202,8 @@ export function planFor(opts: { who: Address; inv: Invoice; method: Method; sym:
     {
       key: 'lock', title: `Lock t${sym} as collateral`, detail: 'Your shares stay yours in NorenStockCredit; the limit is their value × your LTV',
       needed: async () => {
-        const s = await short();
-        topUp = s === 0n ? 0n : lotOf(s);
-        if (topUp === 0n) return false;
+        // Credit always funds this payment (a round lot), even if the private balance could cover it.
+        topUp = lotOf(price);
         const owedNew = usdcOf(topUp) + usdcOf(topUp) / 100n;
         const avail = (await pub.readContract({ address: D.stockCredit, abi: norenStockCreditAbi, functionName: 'available', args: [who] })) as bigint;
         if (avail >= owedNew) return false;
@@ -228,7 +226,7 @@ export function planFor(opts: { who: Address; inv: Invoice; method: Method; sym:
     {
       key: 'plan', title: parts === 3 ? 'Open a pay-in-3 plan' : 'Open a pay-later plan',
       detail: parts === 3 ? 'Draws a round lot from the Earn pool: three installments two weeks apart, 1% fee, no interest' : 'Draws a round lot from the Earn pool: one payment in 30 days, 1% fee, no interest',
-      needed: async () => topUp > 0n,
+      needed: async () => true,
       run: async () => {
         const id = (await pub.readContract({ address: D.stockCredit, abi: norenStockCreditAbi, functionName: 'planCount' })) as bigint;
         const h = await write(D.stockCredit, norenStockCreditAbi as Abi, 'openPlan', [usdcOf(topUp), parts, stringToHex(inv.id.slice(0, 31), { size: 32 }), who], parts === 3 ? `pay in 3: draw ${t2(topUp)} tUSDC` : `pay later: draw ${t2(topUp)} tUSDC`);

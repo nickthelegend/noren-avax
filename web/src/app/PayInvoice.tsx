@@ -118,7 +118,7 @@ export function PayInvoice({ w, initial }: { w: W; initial?: string }) {
                 <div className="nk-inv-h">
                   <span className="nk-inv-mark" aria-hidden>{shop.slice(0, 1).toUpperCase()}</span>
                   <div><small>Pay {shop}</small><b>{cents(inv.amountCents)} <em>tUSDC</em></b><small>{inv.description || "Payment"} · <span className="nk-mono">{inv.id}</span></small></div>
-                  <span className={`nk-pill ${inv.status === "paid" ? "live" : inv.status === "expired" ? "bad" : ""}`}>{inv.status}</span>
+                  <span className={`nk-pill ${inv.status === "paid" || paid ? "live" : inv.status === "expired" ? "bad" : ""}`}>{inv.status === "open" && paid ? "paid · settling" : inv.status}</span>
                 </div>
 
                 {paid || inv.status === "paid" ? (

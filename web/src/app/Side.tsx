@@ -140,7 +140,7 @@ export function Activity() {
     return rows
       .map((x) => ({ hash: x.r.transactionHash as Hex, title: x.title, sub: x.sub, kind: x.kind, at: t.get(String(x.r.blockNumber)) ?? 0 }))
       .sort((a, b) => b.at - a.at);
-  }), [who?.address, ver], 0, [6000]);
+  }), [who?.address, ver], 0, [2500, 9000]);
 
   const recorded: Act[] = DEMO.flatMap((d) => d.txs.map((tx) => ({ hash: tx.hash, title: cap(tx.what), sub: d.title, at: Date.parse(d.at) / 1000 }))).reverse();
   const list = who ? acts.data : recorded;

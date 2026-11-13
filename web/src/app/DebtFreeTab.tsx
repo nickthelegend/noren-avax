@@ -43,7 +43,7 @@ export function DebtFreeTab({ market }: { market: Market }) {
             <div className="nk-stats">
               <div className="nk-stat">
                 <small>Interest a year</small>
-                <b className="warn">{p && apr != null ? (debt > 0 ? `−${usd((debt * apr) / 100)}` : usd(0)) : '—'}</b>
+                <b className="warn">{p && apr != null ? usd((debt * apr) / 100) : '—'}</b>
                 <small>{apr != null ? `${apr}% APR on ${usd(debt)}, accrued per second` : 'contract APR'}</small>
               </div>
               <div className="nk-stat">

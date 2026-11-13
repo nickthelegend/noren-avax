@@ -312,7 +312,7 @@ export function PayTab({ slug, market }: { slug: string; market: Market }) {
                 </button>
                 {steps && <PlanSteps steps={steps} />}
                 {paid && (VIA_HUB ? <HubReceipt r={paid} /> : <DirectReceipt r={paid} />)}
-                {!paid && RECORDED && recordedPay && (
+                {!who && !paid && RECORDED && recordedPay && (
                   <div className="nc-proof">
                     <b>This exact payment has run on Fuji</b>
                     <p>{RECORDED.title}: a proof made in the browser sent the amount encrypted, so the transaction shows only ciphertext. Connect a wallet to make your own payment above.</p>

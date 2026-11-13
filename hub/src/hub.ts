@@ -72,6 +72,10 @@ export interface HubOptions {
   everySec: number;
   coverMin: number;
   log?: (m: string) => void;
+  /** called for every payment read off chain (new or re-read): Noren Merchant marks the invoice it names paid */
+  onPayment?: (q: Queued) => void;
+  /** called once a batch is recorded, with each settled payment's shop payout */
+  onSettled?: (batch: number, items: { tx: Hex; shopId: number | null; payoutTx: Hex | null }[]) => void;
 }
 
 export class Hub {
@@ -125,8 +129,10 @@ export class Hub {
       const tx = l.transactionHash as Hex;
       if (this.state.settled[tx] || this.state.queued.some((q) => q.tx === tx)) continue;
       if (this.state.inflight?.payments.includes(tx)) continue;
-      this.state.queued.push(await this.read(tx, l.args.from as Address, l.blockNumber!));
+      const q = await this.read(tx, l.args.from as Address, l.blockNumber!);
+      this.state.queued.push(q);
       n++;
+      this.hook(() => this.o.onPayment?.(q));
     }
     this.state.scannedTo = String(head);
     this.save();
@@ -288,11 +294,22 @@ export class Hub {
         refundTx: rf?.refundTx ?? null,
       };
     }
+    const done = f.payments.map((tx) => ({ tx, shopId: this.state.settled[tx]!.shopId, payoutTx: this.state.settled[tx]!.payoutTx }));
+    this.hook(() => this.o.onSettled?.(f.batch, done));
     this.state.inflight = null;
     this.state.lastBatchAt = Date.now() / 1000;
     this.state.lastError = null;
     this.save();
     return f.batch;
+  }
+
+  /** Merchant bookkeeping must never stop the hub from settling. */
+  private hook(f: () => void) {
+    try {
+      f();
+    } catch (e) {
+      this.log(`hook failed: ${(e as Error).message.slice(0, 200)}`);
+    }
   }
 
   /** A signed receipt for the payer: only for whoever knows the payment's claim secret (it was in the note). */

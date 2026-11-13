@@ -115,7 +115,7 @@ export interface StockPrice {
   fresh: boolean;
 }
 
-export async function readPrices(pub: PublicClient, d: StockDeployment): Promise<StockPrice[]> {
+export async function readStockPrices(pub: PublicClient, d: StockDeployment): Promise<StockPrice[]> {
   return Promise.all(
     STOCKS.map(async (s) => {
       const token = stockToken(d, s);

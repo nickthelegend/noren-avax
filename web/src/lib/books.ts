@@ -3,8 +3,8 @@
  * transfer whose note is the itemised statement), checked against the digests NorenSettlement recorded, the private
  * balance and withdrawals. Also the merchant assistant's tools, which run here over these books.
  */
-import type { Address, Hex } from 'viem';
-import { checkStatement, parseStatement, readPayouts, scanLogs, statementDigest, withdrawEvent } from '@noren-avax/sdk';
+import { decodeEventLog, decodeFunctionData, type Address, type Hex } from 'viem';
+import { checkStatement, encryptedErcAbi, parseStatement, privateMessageEvent, readPayouts, scanLogs, statementDigest, withdrawEvent } from '@noren-avax/sdk';
 import { D, pub } from './chain';
 import { privateSession } from './signer';
 
@@ -19,27 +19,55 @@ async function blockTimes(blocks: bigint[]) {
   return m;
 }
 
+/**
+ * Fast path: NorenSettlement already lists this shop's payouts, so each payout tx is read and decrypted directly
+ * (its transfer proof for the amount, its PrivateMessage log for the statement) instead of scanning every eERC
+ * transfer since the hub was deployed.
+ */
+async function decryptPayout(tx: Hex, owner: Address): Promise<{ cents: bigint | null; memo: string | null; block: bigint }> {
+  const p = privateSession();
+  const [t, r] = await Promise.all([pub.getTransaction({ hash: tx }), pub.getTransactionReceipt({ hash: tx })]);
+  let cents: bigint | null = null;
+  try {
+    const call = decodeFunctionData({ abi: encryptedErcAbi, data: t.input });
+    const proof = (call.args as unknown as unknown[])[2] as { publicSignals: readonly bigint[] };
+    cents = (p.eerc as unknown as { decryptPCT: (x: bigint[]) => bigint }).decryptPCT(proof.publicSignals.slice(16, 23) as bigint[]);
+  } catch {
+    cents = null;
+  }
+  let memo: string | null = null;
+  for (const l of r.logs) {
+    if (l.address.toLowerCase() !== D.encryptedERC.toLowerCase()) continue;
+    try {
+      const ev = decodeEventLog({ abi: [privateMessageEvent], data: l.data, topics: l.topics });
+      if ((ev.args.to as Address).toLowerCase() !== owner.toLowerCase()) continue;
+      memo = p.readNote((ev.args.metadata as { encryptedMsg: Hex }).encryptedMsg);
+    } catch {
+      /* another event */
+    }
+  }
+  return { cents, memo, block: r.blockNumber };
+}
+
 export async function readBook(owner: Address, shopId: number): Promise<Book> {
   const p = privateSession();
-  const [payments, bal, wlogs, recorded] = await Promise.all([
-    p.received(owner, BigInt((D as { hubDeployBlock?: number }).hubDeployBlock ?? D.deployBlock)),
-    p.balance(),
-    scanLogs(pub as never, { address: D.encryptedERC, event: withdrawEvent, args: { user: owner }, fromBlock: BigInt(D.deployBlock) }),
+  const [recorded, bal, wlogs] = await Promise.all([
     readPayouts(pub as never, D as never, shopId),
+    p.balance(),
+    scanLogs(pub as never, { address: D.encryptedERC, event: withdrawEvent, args: { user: owner }, fromBlock: BigInt((D as { hubDeployBlock?: number }).hubDeployBlock ?? D.deployBlock) }),
   ]);
-  const times = await blockTimes([...payments.map((x) => x.block), ...wlogs.map((l) => l.blockNumber!)]);
+  const got = await Promise.all(recorded.map(async (rec) => ({ rec, ...(await decryptPayout(rec.payoutTx, owner).catch(() => ({ cents: null, memo: null, block: 0n }))) })));
+  const times = await blockTimes([...got.map((g) => g.block).filter((b) => b > 0n), ...wlogs.map((l) => l.blockNumber!)]);
   const lines: Line[] = [];
   const payouts: Payout[] = [];
-  for (const x of payments) {
-    if (x.from.toLowerCase() !== D.hub!.toLowerCase() || !x.memo) continue;
-    const st = parseStatement(x.memo);
+  for (const g of got) {
+    const st = g.memo ? parseStatement(g.memo) : null;
     if (!st) continue;
-    const time = times.get(String(x.block)) ?? 0;
-    const rec = recorded.find((r) => r.payoutTx.toLowerCase() === x.tx.toLowerCase());
-    const problems = checkStatement(st, x.cents);
-    if (rec && rec.digest !== statementDigest(x.memo)) problems.push('statement does not match the digest recorded on chain');
-    payouts.push({ tx: x.tx, time, batch: st.batch, cents: x.cents, cover: st.cover, lines: st.items.length, problems, onChain: !!rec });
-    for (const it of st.items) lines.push({ key: `${x.tx}-${it.tx}`, tx: x.tx, payTx: it.tx, time, cents: BigInt(it.cents), item: it.item, order: it.order, batch: st.batch });
+    const time = times.get(String(g.block)) ?? 0;
+    const problems = checkStatement(st, g.cents);
+    if (g.rec.digest !== statementDigest(g.memo!)) problems.push('statement does not match the digest recorded on chain');
+    payouts.push({ tx: g.rec.payoutTx, time, batch: st.batch, cents: g.cents, cover: st.cover, lines: st.items.length, problems, onChain: true });
+    for (const it of st.items) lines.push({ key: `${g.rec.payoutTx}-${it.tx}`, tx: g.rec.payoutTx, payTx: null, time, cents: BigInt(it.cents), item: it.item, order: it.order, batch: st.batch });
   }
   return {
     lines: lines.sort((a, b) => b.time - a.time),

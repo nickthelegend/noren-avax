@@ -82,7 +82,34 @@ Live runs through the hosted UI on Nov 13 (each an eERC payment to the hub; amou
 | The hub settles batch #15 (three shops paid, two of them zero covers) | [`0x213aa76b…`](https://testnet.snowtrace.io/tx/0x213aa76b55093455537d4814afe56063b5ec89cc55a7d375a7b5e405bd8d6eb0) |
 | A signed stock price report submitted by the relayer | [`0x69236726…`](https://testnet.snowtrace.io/tx/0x69236726b97a6f214059c6026182ff394eccd0f2a9c56a2de2cf3525db0259de) |
 
-### The demo film's run (Avalanche Fuji, Nov 13 2026: transactions 09:11–09:18 UTC; the explorer and café-view shots re-filmed read-only at 09:34–09:36 UTC, the café view again at 09:51)
+### The demo film's run, v21 (Avalanche Fuji, Nov 13 2026, 21:37–22:11 UTC: the pop-up checkout)
+
+Wallets: Riya `0xD86211A4c55921DA65a6368345241B15665B1CCA` (browser test wallet; its gas and stock starter packs were
+claimed off camera before filming, 21:44 UTC), Aubelle shop #5 (payout wallet `0xeef4317D588BC1965Af9DDbE2b5482961f5DD7aD`),
+Juhu Chai House shop #13 (opened on camera in `0xb202af…064c`), Noren's hub `0x58e374A4c704f1806BAbD04726FB60e86e76A6A7`,
+eERC auditor `0xaef81a488d6CED2f63E45d6Fa7fdc3Fcc7aA1A61`. Aubelle orders AUB-2AC225 (invoice `in4qijh52114`, 148.00,
+stocks) and AUB-E258B2 (invoice `inmogda1a86w`, 188.00, pay in 3), both paid inside Noren's pop-up checkout and
+settled together in batch #30 (one payout of 336.00 to Aubelle, plus zero-value covers).
+
+| What | Transaction |
+|---|---|
+| Riya registers her eERC key (Groth16 proof made in the browser) | [`0xd8680245…4e2f`](https://testnet.snowtrace.io/tx/0xd86802459e5278503451aace86372e21833e0170abdc32f2b320817c57b44e2f) |
+| The public stock sale at checkout: 0.925722 tNVDA → 150.00 tUSDC at NorenStockDesk (round lot) | [`0x4fd58e5c…2996`](https://testnet.snowtrace.io/tx/0x4fd58e5cf2ad30decfc2debdcfed90c54e798705a140fd420821010c96d22996) |
+| The public top-up: 150.00 tUSDC into her eERC balance | [`0x50b77afe…1927`](https://testnet.snowtrace.io/tx/0x50b77afe0acedc8a0968850a67f3966de8acbc6a6987b2764eadcd1544041927) |
+| Pay with stocks: 148.00 to Aubelle, an eERC transfer to Noren's hub (0 token transfers, amount encrypted; fee 0.176 nAVAX) | [`0x5ff05459…230a`](https://testnet.snowtrace.io/tx/0x5ff05459e7fc89d26a36711679d84fac5d8bb5a83393fc2593f4d2ed07a5230a) |
+| Pay in 3: locks just enough tTSLA as collateral | [`0xd8369387…65e1`](https://testnet.snowtrace.io/tx/0xd836938750407666576316832d2e981a919ca66cd561ab1ab91e6e733f3665e1) |
+| Pay in 3: the plan draws a round lot of 200.00 (3 × 67.33, 1% fee) | [`0x7022f6ad…d5e5`](https://testnet.snowtrace.io/tx/0x7022f6ad9dfd10605ad833617bdbb6ad95150e2fe697dcbe09f6c797a19ad5e5) |
+| Pay in 3: the public top-up of the round lot | [`0x5a71d274…2f14`](https://testnet.snowtrace.io/tx/0x5a71d274908e0215915e941aa73e77e41a8b3d7f6ac39f3ab5ee0c82e96e2f14) |
+| Pay in 3: 188.00 to Aubelle via the hub (eERC, 0 token transfers) | [`0x96556a21…2c4a`](https://testnet.snowtrace.io/tx/0x96556a21690d6a297d78fd24c6f6dfd8f27b2b1881061a8465e51804f91f2c4a) |
+| Noren's hub pays Aubelle 336.00 in batch #30 (eERC, amount encrypted) | [`0x0220d94a…dd71`](https://testnet.snowtrace.io/tx/0x0220d94aae7c8e74a48f9cc64911314e6f56ec1cacc87604cdbc5a3335cbdd71) |
+| Batch #30 recorded on NorenSettlement | [`0x80707615…d456`](https://testnet.snowtrace.io/tx/0x80707615b6202ca443f08707180479d05a2ad18f2838f2172b21547cb0f4d456) |
+| Riya repays the first installment, 67.33 tUSDC, on time (LTV 60% → 65%) | [`0x13d04c15…49cd`](https://testnet.snowtrace.io/tx/0x13d04c1558686bc084ae2def67f3c15ee5157abf810f24a64656957b148249cd) |
+
+In the film, Aubelle's own Noren Merchant decrypts batch #30 (336.00, Checked) with Aubelle's key, and the eERC
+auditor's page decrypts the two payments (148.00, 188.00) and the payout (336.00) with the auditor's key, both in the
+browser. Those keys were put into their own browsers' storage off camera, never shown.
+
+### Earlier film run (v12–v20) (Avalanche Fuji, Nov 13 2026: transactions 09:11–09:18 UTC; the explorer and café-view shots re-filmed read-only at 09:34–09:36 UTC, the café view again at 09:51)
 
 Wallets: Riya `0xf0a643de127c5d8e54d674877b48959d16271ec1` (browser test wallet), Juhu Chai House shop #12 on NorenMerchants (payout wallet `0x036Ec409bB38a14B079F68fE27cd5BF12e871D52`, store opened in `0xf9b642…09d9`), Noren's hub `0x58e374A4c704f1806BAbD04726FB60e86e76A6A7`. Café link `indlflm7bq2a`, Aubelle invoice `inytes4l6ui8` (order AUB-718B5B). Both settled in batch #26.
 Since API d472720 the shops never receive the customer's payment transaction: Aubelle's order page and the café's payment page show the method, the batch and the payout only.

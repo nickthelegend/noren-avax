@@ -36,7 +36,7 @@ submit the latest signed report.
 
 Three surfaces, the same as Noren at ETHGlobal: **Noren Merchant** (SIWE sign-in, store opened on Avalanche with an
 eERC key, payment links, API keys, events, payouts and statements decrypted in the browser and checked against the
-chain, an accountant, a Claude assistant over the decrypted books), the **hosted checkout** (four ways to pay, stocks
+chain, an accountant, a Claude assistant over the decrypted books), the **checkout** (a pop-up window the shop opens, like Stripe, or a hosted page; four ways to pay, stocks
 first), and the **Noren app** (Home, Pay, Earn, Credit, Borrow, Swap). **Aubelle**, a demo boutique, takes Noren with one
 server file. A judge needs nothing installed: "Use a test wallet" makes a Fuji key in the browser, NorenGasStation
 funds it (gas, tUSDC, tWBTC) and NorenStockStarter gives it test stocks.
@@ -63,10 +63,13 @@ Robinhood Chain, Circle CCTP, Chainlink CCIP / CRE, 1inch Aqua, Uniswap, World I
 - Aubelle (demo shop): https://noren-avax-shop.vercel.app
 - Noren API: https://noren-avax-api.201-18-198-162.sslip.io/api/health
 - Repo: (to be pushed by Nick)
-- Demo video (2:43.8, v20, independent judge 9.1/10; recorded live on the hosted sites and Fuji): 
-  `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and `noren-avax-film-share.mp4` (9.2 MB); versions in
-  `videos/noren-avax/versions/` (v12–v20 = this edition; v1–v11 = the earlier NEAR-UI cuts). Upload link: (to be
-  added by Nick)
+- Demo video (2:51.6, v25, independent judge 8.0/10; recorded live on the hosted sites and Fuji, Nov 13 2026 21:37–22:11 UTC,
+  explorer pages re-opened read-only at 23:59 UTC): `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and
+  `noren-avax-film-share.mp4` (9.3 MB). It opens on the live landing (Why Avalanche: the NYSE news with sources), then
+  Aubelle's **Pay with Noren pop-up checkout** (pay with tNVDA, then pay in 3 against tTSLA), the repayment, Ava Labs'
+  explorer (eERC ciphertext), Aubelle's own decrypt and the eERC auditor's decrypt, and a café joining Noren Merchant.
+  Versions in `videos/noren-avax/versions/` (v21–v27 = this pop-up edition; v12–v20 = the pay-by-link cut; v1–v11 =
+  the earlier NEAR-UI cuts). Upload link: (to be added by Nick)
 - Slides: `docs/SLIDES.md`
 - Contracts and live transactions: README ("Stocks on Fuji", "Live on Avalanche Fuji") and `deployments/fuji.json`.
 

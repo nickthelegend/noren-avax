@@ -63,9 +63,13 @@ Robinhood Chain, Circle CCTP, Chainlink CCIP / CRE, 1inch Aqua, Uniswap, World I
 - Aubelle (demo shop): https://noren-avax-shop.vercel.app
 - Noren API: https://noren-avax-api.201-18-198-162.sslip.io/api/health
 - Repo: https://github.com/nickthelegend/noren-avax
-- Demo video (4:54.2, v29, independent judge 8.2/10 before its one fix pass; recorded live on the hosted sites and Fuji,
-  Nov 14 2026 07:27–07:39 UTC, explorer pages re-opened read-only after paying): `grokbot/videos/noren-avax/noren-avax-film.mp4`
-  (1080p) and `noren-avax-film-share.mp4` (9.4 MB). In order: the live landing (stablecoins, stocks or credit, privately;
+- Demo video, **submission cut (≤3:00)**: 2:57.4, v30, `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and
+  `noren-avax-film-share.mp4` (9.2 MB): an edit of the same live takes for the form's "3 minutes or less" (landing →
+  Noren Merchant → the Noren app's collateral and credit limit → bag → checkout → the Noren pop-up → pay in 3, privately,
+  with stocks → explorer ciphertext → Aubelle's decrypt; waits sped up and badged).
+- Full walkthrough (4:54.2, v29, independent judge 8.2/10 before its one fix pass; recorded live on the hosted sites and
+  Fuji, Nov 14 2026 07:27–07:39 UTC, explorer pages re-opened read-only after paying):
+  `grokbot/videos/noren-avax/noren-avax-walkthrough.mp4` (1080p) and `noren-avax-walkthrough-share.mp4` (9.4 MB). In order: the live landing (stablecoins, stocks or credit, privately;
   the NYSE news with sources), Noren Merchant (a new shop signs in, opens on Avalanche as shop #14
   [`0xf6e0cd10…8fa0`](https://testnet.snowtrace.io/tx/0xf6e0cd10ef157230293353d98c9766f26db1f761ed7fb7c6011f333319168fa0),
   a payment link, API keys), the Noren app (a new wallet, the starter pack, 2 tNVDA locked → a 195.42 tUSDC credit
@@ -76,7 +80,7 @@ Robinhood Chain, Circle CCTP, Chainlink CCIP / CRE, 1inch Aqua, Uniswap, World I
   Ava Labs' explorer (eERC ciphertext; batch #32 payout
   [`0xdf606cca…cd84`](https://testnet.snowtrace.io/tx/0xdf606cca4f7f3fffb4d67f1222c43de034488704d9d5f26cf2992bbda3e7cd84)),
   Aubelle's own decrypt (batches #31 306.00 and #32 330.00, Checked) and the eERC auditor's decrypt.
-  Versions in `videos/noren-avax/versions/` (v29 = the round-5 edition in Nick's order; v21–v28 = the pop-up edition;
+  Versions in `videos/noren-avax/versions/` (v30 = the ≤3:00 submission cut of v29; v29 = the round-5 edition in Nick's order; v21–v28 = the pop-up edition;
   v12–v20 = the pay-by-link cut; v1–v11 = the earlier NEAR-UI cuts). Upload link: (to be added by Nick)
 - Slides: `docs/SLIDES.md`
 - Contracts and live transactions: README ("Stocks on Fuji", "Live on Avalanche Fuji") and `deployments/fuji.json`.

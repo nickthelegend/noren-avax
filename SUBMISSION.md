@@ -63,12 +63,12 @@ Robinhood Chain, Circle CCTP, Chainlink CCIP / CRE, 1inch Aqua, Uniswap, World I
 - Aubelle (demo shop): https://noren-avax-shop.vercel.app
 - Noren API: https://noren-avax-api.201-18-198-162.sslip.io/api/health
 - Repo: (to be pushed by Nick)
-- Demo video (2:53.4, v27, independent judge 8.0/10; recorded live on the hosted sites and Fuji, Nov 13 2026 21:37–22:11 UTC,
+- Demo video (2:53.4, v28, independent judge 8.0/10; recorded live on the hosted sites and Fuji, Nov 13 2026 21:37–22:11 UTC,
   explorer pages re-opened read-only at 23:59 UTC): `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and
   `noren-avax-film-share.mp4` (9.3 MB). It opens on the live landing (Why Avalanche: the NYSE news with sources), then
   Aubelle's **Pay with Noren pop-up checkout** (pay with tNVDA, then pay in 3 against tTSLA), the repayment, Ava Labs'
   explorer (eERC ciphertext), Aubelle's own decrypt and the eERC auditor's decrypt, and a café joining Noren Merchant.
-  Versions in `videos/noren-avax/versions/` (v21–v27 = this pop-up edition; v12–v20 = the pay-by-link cut; v1–v11 =
+  Versions in `videos/noren-avax/versions/` (v21–v28 = this pop-up edition; v12–v20 = the pay-by-link cut; v1–v11 =
   the earlier NEAR-UI cuts). Upload link: (to be added by Nick)
 - Slides: `docs/SLIDES.md`
 - Contracts and live transactions: README ("Stocks on Fuji", "Live on Avalanche Fuji") and `deployments/fuji.json`.

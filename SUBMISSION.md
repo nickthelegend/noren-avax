@@ -62,7 +62,7 @@ Robinhood Chain, Circle CCTP, Chainlink CCIP / CRE, 1inch Aqua, Uniswap, World I
 - Noren Merchant + hosted checkout: https://noren-avax-merchant.vercel.app
 - Aubelle (demo shop): https://noren-avax-shop.vercel.app
 - Noren API: https://noren-avax-api.201-18-198-162.sslip.io/api/health
-- Repo: (to be pushed by Nick)
+- Repo: https://github.com/nickthelegend/noren-avax
 - Demo video (2:53.4, v28, independent judge 8.0/10; recorded live on the hosted sites and Fuji, Nov 13 2026 21:37–22:11 UTC,
   explorer pages re-opened read-only at 23:59 UTC): `grokbot/videos/noren-avax/noren-avax-film.mp4` (1080p) and
   `noren-avax-film-share.mp4` (9.3 MB). It opens on the live landing (Why Avalanche: the NYSE news with sources), then
